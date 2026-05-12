@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工程管理 · 得森室內裝修設計有限公司</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+:root{
+  --sage:#C0C4B6;--sage-dk:#8a9082;--sage-pa:#eef0ea;
+  --beige:#EADFDB;--stone:#AEAFB1;--stone-dk:#7a7c7f;
+  --warm:#D8C2B5;--warm-dk:#b09080;--warm-pa:#f5ede8;
+  --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#c8c4be;
+  --paper:#faf9f6;--paper-w:#f5f2ee;--paper-c:#ffffff;
+  --border:#dddad4;--border-l:#eae8e2;
+  --red:#c0392b;--red-pa:#fdecea;
+  --green:#2e7d32;--green-pa:#e8f5e9;
+  --gold:#8a6914;--gold-pa:#fef9e7;
+  --blue:#1565c0;--blue-pa:#e3f2fd;
+  --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
+  --r:4px;--rl:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── LOCK ── */
+#lock{position:fixed;inset:0;z-index:1000;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+.lk-cn{font-family:var(--serif);font-size:19px;letter-spacing:5px;color:var(--ink);margin-top:12px}
+.lk-en{font-size:10px;color:var(--stone-dk);letter-spacing:4px;margin-top:3px}
+.lk-form{display:flex;flex-direction:column;gap:10px;width:260px}
+.lk-form input{padding:11px 14px;border:1px solid var(--border);border-radius:var(--r);font-size:14px;text-align:center;letter-spacing:5px;outline:none;transition:border-color .2s}
+.lk-form input:focus{border-color:var(--sage-dk)}
+.lk-form button{padding:10px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:13px;letter-spacing:3px;cursor:pointer}
+.lk-err{font-size:12px;color:var(--red);text-align:center;height:14px}
+.lk-hint{font-size:11px;color:var(--ink-f);letter-spacing:2px}
+
+/* ── APP ── */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.on{display:flex}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:var(--paper-c);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;gap:12px}
+.nb{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nn{font-family:var(--serif);font-size:13px;color:var(--ink);letter-spacing:2px}
+.nn small{font-size:9px;color:var(--stone-dk);letter-spacing:2px;display:block}
+.ntabs{display:flex;overflow-x:auto;flex:1;justify-content:center}
+.ntab{padding:0 16px;height:54px;display:flex;align-items:center;font-size:13px;color:var(--ink-l);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .2s;letter-spacing:1px}
+.ntab:hover{color:var(--ink)}
+.ntab.on{color:var(--sage-dk);border-bottom-color:var(--sage-dk)}
+.nav-r{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.btn-back{font-size:12px;color:var(--sage-dk);text-decoration:none;letter-spacing:1px;border:1px solid var(--sage);padding:5px 12px;border-radius:var(--r);transition:all .2s}
+.btn-back:hover{background:var(--sage-pa)}
+.btn-logout{font-size:12px;color:var(--ink-l);cursor:pointer;background:none;border:none}
+
+/* ── PANELS ── */
+.panel{display:none;padding:24px}
+.panel.on{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border-l);gap:12px;flex-wrap:wrap}
+.ph-l h2{font-family:var(--serif);font-size:20px;font-weight:400;letter-spacing:2px}
+.ph-l p{font-size:12px;color:var(--ink-l);margin-top:3px;letter-spacing:1px}
+.ph-r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-family:var(--sans);font-size:13px;border-radius:var(--r);cursor:pointer;transition:all .15s;letter-spacing:1px;border:1px solid transparent}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:var(--ink-m)}
+.btn-secondary{background:transparent;color:var(--ink-m);border-color:var(--border)}
+.btn-secondary:hover{border-color:var(--ink-m)}
+.btn-accent{background:var(--sage-dk);color:#fff}
+.btn-accent:hover{background:#5c6054}
+.btn-danger{background:transparent;color:var(--red);border-color:#f5c6c6}
+.btn-danger:hover{background:var(--red-pa)}
+.btn-sm{padding:4px 9px;font-size:12px}
+.btn-icon{padding:6px 10px;font-size:16px;line-height:1}
+
+/* ── CARDS ── */
+.card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.card-hd{padding:11px 16px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w)}
+.card-hd h3{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--ink-m);letter-spacing:2px}
+
+/* ── FORM ── */
+.fg label{display:block;font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:4px}
+.fg{margin-bottom:10px}
+.fc{width:100%;padding:7px 11px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--paper-c);outline:none;transition:border-color .2s}
+.fc:focus{border-color:var(--sage-dk)}
+textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
+.frow{display:grid;gap:10px;margin-bottom:10px}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;letter-spacing:1px}
+.b-green{background:var(--green-pa);color:var(--green)}
+.b-gold{background:var(--gold-pa);color:var(--gold)}
+.b-red{background:var(--red-pa);color:var(--red)}
+.b-blue{background:var(--blue-pa);color:var(--blue)}
+.b-sage{background:var(--sage-pa);color:var(--sage-dk)}
+.b-stone{background:#f0f0f1;color:var(--stone-dk)}
+
+/* ── MODAL ── */
+.mbg{display:none;position:fixed;inset:0;z-index:500;background:rgba(43,41,38,.5);align-items:center;justify-content:center;padding:16px}
+.mbg.on{display:flex}
+.modal{background:var(--paper-c);border-radius:var(--rl);width:560px;max-width:100%;max-height:92vh;overflow-y:auto}
+.modal.wide{width:760px}
+.modal.full{width:98vw;max-height:96vh}
+.mhd{padding:13px 16px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w);position:sticky;top:0;z-index:1}
+.mhd h3{font-family:var(--serif);font-size:14px;font-weight:400;letter-spacing:2px}
+.mcl{background:none;border:none;cursor:pointer;font-size:18px;color:var(--ink-l)}
+.mbod{padding:16px}
+.mft{padding:12px 16px;border-top:1px solid var(--border-l);display:flex;justify-content:flex-end;gap:8px;background:var(--paper-w)}
+
+/* ── NOTIF ── */
+.notif{position:fixed;bottom:20px;right:20px;z-index:900;background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none}
+.notif.on{opacity:1;transform:translateY(0)}
+
+/* ════════════════════════════
+   DASHBOARD
+   ════════════════════════════ */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+.project-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .2s}
+.project-card:hover{border-color:var(--sage-dk);box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+.pc-stripe{height:5px}
+.pc-body{padding:16px}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.pc-name{font-family:var(--serif);font-size:16px;color:var(--ink);letter-spacing:2px}
+.pc-client{font-size:12px;color:var(--ink-l);margin-top:2px;letter-spacing:1px}
+.pc-progress-wrap{margin-bottom:12px}
+.pc-progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-l);margin-bottom:5px;letter-spacing:1px}
+.pc-bar{height:6px;background:var(--border-l);border-radius:3px;overflow:hidden}
+.pc-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.pc-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pc-meta-item{font-size:11px;color:var(--ink-l);letter-spacing:1px}
+.pc-meta-item strong{display:block;font-size:13px;color:var(--ink);font-weight:400;margin-top:2px}
+.pc-footer{padding:10px 16px;border-top:1px solid var(--border-l);display:flex;justify-content:space-between;align-items:center;background:var(--paper-w)}
+
+/* Today widget */
+.today-widget{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);padding:18px;margin-bottom:20px}
+.today-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-l)}
+.today-hd h3{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--ink);letter-spacing:3px}
+.today-hd span{font-size:12px;color:var(--ink-l);letter-spacing:1px}
+.today-items{display:flex;flex-direction:column;gap:8px}
+.today-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);border:1px solid var(--border-l)}
+.today-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.today-item .info{flex:1}
+.today-item .proj{font-size:13px;color:var(--ink);font-weight:400}
+.today-item .detail{font-size:11px;color:var(--ink-l);margin-top:1px;letter-spacing:1px}
+.today-item .worker{font-size:12px;color:var(--sage-dk)}
+
+/* stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-box{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);padding:14px 16px;text-align:center}
+.stat-num{font-family:var(--serif);font-size:26px;color:var(--sage-dk);font-weight:300}
+.stat-lbl{font-size:11px;color:var(--ink-l);letter-spacing:1.5px;margin-top:3px}
+
+/* ════════════════════════════
+   GANTT CHART
+   ════════════════════════════ */
+.gantt-outer{overflow-x:auto;border:1px solid var(--border-l);border-radius:var(--rl);background:var(--paper-c)}
+.gantt-container{min-width:700px;width:100%}
+.gantt-header{display:flex;border-bottom:2px solid var(--border);background:var(--paper-w)}
+.gantt-label-col{width:160px;flex-shrink:0;padding:8px 12px;font-size:10px;color:var(--ink-l);letter-spacing:1px;border-right:1px solid var(--border-l)}
+.gantt-dates{flex:1;display:flex;min-width:0}
+.gantt-dc{flex:1;min-width:36px;max-width:52px;text-align:center;padding:5px 2px;font-size:10px;color:var(--ink-l);border-right:1px solid var(--border-l);line-height:1.4;word-break:keep-all}
+.gantt-dc.gd-today{background:var(--sage-pa);color:var(--sage-dk);font-weight:600}
+.gantt-dc.gd-we{background:#f8f8f8;color:var(--ink-f)}
+.gantt-row{display:flex;border-bottom:1px solid var(--border-l);min-height:44px;align-items:stretch}
+.gantt-row:hover .gantt-rl{background:var(--sage-pa)!important}
+.gantt-rl{width:160px;flex-shrink:0;padding:8px 10px;border-right:1px solid var(--border-l);display:flex;align-items:center;gap:7px;cursor:pointer;transition:background .15s}
+.g-order{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0}
+.g-catname{font-size:12px;color:var(--ink);flex:1;letter-spacing:.5px;line-height:1.4}
+.g-sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.gantt-tl{flex:1;position:relative;min-height:44px;min-width:0}
+.g-cells-wrap{display:flex;position:absolute;inset:0;min-width:0}
+.g-cell-item{flex:1;min-width:36px;max-width:52px;border-right:1px solid var(--border-l);height:100%}
+.g-cell-item.gd-today{background:rgba(192,196,182,.15)}
+.g-cell-item.gd-we{background:#f8f8f8}
+.gbar{position:absolute;top:6px;bottom:6px;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 7px;overflow:hidden;z-index:2;transition:opacity .15s;min-width:4px}
+.gbar:hover{opacity:.82;z-index:3}
+.gbar-prog{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.22);border-radius:3px 0 0 3px}
+.gbar-lbl{font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;letter-spacing:.5px}
+.gbar.done{opacity:.55}
+.gbar.delayed{outline:2px solid var(--red);outline-offset:1px}
+.gbar.active{box-shadow:0 2px 8px rgba(0,0,0,.2)}
+
+/* Worker chips */
+.worker-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;background:var(--sage-pa);color:var(--sage-dk);margin:2px}
+
+/* ════════════════════════════
+   WORKERS
+   ════════════════════════════ */
+.worker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.worker-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);padding:14px;transition:all .2s}
+.worker-card:hover{border-color:var(--sage-dk);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.wc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.wc-avatar{width:38px;height:38px;border-radius:50%;background:var(--beige);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;color:var(--stone-dk);flex-shrink:0}
+.wc-name{font-family:var(--serif);font-size:14px;color:var(--ink);letter-spacing:1px}
+.wc-trade{font-size:11px;color:var(--sage-dk);margin-top:2px;letter-spacing:1px}
+.wc-info{font-size:12px;color:var(--ink-l);line-height:1.8}
+.wc-stars{color:#c9952a;font-size:14px;letter-spacing:2px}
+.wc-footer{margin-top:10px;padding-top:10px;border-top:1px solid var(--border-l);display:flex;justify-content:space-between;align-items:center}
+
+/* ════════════════════════════
+   PROJECT DETAIL
+   ════════════════════════════ */
+.detail-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+.detail-sidebar{position:sticky;top:68px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row .lbl{color:var(--ink-l);font-size:12px;letter-spacing:1px}
+.info-row .val{color:var(--ink);font-weight:400}
+.pay-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border-l)}
+.pay-row:last-child{border-bottom:none}
+.pay-check{width:18px;height:18px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.pay-check.done{background:var(--sage-dk);border-color:var(--sage-dk);color:#fff}
+
+/* Log entries */
+.log-entry{padding:12px 14px;border-bottom:1px solid var(--border-l);display:flex;gap:12px}
+.log-entry:last-child{border-bottom:none}
+.log-date{font-size:11px;color:var(--ink-l);white-space:nowrap;padding-top:2px;min-width:70px}
+.log-body .log-title{font-size:13px;color:var(--ink);margin-bottom:3px}
+.log-body .log-detail{font-size:12px;color:var(--ink-l);line-height:1.7}
+.log-body .log-tags{margin-top:5px;display:flex;gap:4px;flex-wrap:wrap}
+
+/* ════════════════════════════
+   COLORS for work categories
+   ════════════════════════════ */
+.c0{background:#8a9082} .c1{background:#b09080} .c2{background:#7a7c7f}
+.c3{background:#5c7a6e} .c4{background:#7a6e5c} .c5{background:#6e7a8a}
+.c6{background:#8a7a6e} .c7{background:#6e8a7a} .c8{background:#7a8a6e}
+.c9{background:#8a6e7a} .c10{background:#6e7a5c} .c11{background:#5c6e7a}
+.c12{background:#7a5c6e} .c13{background:#6a8070} .c14{background:#80706a}
+.c15{background:#708060} .c16{background:#607080} .c17{background:#806070}
+.c18{background:#708870} .c19{background:#887068} .c20{background:#688870}
+.c21{background:#a09088}
+
+@media(max-width:900px){
+  .detail-layout{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  nav{padding:0 12px}
+  .panel{padding:14px 12px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .gantt-label-col{width:130px}
+  .gantt-row-label{width:130px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div id="lock">
+  <div style="text-align:center;">
+    <svg width="68" height="60" viewBox="0 0 68 60" fill="none">
+      <rect x="3" y="17" width="28" height="40" rx="1" stroke="#AEAFB1" stroke-width="1.5" fill="none"/>
+      <line x1="3" y1="17" x2="17" y2="3" stroke="#AEAFB1" stroke-width="1.5"/>
+      <line x1="31" y1="17" x2="17" y2="3" stroke="#AEAFB1" stroke-width="1.5"/>
+      <circle cx="11" cy="30" r="3.5" fill="#C0C4B6"/>
+      <text x="36" y="34" font-family="serif" font-size="16" fill="#6a6860" letter-spacing="3">得森</text>
+    </svg>
+    <div class="lk-cn">工程進度管理系統</div>
+    <div class="lk-en">ERIC KUO SPACE DESIGN</div>
+  </div>
+  <div class="lk-form">
+    <input type="password" id="pwd" placeholder="請輸入密碼" autocomplete="current-password">
+    <button onclick="doLogin()">進 入 系 統</button>
+    <div class="lk-err" id="lerr"></div>
+  </div>
+  <span class="lk-hint">與報價系統共用密碼 · 預設 0000</span>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav>
+    <div class="nb">
+      <svg width="36" height="32" viewBox="0 0 36 32" fill="none">
+        <rect x="2" y="10" width="18" height="21" rx="1" stroke="#AEAFB1" stroke-width="1.2" fill="none"/>
+        <line x1="2" y1="10" x2="11" y2="2" stroke="#AEAFB1" stroke-width="1.2"/>
+        <line x1="20" y1="10" x2="11" y2="2" stroke="#AEAFB1" stroke-width="1.2"/>
+        <circle cx="8" cy="18" r="2.5" fill="#C0C4B6"/>
+        <text x="23" y="20" font-family="serif" font-size="12" fill="#6a6860" letter-spacing="2">得森</text>
+      </svg>
+      <div class="nn">工程管理<small>PROJECT MANAGER</small></div>
+    </div>
+    <div class="ntabs">
+      <div class="ntab on" onclick="go('dash')">📊 總覽</div>
+      <div class="ntab" onclick="go('projects')">🏗️ 專案列表</div>
+      <div class="ntab" onclick="go('workers')">👷 工班資料庫</div>
+    </div>
+    <div class="nav-r">
+      <a class="btn-back" href="quotation-platform.html">← 報價系統</a>
+      <button class="btn-logout" onclick="logout()">登出</button>
+    </div>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <div id="p-dash" class="panel on">
+    <div class="ph">
+      <div class="ph-l"><h2>工程總覽</h2><p id="today-label"></p></div>
+      <div class="ph-r">
+        <button class="btn btn-accent" onclick="openNewProject()">＋ 新增工程專案</button>
+      </div>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="today-widget">
+      <div class="today-hd">
+        <h3>今日工地動態</h3>
+        <span id="today-date-str"></span>
+      </div>
+      <div class="today-items" id="today-items"></div>
+    </div>
+    <h3 style="font-family:var(--serif);font-size:14px;font-weight:400;color:var(--ink-m);letter-spacing:2px;margin-bottom:14px;">進行中專案</h3>
+    <div class="dash-grid" id="dash-grid"></div>
+  </div>
+
+  <!-- PROJECTS LIST -->
+  <div id="p-projects" class="panel">
+    <div class="ph">
+      <div class="ph-l"><h2>專案列表</h2><p>所有工程專案的完整管理</p></div>
+      <div class="ph-r">
+        <select class="fc" id="proj-filter" style="max-width:130px;" onchange="rProjects()">
+          <option value="">所有狀態</option>
+          <option value="active">進行中</option>
+          <option value="planning">規劃中</option>
+          <option value="done">已完工</option>
+          <option value="paused">暫停</option>
+        </select>
+        <button class="btn btn-accent" onclick="openNewProject()">＋ 新增專案</button>
+      </div>
+    </div>
+    <div id="projects-list"></div>
+  </div>
+
+  <!-- WORKERS -->
+  <div id="p-workers" class="panel">
+    <div class="ph">
+      <div class="ph-l"><h2>工班資料庫</h2><p>師傅聯絡資訊、專長工種、合作評分</p></div>
+      <div class="ph-r">
+        <input class="fc" type="search" id="worker-search" placeholder="搜尋師傅…" oninput="rWorkers()" style="max-width:180px;">
+        <select class="fc" id="worker-trade" style="max-width:150px;" onchange="rWorkers()">
+          <option value="">所有工種</option>
+        </select>
+        <button class="btn btn-accent" onclick="openWorkerM()">＋ 新增工班</button>
+      </div>
+    </div>
+    <div class="worker-grid" id="worker-grid"></div>
+  </div>
+</div>
+
+<!-- PROJECT DETAIL (fullscreen panel) -->
+<div id="detail-panel" style="display:none;position:fixed;inset:0;background:var(--paper);z-index:300;overflow-y:auto;">
+  <nav style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:var(--paper-c);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← 返回總覽</button>
+      <span id="detail-nav-title" style="font-family:var(--serif);font-size:14px;letter-spacing:2px;color:var(--ink-m);"></span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary btn-sm" onclick="exportGanttJPG()">匯出甘特圖 JPG</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportProjectPDF()">匯出報告 PDF</button>
+      <button class="btn btn-accent btn-sm" onclick="openLogM()">＋ 工地日誌</button>
+    </div>
+  </nav>
+  <div style="padding:24px;" id="detail-content"></div>
+</div>
+
+<!-- MODALS -->
+
+<!-- New/Edit Project -->
+<div class="mbg" id="project-modal">
+  <div class="modal wide">
+    <div class="mhd"><h3 id="pm-title">新增工程專案</h3><button class="mcl" onclick="closePM()">✕</button></div>
+    <div class="mbod">
+      <div class="frow" style="grid-template-columns:2fr 1fr;">
+        <div class="fg"><label>專案名稱 *</label><input class="fc" id="pm-name" placeholder="例：台南中西區住宅翻新案"></div>
+        <div class="fg"><label>連結報價單（選填）</label>
+          <select class="fc" id="pm-quote"><option value="">不連結</option></select>
+        </div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>業主姓名</label><input class="fc" id="pm-owner" placeholder="陳先生"></div>
+        <div class="fg"><label>業主電話</label><input class="fc" id="pm-phone" placeholder="09xx-xxxxxx"></div>
+      </div>
+      <!-- 地址 -->
+      <div class="frow" style="grid-template-columns:2fr 1fr;">
+        <div class="fg"><label>工程地址</label>
+          <input class="fc" id="pm-addr" placeholder="例：高雄市苓雅區中正一路121巷5弄6-1號">
+        </div>
+        <div class="fg"><label>坪數</label><input class="fc" id="pm-size" type="number" placeholder="0"></div>
+      </div>
+      <div class="fg"><label>詳細地址（路名、巷弄、門號）</label>
+        <input class="fc" id="pm-addr" placeholder="例：中正一路121巷5弄6-1號"></div>
+
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="fg"><label>開工日期</label><input class="fc" id="pm-start" type="date"></div>
+        <div class="fg"><label>預計完工</label><input class="fc" id="pm-end" type="date"></div>
+        <div class="fg"><label>合約金額（元）</label><input class="fc" id="pm-budget" type="number" placeholder="0"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="fg"><label>專案狀態</label>
+          <select class="fc" id="pm-status">
+            <option value="planning">規劃中</option>
+            <option value="active">進行中</option>
+            <option value="paused">暫停</option>
+            <option value="done">已完工</option>
+          </select>
+        </div>
+        <div class="fg"><label>緊急優先標記</label>
+          <select class="fc" id="pm-urgent">
+            <option value="normal">一般</option>
+            <option value="urgent">🔴 緊急</option>
+            <option value="attention">🟡 注意</option>
+          </select>
+        </div>
+        <div class="fg"><label>專案識別顏色</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;" id="color-picker">
+            <div data-color="#8a9082" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#8a9082;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="苔綠"></div>
+            <div data-color="#b09080" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#b09080;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="暖棕"></div>
+            <div data-color="#7a7c7f" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#7a7c7f;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="石灰"></div>
+            <div data-color="#5c7a6e" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#5c7a6e;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="青綠"></div>
+            <div data-color="#7a6e5c" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#7a6e5c;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="深褐"></div>
+            <div data-color="#6e7a8a" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#6e7a8a;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="灰藍"></div>
+            <div data-color="#c0392b" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#c0392b;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="紅"></div>
+            <div data-color="#8a6914" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#8a6914;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="金"></div>
+          </div>
+          <div style="font-size:11px;color:var(--ink-l);margin-top:5px;letter-spacing:1px;">已選：<span id="color-chosen-name">苔綠</span></div>
+        </div>
+      </div>
+      <div class="fg"><label>付款條件（格式：名稱:百分比，用逗號分隔）</label>
+        <input class="fc" id="pm-pay" placeholder="簽約款:30,開工款:30,完工款:40"></div>
+      <div class="fg"><label>備註</label><textarea class="fc" id="pm-note" rows="2"></textarea></div>
+
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-l);">
+        <div style="font-size:11px;color:var(--ink-l);letter-spacing:2px;margin-bottom:10px;">工程工序（勾選本案包含的工種）</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;" id="pm-cats"></div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closePM()">取消</button>
+      <button class="btn btn-primary" onclick="saveProject()">儲存專案</button>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Modal -->
+<div class="mbg" id="worker-modal">
+  <div class="modal">
+    <div class="mhd"><h3 id="wm-title">新增工班</h3><button class="mcl" onclick="closeWM()">✕</button></div>
+    <div class="mbod">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>師傅姓名 *</label><input class="fc" id="wm-name" placeholder="例：王師傅"></div>
+        <div class="fg"><label>公司/行號</label><input class="fc" id="wm-company" placeholder="例：王記木作工程行"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>手機 *</label><input class="fc" id="wm-mob" placeholder="09xx-xxxxxx"></div>
+        <div class="fg"><label>LINE ID</label><input class="fc" id="wm-line" placeholder=""></div>
+      </div>
+      <div class="fg"><label>專長工種（可複選）</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px;" id="wm-trades"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>合作評分</label>
+          <select class="fc" id="wm-rating">
+            <option value="5">⭐⭐⭐⭐⭐ 優秀</option>
+            <option value="4">⭐⭐⭐⭐ 良好</option>
+            <option value="3" selected>⭐⭐⭐ 普通</option>
+            <option value="2">⭐⭐ 待改善</option>
+            <option value="1">⭐ 不推薦</option>
+          </select>
+        </div>
+        <div class="fg"><label>日薪/報價方式</label><input class="fc" id="wm-rate" placeholder="例：日薪3500 or 坪計"></div>
+      </div>
+      <div class="fg"><label>備註（施工習慣、注意事項）</label><textarea class="fc" id="wm-note" rows="2"></textarea></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeWM()">取消</button>
+      <button class="btn btn-primary" onclick="saveWorker()">儲存工班</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log Modal -->
+<div class="mbg" id="log-modal">
+  <div class="modal">
+    <div class="mhd"><h3>新增工地日誌</h3><button class="mcl" onclick="closeLogM()">✕</button></div>
+    <div class="mbod">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>日期</label><input class="fc" id="lm-date" type="date"></div>
+        <div class="fg"><label>今日工種</label>
+          <select class="fc" id="lm-cat"><option value="">請選擇</option></select>
+        </div>
+      </div>
+      <div class="fg"><label>今日工班（師傅）</label>
+        <div id="lm-workers-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;"></div>
+      </div>
+      <div class="fg"><label>今日完成內容</label><textarea class="fc" id="lm-done" rows="2" placeholder="例：天花板骨架完成，約80%進度"></textarea></div>
+      <div class="fg"><label>問題 / 待處理事項</label><textarea class="fc" id="lm-issue" rows="2" placeholder="例：廁所防水需補做，明日請師傅確認"></textarea></div>
+      <div class="fg"><label>現場照片（Google Drive 分享連結，每行一個）</label>
+        <textarea class="fc" id="lm-photos" rows="3" placeholder="貼上 Google Drive 照片分享連結&#10;例：https://drive.google.com/file/d/xxx/view"></textarea>
+        <div style="font-size:11px;color:var(--ink-l);margin-top:4px;letter-spacing:1px;">📌 Google Drive → 右鍵照片 → 取得連結 → 複製連結貼上</div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeLogM()">取消</button>
+      <button class="btn btn-primary" onclick="saveLog()">儲存日誌</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Edit Modal -->
+<div class="mbg" id="task-modal">
+  <div class="modal">
+    <div class="mhd"><h3 id="tm-title">編輯工序</h3><button class="mcl" onclick="closeTM()">✕</button></div>
+    <div class="mbod">
+      <div class="fg"><label>工種</label><input class="fc" id="tm-cat" readonly style="background:var(--paper-w);color:var(--ink-l)"></div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>計畫開始</label><input class="fc" id="tm-start" type="date"></div>
+        <div class="fg"><label>計畫完工</label><input class="fc" id="tm-end" type="date"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg">
+          <label>完成進度</label>
+          <select class="fc" id="tm-progress" onchange="onProgChange()">
+            <option value="0">0%　尚未開始</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%　進行一半</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%　已完成</option>
+          </select>
+          <div style="margin-top:6px;height:6px;background:var(--border-l);border-radius:3px;overflow:hidden;">
+            <div id="tm-prog-bar" style="height:100%;background:var(--sage-dk);border-radius:3px;transition:width .3s;width:0%;"></div>
+          </div>
+        </div>
+        <div class="fg"><label>狀態</label>
+          <select class="fc" id="tm-status">
+            <option value="pending">待施工</option>
+            <option value="active">施工中</option>
+            <option value="done">已完成</option>
+            <option value="delayed">延誤</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>負責工班</label>
+        <select class="fc" id="tm-worker"><option value="">未指定</option></select>
+      </div>
+      <div class="fg"><label>備註</label><textarea class="fc" id="tm-note" rows="2"></textarea></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeTM()">取消</button>
+      <button class="btn btn-primary" onclick="saveTask()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ════════════════════════════════════════
+// KEYS & CONSTANTS
+// ════════════════════════════════════════
+const KP='ds_pwd', KPR='ds_projects', KW='ds_workers';
+// Share clients & quotes with quotation system
+const KC='ds_clients', KQT='ds_quotes';
+
+const WORK_ORDER=[
+  {order:1,cat:'假設工程',icon:'🔧',color:'#8a9082'},
+  {order:2,cat:'拆除工程',icon:'🔨',color:'#b09080'},
+  {order:3,cat:'清運工程',icon:'🚛',color:'#7a7c7f'},
+  {order:4,cat:'結構工程',icon:'🏗️',color:'#5c6054'},
+  {order:5,cat:'水電工程',icon:'⚡',color:'#5c7a6e'},
+  {order:6,cat:'空調工程',icon:'❄️',color:'#4a6e8a'},
+  {order:7,cat:'防水工程',icon:'💧',color:'#6e7a8a'},
+  {order:8,cat:'泥作工程',icon:'🧱',color:'#8a7a6e'},
+  {order:9,cat:'鋁窗工程',icon:'🪟',color:'#6e8a7a'},
+  {order:10,cat:'石材工程',icon:'💎',color:'#7a8a6e'},
+  {order:11,cat:'木作工程',icon:'🪵',color:'#8a6e5c'},
+  {order:12,cat:'鐵件工程',icon:'⚙️',color:'#6a6e7a'},
+  {order:13,cat:'系統櫃',  icon:'🗄️',color:'#7a6e8a'},
+  {order:14,cat:'地板工程',icon:'🏠',color:'#6e8060'},
+  {order:15,cat:'弱電工程',icon:'📡',color:'#607080'},
+  {order:16,cat:'衛浴設備',icon:'🚿',color:'#80706a'},
+  {order:17,cat:'油漆工程',icon:'🖌️',color:'#6e7060'},
+  {order:18,cat:'玻璃工程',icon:'🔲',color:'#708878'},
+  {order:19,cat:'照明工程',icon:'💡',color:'#887860'},
+  {order:20,cat:'軟裝配置',icon:'🛋️',color:'#786880'},
+  {order:21,cat:'清潔工程',icon:'🧹',color:'#688878'},
+  {order:22,cat:'雜項工程',icon:'📋',color:'#807870'},
+];
+const TRADES=WORK_ORDER.map(w=>w.cat);
+
+const SAMPLE_WORKERS=[
+  {id:uid(),name:'王師傅',company:'王記木作工程',mob:'0912-111222',line:'wang_wood',trades:['木作工程','系統櫃'],rating:5,rate:'坪計',note:'細活好，需提前兩週預約'},
+  {id:uid(),name:'陳師傅',company:'',mob:'0923-333444',line:'',trades:['水電工程'],rating:4,rate:'日薪3500',note:''},
+  {id:uid(),name:'林師傅',company:'林泥作',mob:'0934-555666',line:'',trades:['泥作工程','防水工程'],rating:4,rate:'坪計',note:'防水技術紮實'},
+  {id:uid(),name:'黃師傅',company:'',mob:'0945-777888',line:'',trades:['油漆工程'],rating:5,rate:'坪計',note:''},
+];
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let CUR_PROJECT=null, CUR_TASK_IDX=null, EID_WORKER=null, selColorVal='#8a9082';
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function gP(){return JSON.parse(localStorage.getItem(KPR)||'[]')}
+function sP(d){localStorage.setItem(KPR,JSON.stringify(d))}
+function gW(){return JSON.parse(localStorage.getItem(KW)||'null')||SAMPLE_WORKERS}
+function sW(d){localStorage.setItem(KW,JSON.stringify(d))}
+function gClients(){return JSON.parse(localStorage.getItem(KC)||'[]')}
+function gQuotes(){return JSON.parse(localStorage.getItem(KQT)||'[]')}
+function notify(m,t){const e=document.getElementById('notif');e.textContent=m;e.style.background=t==='err'?'#c0392b':t==='ok'?'#2e7d32':'#2b2926';e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2500)}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function fmtDate(s){if(!s)return'—';const d=new Date(s);return`${d.getMonth()+1}/${d.getDate()}`}
+function fmtDateFull(s){if(!s)return'—';const d=new Date(s);return`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/(1000*60*60*24))}
+function daysLeft(end){return daysBetween(todayStr(),end)}
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function catColor(cat){return WORK_ORDER.find(w=>w.cat===cat)?.color||'#8a9082'}
+function catIcon(cat){return WORK_ORDER.find(w=>w.cat===cat)?.icon||'📋'}
+function catOrder(cat){return WORK_ORDER.find(w=>w.cat===cat)?.order||99}
+function projProgress(proj){
+  const tasks=(proj.tasks||[]).filter(t=>t.startDate);
+  if(!tasks.length)return 0;
+  const done=tasks.filter(t=>t.status==='done').length;
+  return Math.round(done/tasks.length*100);
+}
+function projStatusBadge(s){const m={active:'b-green',planning:'b-gold',done:'b-stone',paused:'b-red'};const l={active:'進行中',planning:'規劃中',done:'已完工',paused:'暫停'};return`<span class="badge ${m[s]||'b-stone'}">${l[s]||s}</span>`}
+function taskStatusColor(s){return{pending:'var(--stone)',active:'var(--sage-dk)',done:'var(--green)',delayed:'var(--red)'}[s]||'var(--stone)'}
+function starsHTML(n){return'⭐'.repeat(n)+'☆'.repeat(5-n)}
+
+// ════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════
+async function h(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function doLogin(){
+  const v=document.getElementById('pwd').value;
+  const stored=localStorage.getItem(KP)||await h('0000');
+  if(await h(v)===stored){document.getElementById('lock').style.display='none';document.getElementById('app').classList.add('on');init()}
+  else{document.getElementById('lerr').textContent='密碼錯誤';document.getElementById('pwd').value='';setTimeout(()=>document.getElementById('lerr').textContent='',2000)}
+}
+document.getElementById('pwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+function logout(){document.getElementById('app').classList.remove('on');document.getElementById('lock').style.display='flex';document.getElementById('pwd').value=''}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+function init(){
+  const now=new Date();
+  document.getElementById('today-label').textContent=now.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  document.getElementById('today-date-str').textContent=now.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'long'});
+  populateQuoteSel();populateWorkerTrades();
+  rDash();rWorkers();rebWorkerSelects();
+}
+
+function go(id){
+  ['dash','projects','workers'].forEach(p=>document.getElementById('p-'+p).classList.toggle('on',p===id));
+  document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('on',['dash','projects','workers'][i]===id));
+  if(id==='projects')rProjects();
+  if(id==='workers')rWorkers();
+}
+
+// ════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════
+function rDash(){
+  const projs=gP();
+  const active=projs.filter(p=>p.status==='active');
+  const planning=projs.filter(p=>p.status==='planning');
+  const done=projs.filter(p=>p.status==='done');
+
+  // Stats
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-box"><div class="stat-num">${active.length}</div><div class="stat-lbl">進行中工地</div></div>
+    <div class="stat-box"><div class="stat-num">${planning.length}</div><div class="stat-lbl">規劃中</div></div>
+    <div class="stat-box"><div class="stat-num">${done.length}</div><div class="stat-lbl">已完工</div></div>
+    <div class="stat-box"><div class="stat-num">${gW().length}</div><div class="stat-lbl">工班人數</div></div>`;
+
+  // Today's active tasks
+  const today=todayStr();
+  const todayItems=[];
+  active.forEach(proj=>{
+    (proj.tasks||[]).forEach(t=>{
+      if(t.startDate&&t.endDate&&t.startDate<=today&&t.endDate>=today&&t.status!=='done'){
+        todayItems.push({proj,task:t});
+      }
+    });
+  });
+  const tiEl=document.getElementById('today-items');
+  if(!todayItems.length){tiEl.innerHTML=`<div style="color:var(--ink-l);font-size:13px;padding:12px 0;letter-spacing:1px;">今日無排定工序</div>`}
+  else tiEl.innerHTML=todayItems.map(({proj,task})=>{
+    const w=task.workerId?gW().find(x=>x.id===task.workerId):null;
+    return`<div class="today-item" style="border-left:3px solid ${proj.color||catColor(task.cat)};">
+      <div class="dot" style="background:${catColor(task.cat)};"></div>
+      <div class="info">
+        <div class="proj">${catIcon(task.cat)} ${task.cat} <span style="color:var(--ink-l);font-size:12px;">｜ ${proj.name}</span></div>
+        <div class="detail">${proj.ownerName} · ${proj.address||''}</div>
+      </div>
+      ${w?`<div class="worker">${w.name} ${w.mob}</div>`:''}
+    </div>`;
+  }).join('');
+
+  // Project cards
+  const grid=document.getElementById('dash-grid');
+  if(!active.length&&!planning.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-l);font-size:13px;letter-spacing:1px;">尚無進行中的工程專案<br><br><button class="btn btn-accent" onclick="openNewProject()">＋ 新增第一個專案</button></div>`;return}
+  grid.innerHTML=[...active,...planning].map(proj=>{
+    const pct=projProgress(proj);
+    const dl=proj.endDate?daysLeft(proj.endDate):null;
+    const dlText=dl===null?'—':dl<0?`已超期 ${Math.abs(dl)} 天`:dl===0?'今日完工':dl<=7?`剩 ${dl} 天 ⚠️`:`剩 ${dl} 天`;
+    const dlColor=dl!==null&&dl<0?'var(--red)':dl!==null&&dl<=7?'var(--gold)':'var(--ink)';
+    return`<div class="project-card" onclick="openDetail('${proj.id}')">
+      <div class="pc-stripe" style="background:${proj.color||'#8a9082'};"></div>
+      <div class="pc-body">
+        <div class="pc-top">
+          <div>
+            <div class="pc-name">${proj.name}</div>
+            <div class="pc-client">${proj.ownerName||'—'}</div>
+          </div>
+          ${projStatusBadge(proj.status)}
+        </div>
+        <div class="pc-progress-wrap">
+          <div class="pc-progress-label"><span>施工進度</span><span>${pct}%</span></div>
+          <div class="pc-bar"><div class="pc-bar-fill" style="width:${pct}%;background:${proj.color||'#8a9082'};"></div></div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-meta-item">開工<strong>${fmtDateFull(proj.startDate)}</strong></div>
+          <div class="pc-meta-item">完工<strong>${fmtDateFull(proj.endDate)}</strong></div>
+          <div class="pc-meta-item">剩餘<strong style="color:${dlColor};">${dlText}</strong></div>
+          <div class="pc-meta-item">坪數<strong>${proj.size||'—'} 坪</strong></div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <span style="font-size:12px;color:var(--ink-l);">${proj.address||''}</span>
+        <button class="btn btn-sm btn-accent" onclick="event.stopPropagation();openDetail('${proj.id}')">甘特圖</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// PROJECTS LIST
+// ════════════════════════════════════════
+function rProjects(){
+  const filter=document.getElementById('proj-filter').value;
+  let projs=gP();if(filter)projs=projs.filter(p=>p.status===filter);
+  projs.sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
+  const el=document.getElementById('projects-list');
+  if(!projs.length){el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--ink-l);">尚無符合的專案</div>`;return}
+  el.innerHTML=projs.map(proj=>{
+    const pct=projProgress(proj);
+    return`<div class="card" style="cursor:pointer;" onclick="openDetail('${proj.id}')">
+      <div style="display:flex;align-items:center;gap:0;">
+        <div style="width:6px;align-self:stretch;background:${proj.color||'#8a9082'};flex-shrink:0;"></div>
+        <div style="padding:14px 16px;flex:1;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-family:var(--serif);font-size:15px;letter-spacing:2px;">${proj.name}</div>
+            <div style="font-size:12px;color:var(--ink-l);margin-top:2px;">${proj.ownerName||''} ${proj.ownerPhone?'· '+proj.ownerPhone:''}</div>
+          </div>
+          <div style="min-width:120px;">
+            <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:4px;">進度 ${pct}%</div>
+            <div class="pc-bar" style="width:120px;"><div class="pc-bar-fill" style="width:${pct}%;background:${proj.color||'#8a9082'};"></div></div>
+          </div>
+          <div style="font-size:12px;color:var(--ink-l);min-width:100px;">${fmtDateFull(proj.startDate)} ～<br>${fmtDateFull(proj.endDate)}</div>
+          ${projStatusBadge(proj.status)}
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();openEditProject('${proj.id}')">編輯</button>
+            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delProject('${proj.id}')">刪除</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// PROJECT DETAIL + GANTT
+// ════════════════════════════════════════
+function openDetail(id){
+  CUR_PROJECT=id;
+  const proj=gP().find(p=>p.id===id);if(!proj)return;
+  document.getElementById('detail-nav-title').textContent=proj.name;
+  renderDetail(proj);
+  document.getElementById('detail-panel').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeDetail(){
+  document.getElementById('detail-panel').style.display='none';
+  document.body.style.overflow='';
+  CUR_PROJECT=null;
+  rDash();
+}
+
+function renderDetail(proj){
+  const pct=projProgress(proj);
+  const tasks=proj.tasks||[];
+  const logs=proj.logs||[];
+  // Payment
+  const pays=parsePay(proj.payStr||'');
+  const paidSum=pays.filter(p=>p.paid).reduce((s,p)=>s+p.amount,0);
+  const totalBudget=proj.budget||0;
+
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-layout">
+      <div>
+        <!-- GANTT -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>甘特圖 — 工程進度</h3>
+            <div style="display:flex;gap:6px;font-size:11px;color:var(--ink-l);align-items:center;">
+              <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--sage-dk);display:inline-block;"></span>施工中</span>
+              <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block;"></span>完成</span>
+              <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);display:inline-block;"></span>延誤</span>
+            </div>
+          </div>
+          <div style="padding:0;" id="gantt-container">${buildGantt(proj)}</div>
+        </div>
+        <!-- LOGS -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>工地日誌</h3>
+            <button class="btn btn-sm btn-accent" onclick="openLogM()">＋ 新增</button>
+          </div>
+          <div>${logs.length?logs.slice().reverse().map((log,ri)=>{
+            const realIdx=logs.length-1-ri;
+            const photoLinks=log.photos||[];
+            // Convert Google Drive share link to preview-able embed
+            const photoHtml=photoLinks.map(url=>{
+              // Transform drive share URL to thumbnail
+              const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+              const fileId=m?m[1]:null;
+              const thumbUrl=fileId?`https://drive.google.com/thumbnail?id=${fileId}&sz=w200`:null;
+              return thumbUrl
+                ?`<a href="${url}" target="_blank" style="display:inline-block;margin:3px;"><img src="${thumbUrl}" style="width:80px;height:60px;object-fit:cover;border-radius:3px;border:1px solid var(--border-l);" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:var(--ink-l);\\'>📷 照片連結</span>';"></a>`
+                :`<a href="${url}" target="_blank" style="font-size:11px;color:var(--sage-dk);display:inline-block;margin:3px;">📷 查看照片</a>`;
+            }).join('');
+            const hasContent=log.done||log.issue||photoLinks.length;
+            return`<div style="border-bottom:1px solid var(--border-l);">
+              <div onclick="toggleLog('log-${realIdx}')" style="display:flex;align-items:flex-start;padding:12px 14px;cursor:pointer;gap:10px;" onmouseover="this.style.background='var(--paper-w)'" onmouseout="this.style.background=''">
+                <div style="min-width:70px;font-size:11px;color:var(--ink-l);padding-top:2px;">${fmtDateFull(log.date)}</div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;color:var(--ink);font-weight:400;">${catIcon(log.cat)||'📋'} ${log.cat||'工地紀錄'}</div>
+                  ${log.workerName?`<div style="font-size:12px;color:var(--ink-l);margin-top:2px;">👷 ${log.workerName}</div>`:''}
+                  ${log.done?`<div style="font-size:12px;color:var(--green);margin-top:2px;">✅ ${log.done.length>40?log.done.slice(0,40)+'…':log.done}</div>`:''}
+                  ${log.issue?`<div style="font-size:12px;color:var(--red);margin-top:2px;">⚠️ ${log.issue.length>40?log.issue.slice(0,40)+'…':log.issue}</div>`:''}
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                  ${hasContent?`<span style="font-size:10px;color:var(--ink-f);">▼</span>`:''}
+                  <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();editLog(${realIdx})" style="padding:2px 8px;font-size:11px;">編輯</button>
+                  <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteLog(${realIdx})" style="padding:2px 8px;font-size:11px;">刪除</button>
+                </div>
+              </div>
+              <div id="log-${realIdx}" style="display:none;padding:0 14px 14px 94px;">
+                ${log.done?`<div style="padding:8px 12px;background:var(--green-pa);border-radius:var(--r);margin-bottom:6px;font-size:13px;color:var(--green);line-height:1.7;">✅ 完成內容<br>${log.done}</div>`:''}
+                ${log.issue?`<div style="padding:8px 12px;background:var(--red-pa);border-radius:var(--r);margin-bottom:6px;font-size:13px;color:var(--red);line-height:1.7;">⚠️ 問題/待處理<br>${log.issue}</div>`:''}
+                ${photoHtml?`<div style="margin-top:4px;">${photoHtml}</div>`:''}
+                ${!hasContent?`<div style="font-size:12px;color:var(--ink-f);">（無詳細記錄）</div>`:''}
+              </div>
+            </div>`;
+          }).join(''):`<div style="text-align:center;padding:24px;color:var(--ink-l);font-size:13px;">尚無日誌記錄</div>`}
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="detail-sidebar">
+        <!-- Project info -->
+        <div class="card">
+          <div class="card-hd"><h3>專案資訊</h3><button class="btn btn-sm btn-secondary" onclick="openEditProject('${proj.id}')">編輯</button></div>
+          <div style="padding:4px 14px;">
+            <div class="info-row"><span class="lbl">業主</span><span class="val">${proj.ownerName||'—'} ${proj.ownerPhone?'<br><a href="tel:'+proj.ownerPhone+'" style="color:var(--sage-dk);font-size:12px;">'+proj.ownerPhone+'</a>':''}</span></div>
+            <div class="info-row"><span class="lbl">地址</span><span class="val" style="font-size:12px;">${proj.address||'—'}</span></div>
+            <div class="info-row"><span class="lbl">坪數</span><span class="val">${proj.size||'—'} 坪</span></div>
+            <div class="info-row"><span class="lbl">開工</span><span class="val">${fmtDateFull(proj.startDate)}</span></div>
+            <div class="info-row"><span class="lbl">預計完工</span><span class="val">${fmtDateFull(proj.endDate)}</span></div>
+            <div class="info-row"><span class="lbl">整體進度</span><span class="val" style="color:var(--sage-dk);font-family:var(--serif);">${pct}%</span></div>
+            <div class="info-row"><span class="lbl">狀態</span><span class="val">${projStatusBadge(proj.status)}</span></div>
+          </div>
+        </div>
+
+        <!-- Payment -->
+        ${totalBudget>0?`<div class="card">
+          <div class="card-hd"><h3>付款進度</h3></div>
+          <div>
+            ${pays.map((p,i)=>`<div class="pay-row">
+              <div>
+                <div style="font-size:13px;color:var(--ink);">${p.label}</div>
+                <div style="font-size:12px;color:var(--ink-l);">$ ${Math.round(totalBudget*p.pct/100).toLocaleString('zh-TW')} （${p.pct}%）</div>
+              </div>
+              <div class="pay-check ${p.paid?'done':''}" onclick="togglePay('${proj.id}',${i})">${p.paid?'✓':''}</div>
+            </div>`).join('')}
+            <div style="padding:10px 14px;font-size:12px;color:var(--ink-l);border-top:1px solid var(--border-l);">
+              已收：<strong style="color:var(--green);">$ ${Math.round(paidSum).toLocaleString('zh-TW')}</strong> ／ 合約：$ ${Math.round(totalBudget).toLocaleString('zh-TW')}
+            </div>
+          </div>
+        </div>`:''}
+
+        ${proj.note?`<div class="card"><div class="card-hd"><h3>備註</h3></div><div style="padding:12px 14px;font-size:13px;color:var(--ink-m);line-height:1.8;">${proj.note}</div></div>`:''}
+      </div>
+    </div>`;
+}
+
+// ── GANTT BUILD ──
+const LABEL_W=160;
+const DAY_W=40;
+
+function buildGantt(proj){
+  const allTasks=(proj.tasks||[]).slice().sort((a,b)=>catOrder(a.cat)-catOrder(b.cat));
+  if(!allTasks.length)return'<div style="text-align:center;padding:24px;color:var(--ink-l);font-size:13px;">請先在「編輯專案」勾選工程工序</div>';
+  const datedTasks=allTasks.filter(t=>t.startDate&&t.endDate);
+  const today=todayStr();
+  if(!datedTasks.length){
+    let listRows='';
+    allTasks.forEach((task,idx)=>{
+      const wo=WORK_ORDER.find(w=>w.cat===task.cat);
+      listRows+='<div onclick="openTaskM('+idx+')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-l);cursor:pointer;" onmouseover="this.style.background=\'var(--sage-pa)\'" onmouseout="this.style.background=\'\'">'
+        +'<div style="width:22px;height:22px;border-radius:50%;background:'+( wo?.color||'#8a9082')+';display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;">'+( wo?.order||'?')+'</div>'
+        +'<span style="font-size:13px;">'+catIcon(task.cat)+' '+task.cat+'</span>'
+        +'<span style="font-size:11px;color:var(--sage-dk);margin-left:auto;">點擊設定日期 →</span></div>';
+    });
+    return'<div style="border:1px solid var(--border-l);border-radius:var(--r);overflow:hidden;">'
+      +'<div style="padding:10px 16px;background:var(--paper-w);font-size:11px;color:var(--ink-l);">共 '+allTasks.length+' 個工種，點擊各工種設定施工日期</div>'
+      +listRows+'</div>';
+  }
+  const dates=datedTasks.flatMap(t=>[t.startDate,t.endDate]);
+  const minDate=dates.reduce((a,b)=>a<b?a:b);
+  const maxDate=dates.reduce((a,b)=>a>b?a:b);
+  const totalDays=Math.max(daysBetween(minDate,maxDate)+2,7);
+  const totalW=totalDays*DAY_W;
+  let dateHeaders='';
+  for(let i=0;i<totalDays;i++){
+    const d=addDays(minDate,i);const dd=new Date(d);
+    const isToday=d===today;const isWE=dd.getDay()===0||dd.getDay()===6;
+    const bg=isToday?'background:var(--sage-pa);color:var(--sage-dk);font-weight:600;':isWE?'background:#f4f4f4;color:var(--ink-f);':'';
+    dateHeaders+='<div style="width:'+DAY_W+'px;flex-shrink:0;text-align:center;padding:5px 0;font-size:10px;color:var(--ink-l);border-right:1px solid var(--border-l);line-height:1.4;'+bg+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br><span style="font-size:8px;">'+['日','一','二','三','四','五','六'][dd.getDay()]+'</span></div>';
+  }
+  let cellBgs='';
+  for(let i=0;i<totalDays;i++){
+    const d=addDays(minDate,i);const dd=new Date(d);
+    const isToday=d===today;const isWE=dd.getDay()===0||dd.getDay()===6;
+    const bg=isToday?'background:rgba(192,196,182,.18);':isWE?'background:#f8f8f8;':'';
+    cellBgs+='<div style="width:'+DAY_W+'px;flex-shrink:0;height:100%;border-right:1px solid var(--border-l);'+bg+'"></div>';
+  }
+  let rows='';
+  allTasks.forEach((task,idx)=>{
+    const wo=WORK_ORDER.find(w=>w.cat===task.cat);
+    const sColor=taskStatusColor(task.status||'pending');
+    const worker=task.workerId?gW().find(w=>w.id===task.workerId):null;
+    const hasDate=!!(task.startDate&&task.endDate);
+    let barHtml='';
+    if(hasDate){
+      const leftDays=daysBetween(minDate,task.startDate);
+      const spanDays=daysBetween(task.startDate,task.endDate)+1;
+      const leftPx=leftDays*DAY_W;
+      const widthPx=Math.max(spanDays*DAY_W-2,DAY_W-2);
+      const prog=task.progress||0;
+      const isDelayed=task.endDate<today&&task.status!=='done';
+      const isActive=task.startDate<=today&&task.endDate>=today&&task.status!=='done';
+      const barColor=wo?.color||'#8a9082';
+      const outline=isDelayed?'outline:2px solid #c0392b;outline-offset:1px;':'';
+      const shadow=isActive?'box-shadow:0 2px 8px rgba(0,0,0,.2);':'';
+      const opacity=task.status==='done'?'opacity:.55;':'';
+      const lbl=(task.status==='done'?'✓ ':isDelayed?'⚠ ':'')+(prog>0?prog+'% ':'')+( worker?worker.name:task.cat);
+      barHtml='<div onclick="openTaskM('+idx+')" title="'+task.cat+'：'+fmtDate(task.startDate)+'～'+fmtDate(task.endDate)+(worker?' ｜ '+worker.name:'')+'"'
+        +' style="position:absolute;left:'+leftPx+'px;width:'+widthPx+'px;top:6px;bottom:6px;border-radius:3px;background:'+barColor+';cursor:pointer;display:flex;align-items:center;padding:0 6px;overflow:hidden;z-index:2;'+outline+shadow+opacity+'">'
+        +'<div style="position:absolute;left:0;top:0;bottom:0;width:'+prog+'%;background:rgba(255,255,255,.22);border-radius:3px 0 0 3px;"></div>'
+        +'<span style="font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;">'+lbl+'</span></div>';
+    }
+    rows+='<div style="display:flex;border-bottom:1px solid var(--border-l);min-height:44px;">'
+      +'<div class="gantt-rl" onclick="openTaskM('+idx+')" style="background:'+( hasDate?'':' var(--paper-w)')+';width:'+LABEL_W+'px;">'
+      +'<div class="g-order" style="background:'+( wo?.color||'#8a9082')+';">'+( wo?.order||'?')+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div class="g-catname">'+catIcon(task.cat)+' '+task.cat+'</div>'
+      +(worker?'<div style="font-size:10px;color:var(--sage-dk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+worker.name+'</div>':'')
+      +(!hasDate?'<div style="font-size:9px;color:var(--ink-f);">未設定 →</div>':'')
+      +'</div><div class="g-sdot" style="background:'+sColor+';"></div></div>'
+      +'<div style="flex:1;position:relative;min-height:44px;overflow:hidden;">'
+      +'<div style="display:flex;position:absolute;inset:0;width:'+totalW+'px;">'+cellBgs+'</div>'
+      +barHtml+'</div></div>';
+  });
+  return'<div style="overflow-x:auto;border:1px solid var(--border-l);border-radius:var(--rl);">'
+    +'<div style="min-width:'+( LABEL_W+totalW)+'px;">'
+    +'<div style="display:flex;border-bottom:2px solid var(--border);background:var(--paper-w);">'
+    +'<div style="width:'+LABEL_W+'px;flex-shrink:0;padding:8px 12px;font-size:10px;color:var(--ink-l);border-right:1px solid var(--border-l);">工種（點擊設定）</div>'
+    +'<div style="display:flex;width:'+totalW+'px;flex-shrink:0;">'+dateHeaders+'</div></div>'
+    +rows+'</div></div>';
+}
+
+function buildGanttExportHTML(proj){
+  const now=new Date();
+  const nowStr=now.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'})+' '+now.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  const pct=projProgress(proj);
+  return'<div style="font-family:sans-serif;background:#fff;padding:24px;min-width:800px;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #2b2926;">'
+    +'<div>'
+    +'<div style="font-size:20px;color:#2b2926;letter-spacing:3px;margin-bottom:4px;">'+proj.name+'</div>'
+    +'<div style="font-size:12px;color:#8a8780;">'+( proj.ownerName||'')+( proj.address?' · '+proj.address:'')+'</div>'
+    +'<div style="font-size:12px;color:#8a8780;margin-top:2px;">開工：'+fmtDateFull(proj.startDate)+'　預計完工：'+fmtDateFull(proj.endDate)+'　整體進度：'+pct+'%</div>'
+    +'</div>'
+    +'<div style="text-align:right;font-size:10px;color:#aeafb1;">'
+    +'<div>得森室內裝修設計有限公司</div>'
+    +'<div style="margin-top:2px;">列印時間：'+nowStr+'</div>'
+    +'</div></div>'
+    +buildGantt(proj)
+    +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eae8e2;display:flex;justify-content:space-between;font-size:10px;color:#aeafb1;">'
+    +'<span>ERIC KUO SPACE DESIGN</span><span>得森工程管理系統</span></div></div>';
+}
+
+
+
+// ── PAYMENT ──
+function parsePay(str){
+  if(!str)return[{label:'簽約款',pct:30,paid:false,amount:0},{label:'開工款',pct:30,paid:false,amount:0},{label:'完工款',pct:40,paid:false,amount:0}];
+  return str.split(',').map(s=>{const[label,pct]=s.split(':');return{label:label?.trim()||'款項',pct:parseFloat(pct)||33,paid:false,amount:0}});
+}
+function togglePay(pid,idx){
+  const projs=gP();const proj=projs.find(p=>p.id===pid);if(!proj)return;
+  const pays=parsePay(proj.payStr||'');
+  // Store paid state separately
+  if(!proj.payStatus)proj.payStatus=[];
+  proj.payStatus[idx]=!proj.payStatus[idx];
+  projs.splice(projs.findIndex(p=>p.id===pid),1,proj);sP(projs);
+  renderDetail(proj);notify(proj.payStatus[idx]?'已標記收款':'已取消收款','ok');
+}
+
+// ════════════════════════════════════════
+// PROJECT MODAL
+// ════════════════════════════════════════
+function populateQuoteSel(){
+  const quotes=gQuotes();
+  const sel=document.getElementById('pm-quote');
+  if(!sel)return;
+  sel.innerHTML='<option value="">不連結報價單</option>';
+  quotes.filter(q=>q.status==='approved'||q.status==='sent').forEach(q=>{
+    const o=document.createElement('option');o.value=q.id;o.textContent=`${q.no} — ${q.clientName||''} ${q.project?'· '+q.project:''}`;sel.appendChild(o);
+  });
+}
+function buildCatChecks(selected=[]){
+  return WORK_ORDER.map(w=>`
+    <label style="display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--border-l);border-radius:var(--r);cursor:pointer;font-size:12px;color:var(--ink-m);">
+      <input type="checkbox" value="${w.cat}" ${selected.includes(w.cat)?'checked':''} style="accent-color:var(--sage-dk);">
+      <span style="width:16px;">${w.icon}</span> ${w.cat}
+    </label>`).join('');
+}
+function openNewProject(){
+  document.getElementById('pm-title').textContent='新增工程專案';
+  ['pm-name','pm-owner','pm-phone','pm-addr','pm-note','pm-pay'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pm-size').value='';document.getElementById('pm-budget').value='';
+  document.getElementById('pm-start').value=todayStr();document.getElementById('pm-end').value='';
+  document.getElementById('pm-status').value='planning';
+  document.getElementById('pm-urgent').value='normal';
+  document.getElementById('pm-cats').innerHTML=buildCatChecks([]);
+  selColorVal='#8a9082';
+  setTimeout(()=>highlightColor('#8a9082'),50);
+  populateQuoteSel();
+  delete document.getElementById('project-modal').dataset.editId;
+  document.getElementById('project-modal').classList.add('on');
+  document.getElementById('pm-quote').onchange=fillFromQuote;
+}
+function fillFromQuote(){
+  const qid=document.getElementById('pm-quote').value;if(!qid)return;
+  const q=gQuotes().find(x=>x.id===qid);if(!q)return;
+  if(q.clientName)document.getElementById('pm-owner').value=q.clientName;
+  if(q.clientPhone)document.getElementById('pm-phone').value=q.clientPhone;
+  if(q.project)document.getElementById('pm-name').value=q.project;
+  if(q.area)document.getElementById('pm-size').value=q.area;
+  if(q.total)document.getElementById('pm-budget').value=Math.round(q.total);
+  // Pre-check cats from quote lines
+  const cats=[...new Set((q.lines||[]).map(l=>l.cat))];
+  document.getElementById('pm-cats').innerHTML=buildCatChecks(cats);
+  notify('已從報價單帶入資訊','ok');
+}
+function openEditProject(id){
+  const proj=gP().find(p=>p.id===id);if(!proj)return;
+  document.getElementById('pm-title').textContent='編輯專案';
+  document.getElementById('pm-name').value=proj.name||'';
+  document.getElementById('pm-owner').value=proj.ownerName||'';
+  document.getElementById('pm-phone').value=proj.ownerPhone||'';
+  document.getElementById('pm-addr').value=proj.addressDetail||proj.address||'';
+  document.getElementById('pm-size').value=proj.size||'';
+  document.getElementById('pm-start').value=proj.startDate||'';
+  document.getElementById('pm-end').value=proj.endDate||'';
+  document.getElementById('pm-budget').value=proj.budget||'';
+  document.getElementById('pm-status').value=proj.status||'planning';
+  document.getElementById('pm-urgent').value=proj.urgent||'normal';
+  document.getElementById('pm-pay').value=proj.payStr||'';
+  document.getElementById('pm-note').value=proj.note||'';
+  document.getElementById('pm-addr').value=proj.address||'';
+  selColorVal=proj.color||'#8a9082';
+  const existingCats=(proj.tasks||[]).map(t=>t.cat);
+  document.getElementById('pm-cats').innerHTML=buildCatChecks(existingCats);
+  populateQuoteSel();document.getElementById('pm-quote').value=proj.quoteId||'';
+  // Highlight selected color using data-color attribute
+  highlightColor(selColorVal);
+  document.getElementById('project-modal').classList.add('on');
+  document.getElementById('project-modal').dataset.editId=id;
+}
+function closePM(){document.getElementById('project-modal').classList.remove('on')}
+function onProgChange(){
+  const v=parseInt(document.getElementById('tm-progress').value)||0;
+  const bar=document.getElementById('tm-prog-bar');
+  if(bar)bar.style.width=v+'%';
+  // Auto-set status when 100%
+  const stSel=document.getElementById('tm-status');
+  if(v===100&&stSel)stSel.value='done';
+  else if(v>0&&v<100&&stSel&&stSel.value==='pending')stSel.value='active';
+}
+function setProgVal(v){
+  const sel=document.getElementById('tm-progress');
+  if(sel)sel.value=v;
+  const bar=document.getElementById('tm-prog-bar');
+  if(bar)bar.style.width=v+'%';
+}
+function highlightColor(c){
+  document.querySelectorAll('#color-picker > div').forEach(d=>{
+    const match=d.getAttribute('data-color')===c;
+    d.style.borderColor=match?'var(--ink)':'transparent';
+    d.style.transform=match?'scale(1.25)':'scale(1)';
+    d.style.outline=match?'2px solid white':'none';
+    d.style.outlineOffset='-5px';
+  });
+  const chosen=document.querySelector('#color-picker > div[data-color="'+c+'"]');
+  const nameEl=document.getElementById('color-chosen-name');
+  if(nameEl&&chosen)nameEl.textContent=chosen.getAttribute('title')||c;
+}
+function selColor(el){
+  const c=el.getAttribute('data-color');
+  selColorVal=c;
+  highlightColor(c);
+}
+function saveProject(){
+  const name=document.getElementById('pm-name').value.trim();if(!name){notify('請填寫專案名稱','err');return}
+  const editId=document.getElementById('project-modal').dataset.editId;
+  const projs=gP();
+  const selCats=[...document.querySelectorAll('#pm-cats input:checked')].map(cb=>cb.value);
+  const existingProj=editId?projs.find(p=>p.id===editId):null;
+
+  // Build tasks list: keep existing tasks, add new cats, don't delete existing
+  let tasks=existingProj?.tasks||[];
+  selCats.forEach(cat=>{if(!tasks.find(t=>t.cat===cat)){tasks.push({cat,startDate:'',endDate:'',status:'pending',progress:0,workerId:'',note:''})}});
+
+  const address=document.getElementById('pm-addr').value;
+  const proj={
+    id:editId||uid(), name,
+    ownerName:document.getElementById('pm-owner').value,
+    ownerPhone:document.getElementById('pm-phone').value,
+    address,
+    size:document.getElementById('pm-size').value,
+    startDate:document.getElementById('pm-start').value,
+    endDate:document.getElementById('pm-end').value,
+    budget:parseFloat(document.getElementById('pm-budget').value)||0,
+    status:document.getElementById('pm-status').value,
+    urgent:document.getElementById('pm-urgent').value,
+    payStr:document.getElementById('pm-pay').value||'簽約款:30,開工款:30,完工款:40',
+    payStatus:existingProj?.payStatus||[],
+    note:document.getElementById('pm-note').value,
+    color:selColorVal,quoteId:document.getElementById('pm-quote').value,
+    tasks, logs:existingProj?.logs||[],
+    createdAt:existingProj?.createdAt||todayStr()
+  };
+  if(editId){const i=projs.findIndex(p=>p.id===editId);projs.splice(i,1,proj)}else projs.push(proj);
+  sP(projs);
+  delete document.getElementById('project-modal').dataset.editId;
+  closePM();rDash();rProjects();
+  // If detail panel is open for this project, re-render it
+  if(CUR_PROJECT===proj.id){
+    renderDetail(proj);
+    document.getElementById('detail-nav-title').textContent=proj.name;
+  }
+  notify(editId?'專案已更新':'專案已建立','ok');
+}
+function delProject(id){
+  if(!confirm('確定刪除此專案？'))return;
+  sP(gP().filter(p=>p.id!==id));rDash();rProjects();notify('已刪除','ok');
+}
+
+// ════════════════════════════════════════
+// TASK MODAL
+// ════════════════════════════════════════
+function openTaskM(idx){
+  const proj=gP().find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  CUR_TASK_IDX=idx;const task=proj.tasks[idx];
+  document.getElementById('tm-title').textContent='編輯工序：'+task.cat;
+  document.getElementById('tm-cat').value=task.cat;
+  document.getElementById('tm-start').value=task.startDate||'';
+  document.getElementById('tm-end').value=task.endDate||'';
+  setProgVal(task.progress||0);
+  document.getElementById('tm-status').value=task.status||'pending';
+  document.getElementById('tm-note').value=task.note||'';
+  // Worker sel
+  const wsel=document.getElementById('tm-worker');
+  wsel.innerHTML='<option value="">未指定工班</option>';
+  gW().forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=w.name+' ('+w.trades.slice(0,2).join('、')+')';wsel.appendChild(o)});
+  wsel.value=task.workerId||'';
+  document.getElementById('task-modal').classList.add('on');
+}
+function closeTM(){document.getElementById('task-modal').classList.remove('on')}
+function saveTask(){
+  const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  const task=proj.tasks[CUR_TASK_IDX];
+  task.startDate=document.getElementById('tm-start').value;
+  task.endDate=document.getElementById('tm-end').value;
+  task.progress=parseInt(document.getElementById('tm-progress').value)||0;
+  task.status=document.getElementById('tm-status').value;
+  task.workerId=document.getElementById('tm-worker').value;
+  task.note=document.getElementById('tm-note').value;
+  if(task.status==='done')task.progress=100;
+  sP(projs);closeTM();
+  renderDetail(proj);notify('工序已更新','ok');
+}
+
+// ════════════════════════════════════════
+// LOG MODAL
+// ════════════════════════════════════════
+let EDITING_LOG_IDX=null;
+
+function openLogM(editIdx){
+  const proj=gP().find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  EDITING_LOG_IDX=(editIdx!==undefined)?editIdx:null;
+  // Modal title
+  document.querySelector('#log-modal .mhd h3').textContent=EDITING_LOG_IDX!==null?'編輯工地日誌':'新增工地日誌';
+  // Fill cats
+  const lmcat=document.getElementById('lm-cat');
+  lmcat.innerHTML='<option value="">選擇今日工種</option>';
+  (proj.tasks||[]).forEach(t=>{const o=document.createElement('option');o.value=t.cat;o.textContent=catIcon(t.cat)+' '+t.cat;lmcat.appendChild(o)});
+  // Workers checkboxes
+  const wlist=document.getElementById('lm-workers-list');
+  wlist.innerHTML=gW().map(w=>`<label style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--border-l);border-radius:12px;cursor:pointer;font-size:12px;">
+    <input type="checkbox" value="${w.id}" style="accent-color:var(--sage-dk);">
+    ${w.name}
+  </label>`).join('');
+  // Fill fields
+  if(EDITING_LOG_IDX!==null){
+    const log=proj.logs[EDITING_LOG_IDX];
+    document.getElementById('lm-date').value=log.date||todayStr();
+    lmcat.value=log.cat||'';
+    document.getElementById('lm-done').value=log.done||'';
+    document.getElementById('lm-issue').value=log.issue||'';
+    document.getElementById('lm-photos').value=(log.photos||[]).join('\n');
+    // Re-check workers
+    const workerNames=(log.workerName||'').split('、');
+    wlist.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      const w=gW().find(x=>x.id===cb.value);
+      if(w&&workerNames.includes(w.name))cb.checked=true;
+    });
+  } else {
+    document.getElementById('lm-date').value=todayStr();
+    ['lm-done','lm-issue'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('lm-photos').value='';
+  }
+  document.getElementById('log-modal').classList.add('on');
+}
+function toggleLog(id){
+  const el=document.getElementById(id);if(!el)return;
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  // Flip arrow
+  const arrow=el.previousElementSibling?.querySelector('span[style*="▼"],span[style*="▲"]');
+  if(arrow)arrow.textContent=isOpen?'▼':'▲';
+}
+function editLog(idx){openLogM(idx)}
+function deleteLog(idx){
+  if(!confirm('確定刪除此日誌記錄？'))return;
+  const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  proj.logs.splice(idx,1);
+  sP(projs);renderDetail(proj);notify('日誌已刪除','ok');
+}
+function closeLogM(){document.getElementById('log-modal').classList.remove('on');EDITING_LOG_IDX=null;}
+function saveLog(){
+  const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  const selWorkers=[...document.querySelectorAll('#lm-workers-list input:checked')].map(cb=>{const w=gW().find(x=>x.id===cb.value);return w?w.name:''}).filter(Boolean);
+  const photoLinks=document.getElementById('lm-photos').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const log={
+    id:(EDITING_LOG_IDX!==null?proj.logs[EDITING_LOG_IDX].id:null)||uid(),
+    date:document.getElementById('lm-date').value||todayStr(),
+    cat:document.getElementById('lm-cat').value,
+    done:document.getElementById('lm-done').value.trim(),
+    issue:document.getElementById('lm-issue').value.trim(),
+    workerName:selWorkers.join('、'),
+    photos:photoLinks,
+  };
+  if(!proj.logs)proj.logs=[];
+  if(EDITING_LOG_IDX!==null){proj.logs[EDITING_LOG_IDX]=log;}
+  else{proj.logs.push(log);}
+  sP(projs);closeLogM();renderDetail(proj);notify(EDITING_LOG_IDX!==null?'日誌已更新':'日誌已記錄','ok');
+}
+
+// ════════════════════════════════════════
+// WORKERS
+// ════════════════════════════════════════
+function populateWorkerTrades(){
+  const sel=document.getElementById('worker-trade');
+  TRADES.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o)});
+  // Worker modal
+  const wmt=document.getElementById('wm-trades');
+  wmt.innerHTML=WORK_ORDER.map(w=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:3px;">
+    <input type="checkbox" value="${w.cat}" style="accent-color:var(--sage-dk);">${w.icon} ${w.cat}</label>`).join('');
+}
+function rebWorkerSelects(){
+  // Used in task modal — already populated dynamically
+}
+function rWorkers(){
+  const q=(document.getElementById('worker-search').value||'').toLowerCase();
+  const trade=document.getElementById('worker-trade').value;
+  let workers=gW().filter(w=>(!trade||w.trades?.includes(trade))&&(!q||w.name.toLowerCase().includes(q)||(w.company||'').toLowerCase().includes(q)));
+  const grid=document.getElementById('worker-grid');
+  if(!workers.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--ink-l);">尚無符合工班</div>`;return}
+  grid.innerHTML=workers.map(w=>`
+    <div class="worker-card">
+      <div class="wc-top">
+        <div class="wc-avatar">${w.name.slice(0,1)}</div>
+        <div>
+          <div class="wc-name">${w.name}</div>
+          ${w.company?`<div class="wc-trade">${w.company}</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;">
+        ${(w.trades||[]).map(t=>`<span class="badge b-sage" style="font-size:10px;">${catIcon(t)} ${t}</span>`).join('')}
+      </div>
+      <div class="wc-info">
+        📱 <a href="tel:${w.mob}" style="color:var(--sage-dk);">${w.mob}</a>
+        ${w.line?'<br>LINE: '+w.line:''}
+        ${w.rate?'<br>💰 '+w.rate:''}
+        ${w.note?'<br><span style="color:var(--ink-l);">'+w.note+'</span>':''}
+      </div>
+      <div class="wc-footer">
+        <div class="wc-stars" style="font-size:13px;">${starsHTML(parseInt(w.rating)||3)}</div>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-sm btn-secondary" onclick="openWorkerM('${w.id}')">編輯</button>
+          <button class="btn btn-sm btn-danger" onclick="delWorker('${w.id}')">刪除</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function openWorkerM(id){
+  EID_WORKER=id||null;
+  document.getElementById('wm-title').textContent=id?'編輯工班':'新增工班';
+  if(id){
+    const w=gW().find(x=>x.id===id);if(!w)return;
+    document.getElementById('wm-name').value=w.name||'';document.getElementById('wm-company').value=w.company||'';
+    document.getElementById('wm-mob').value=w.mob||'';document.getElementById('wm-line').value=w.line||'';
+    document.getElementById('wm-rating').value=w.rating||3;document.getElementById('wm-rate').value=w.rate||'';
+    document.getElementById('wm-note').value=w.note||'';
+    document.querySelectorAll('#wm-trades input').forEach(cb=>{cb.checked=(w.trades||[]).includes(cb.value)});
+  } else {
+    ['wm-name','wm-company','wm-mob','wm-line','wm-rate','wm-note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('wm-rating').value=3;
+    document.querySelectorAll('#wm-trades input').forEach(cb=>cb.checked=false);
+  }
+  document.getElementById('worker-modal').classList.add('on');
+  setTimeout(()=>document.getElementById('wm-name').focus(),80);
+}
+function closeWM(){document.getElementById('worker-modal').classList.remove('on')}
+function saveWorker(){
+  const name=document.getElementById('wm-name').value.trim();const mob=document.getElementById('wm-mob').value.trim();
+  if(!name){notify('請填寫師傅姓名','err');return}
+  const trades=[...document.querySelectorAll('#wm-trades input:checked')].map(cb=>cb.value);
+  const w={id:EID_WORKER||uid(),name,company:document.getElementById('wm-company').value,
+    mob,line:document.getElementById('wm-line').value,trades,
+    rating:parseInt(document.getElementById('wm-rating').value),
+    rate:document.getElementById('wm-rate').value,note:document.getElementById('wm-note').value};
+  const workers=gW();
+  if(EID_WORKER){const i=workers.findIndex(x=>x.id===EID_WORKER);workers.splice(i,1,w)}else workers.push(w);
+  sW(workers);closeWM();rWorkers();notify(EID_WORKER?'已更新':'已新增','ok');
+}
+function delWorker(id){
+  if(!confirm('確定刪除？'))return;
+  sW(gW().filter(w=>w.id!==id));rWorkers();notify('已刪除','ok');
+}
+
+// ════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════
+async function exportGanttJPG(){
+  const proj=gP().find(p=>p.id===CUR_PROJECT);
+  if(!proj){notify('請先開啟專案','err');return}
+  notify('產生圖片中，請稍候…');
+  try{
+    // Build export wrapper with project info
+    let tmp=document.getElementById('_gantt_export_tmp');
+    if(!tmp){
+      tmp=document.createElement('div');
+      tmp.id='_gantt_export_tmp';
+      tmp.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;background:#fff;';
+      document.body.appendChild(tmp);
+    }
+    tmp.innerHTML=buildGanttExportHTML(proj);
+    await new Promise(r=>setTimeout(r,300));
+    const canvas=await html2canvas(tmp,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    const fname='甘特圖_'+(proj.name||'工程')+'.jpg';
+    const dataUrl=canvas.toDataURL('image/jpeg',0.92);
+    const a=document.createElement('a');
+    a.href=dataUrl;a.download=fname;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>document.body.removeChild(a),200);
+    notify('JPG 已下載','ok');
+  }catch(e){notify('匯出失敗：'+e.message,'err')}
+}
+async function exportProjectPDF(){
+  const content=document.getElementById('detail-content');
+  if(!content){notify('請先開啟專案','err');return}
+  notify('PDF 產生中，請稍候…');
+  try{
+    const canvas=await html2canvas(content,{scale:1.5,backgroundColor:'#faf9f6',useCORS:true,logging:false});
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    const ratio=canvas.width/canvas.height;const iw=pw,ih=iw/ratio;
+    if(ih<=ph){
+      pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,iw,ih);
+    }else{
+      let pos=0;
+      while(pos<canvas.height){
+        const slH=Math.min(canvas.height-pos,Math.round(canvas.width*ph/pw));
+        const sl=document.createElement('canvas');sl.width=canvas.width;sl.height=slH;
+        sl.getContext('2d').drawImage(canvas,0,pos,canvas.width,slH,0,0,canvas.width,slH);
+        if(pos>0)pdf.addPage();
+        pdf.addImage(sl.toDataURL('image/png'),'PNG',0,0,pw,slH*pw/canvas.width);
+        pos+=slH;
+      }
+    }
+    const proj=gP().find(p=>p.id===CUR_PROJECT);
+    const fname='工程報告_'+(proj?.name||'專案')+'.pdf';
+    pdf.save(fname);
+    notify('PDF 已下載','ok');
+  }catch(e){notify('匯出失敗：'+e.message,'err')}
+}
+</script>
+</body>
+</html>
