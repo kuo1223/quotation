@@ -853,65 +853,93 @@ async function pushAllToSheets(){
 function logout(){document.getElementById('app').classList.remove('on');document.getElementById('lock').style.display='flex';document.getElementById('pwd').value=''}
 
 // ════════════════════════════════════════
-// GOOGLE SHEETS SYNC
+// GOOGLE SHEETS SYNC v2 (JSONP)
 // ════════════════════════════════════════
-const KSU='ds_script_url'; // script url key
-
+const KSU='ds_script_url';
 function getScriptUrl(){return localStorage.getItem(KSU)||''}
+
+// JSONP fetch - bypasses CORS limitation
+function jsonpFetch(url){
+  return new Promise((resolve,reject)=>{
+    const cb='_gs_'+Date.now();
+    const script=document.createElement('script');
+    const timeout=setTimeout(()=>{
+      delete window[cb];document.body.removeChild(script);
+      reject(new Error('請求逾時'));
+    },15000);
+    window[cb]=function(data){
+      clearTimeout(timeout);
+      delete window[cb];
+      try{document.body.removeChild(script)}catch(e){}
+      resolve(data);
+    };
+    script.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    script.onerror=()=>{clearTimeout(timeout);delete window[cb];reject(new Error('網路錯誤'))};
+    document.body.appendChild(script);
+  });
+}
 
 async function syncToSheets(sheetName, rows){
   const url=getScriptUrl();if(!url)return;
   try{
-    await fetch(url+'?action=set&sheet='+sheetName+'&rows='+encodeURIComponent(JSON.stringify(rows)),{method:'GET',mode:'no-cors'});
+    const params=new URLSearchParams({action:'set',sheet:sheetName,rows:JSON.stringify(rows)});
+    // Use JSONP for write too
+    await jsonpFetch(url+'?'+params.toString());
   }catch(e){console.warn('Sheets sync failed:',e)}
 }
 
 async function syncFromSheets(sheetName){
   const url=getScriptUrl();if(!url)return null;
   try{
-    const r=await fetch(url+'?action=get&sheet='+sheetName);
-    const d=await r.json();
-    return d.data||null;
+    const data=await jsonpFetch(url+'?action=get&sheet='+sheetName);
+    if(data.ok&&data.data)return data.data;
+    return null;
   }catch(e){console.warn('Sheets fetch failed:',e);return null}
 }
 
-// Override sP and sC to also sync
-const _origSP=window.sP;
-function sP(d){
-  localStorage.setItem('ds_projects',JSON.stringify(d));
-  // Sync projects to sheets
-  if(getScriptUrl()){
-    const rows=d.map(p=>[p.id,p.name,p.ownerName||'',p.ownerPhone||'',p.address||'',p.startDate||'',p.endDate||'',p.status||'',p.budget||0,p.color||'',JSON.stringify(p)]);
-    syncToSheets('projects',rows);
-  }
-}
-
-function sSave(key,arr,sheetName,rowFn){
-  localStorage.setItem(key,JSON.stringify(arr));
-  if(getScriptUrl()){
-    const rows=arr.map(rowFn);
-    syncToSheets(sheetName,rows);
-  }
-}
-
 async function pullFromSheets(){
-  notify('從雲端載入資料…');
+  const url=getScriptUrl();
+  if(!url){notify('請先在設定頁填入 Script 網址','err');return}
+  notify('從雲端載入資料中…');
   try{
+    let loaded=0;
     // Pull clients
     const cData=await syncFromSheets('clients');
     if(cData&&cData.length>0){
-      const clients=cData.map(r=>JSON.parse(r[r.length-1]||'{}')).filter(c=>c.id);
-      if(clients.length)localStorage.setItem('ds_clients',JSON.stringify(clients));
+      const clients=cData.map(r=>{try{return JSON.parse(r[r.length-1])}catch{return null}}).filter(c=>c&&c.id);
+      if(clients.length){localStorage.setItem('ds_clients',JSON.stringify(clients));loaded+=clients.length;}
     }
     // Pull quotes
     const qData=await syncFromSheets('quotes');
     if(qData&&qData.length>0){
-      const quotes=qData.map(r=>JSON.parse(r[r.length-1]||'{}')).filter(q=>q.id);
-      if(quotes.length)localStorage.setItem('ds_quotes',JSON.stringify(quotes));
+      const quotes=qData.map(r=>{try{return JSON.parse(r[r.length-1])}catch{return null}}).filter(q=>q&&q.id);
+      if(quotes.length){localStorage.setItem('ds_quotes',JSON.stringify(quotes));loaded+=quotes.length;}
     }
-    notify('雲端資料載入完成','ok');
-    init();
+    notify('載入完成，共 '+loaded+' 筆資料','ok');
+    init();rDash();
   }catch(e){notify('載入失敗：'+e.message,'err')}
+}
+
+async function pushAllToSheets(){
+  const url=getScriptUrl();
+  if(!url){notify('請先設定 Script 網址','err');return}
+  notify('推送資料中…');
+  try{
+    const clients=gClients();
+    const quotes=gQuotes();
+    const cRows=clients.map(c=>[c.id,c.name||'',c.mob||'',c.type||'',c.addr||'',JSON.stringify(c)]);
+    const qRows=quotes.map(q=>[q.id,q.no||'',q.clientName||'',q.project||'',q.date||'',q.status||'',Math.round(q.total||0),JSON.stringify(q)]);
+    if(cRows.length)await syncToSheets('clients',cRows);
+    if(qRows.length)await syncToSheets('quotes',qRows);
+    const statusEl=document.getElementById('sync-status');
+    if(statusEl)statusEl.textContent='✅ 最後同步：'+new Date().toLocaleTimeString('zh-TW');
+    notify('共推送 '+(cRows.length+qRows.length)+' 筆資料到雲端','ok');
+  }catch(e){notify('推送失敗：'+e.message,'err')}
+}
+
+// Auto-sync on save
+function autoSync(sheetName, rows){
+  if(getScriptUrl())syncToSheets(sheetName,rows);
 }
 
 function globalSearch(q){
