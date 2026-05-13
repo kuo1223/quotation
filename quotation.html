@@ -665,6 +665,7 @@ const WORK_ORDER=[
   {order:20, cat:'軟裝配置',  icon:'🛋️', desc:'窗簾、地毯、家具、藝術品'},
   {order:21, cat:'清潔工程',  icon:'🧹', desc:'工程清潔、入住清潔'},
   {order:22, cat:'雜項工程',  icon:'📋', desc:'其他未分類工程'},
+  {order:23, cat:'服務費',    icon:'📐', desc:'設計服務費、工程監造費'},
 ];
 
 const CAT_ORDER=WORK_ORDER.reduce((m,w)=>{m[w.cat]=w.order;return m},{});
@@ -766,8 +767,9 @@ const SAMPLE_DB=[
   {id:uid(),cat:'清潔工程',name:'細部清潔（入住前）',unit:'坪',price:250,taxed:0,note:''},
   // 雜項工程
   {id:uid(),cat:'雜項工程',name:'工程保險',unit:'式',price:5000,taxed:0,note:''},
-  {id:uid(),cat:'雜項工程',name:'設計費',unit:'坪',price:2500,taxed:0,note:''},
-  {id:uid(),cat:'雜項工程',name:'監工管理費',unit:'式',price:30000,taxed:0,note:'含每週工地監督'},
+  // 服務費
+  {id:uid(),cat:'服務費',name:'設計服務費',unit:'式',price:0,taxed:0,note:'依設計規模另議'},
+  {id:uid(),cat:'服務費',name:'工程監造費',unit:'式',price:0,taxed:0,note:'含每週工地監督'},
 ];
 
 // ════════════════════════════════════════
@@ -839,10 +841,10 @@ async function pushAllToSheets(){
   try{
     const clients=gClients();
     const quotes=gQuotes();
-    const cRows=clients.map(c=>[c.id,c.name,c.mob||'',c.addr||'',c.type||'',JSON.stringify(c)]);
-    const qRows=quotes.map(q=>[q.id,q.no||'',q.clientName||'',q.project||'',q.total||0,q.status||'',q.date||'',JSON.stringify(q)]);
-    await syncToSheets('clients',cRows);
-    await syncToSheets('quotes',qRows);
+    const cRows=clients.map(c=>[c.id,c.name,c.mob||'',c.type||'',c.addr||'',JSON.stringify(c)]);
+    const qRows=quotes.map(q=>[q.id,q.no||'',q.clientName||'',q.project||'',q.date||'',q.status||'',Math.round(q.total||0),JSON.stringify(q)]);
+    if(cRows.length)await syncToSheets('clients',cRows);
+    if(qRows.length)await syncToSheets('quotes',qRows);
     notify('所有資料已推送到雲端','ok');
     document.getElementById('sync-status').textContent='✅ 最後同步：'+new Date().toLocaleTimeString('zh-TW');
   }catch(e){notify('推送失敗：'+e.message,'err')}
@@ -1283,31 +1285,6 @@ function rLines(){
   });
   flushCat();
 
-  // Design & supervision fee rows (always at bottom)
-  html+=`<tr style="background:var(--paper-w);">
-    <td colspan="7" style="padding:6px 10px;font-size:11px;color:var(--ink-l);letter-spacing:1.5px;border-top:2px solid var(--border);">
-      ── 設計與監造費用
-    </td>
-  </tr>
-  <tr>
-    <td style="font-size:11px;color:var(--ink-l);"></td>
-    <td>設計服務費</td>
-    <td>式</td>
-    <td style="text-align:right;"><input type="number" id="fee_design" value="${window._feeDesign||0}" min="0" style="width:82px;" oninput="updFee()" onchange="updFee()"></td>
-    <td style="text-align:right;"><input type="number" value="1" readonly style="width:62px;background:var(--paper-w);"></td>
-    <td style="text-align:right;font-weight:500;" id="st_design">$ ${Math.round(window._feeDesign||0).toLocaleString('zh-TW')}</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td style="font-size:11px;color:var(--ink-l);"></td>
-    <td>工程監造費</td>
-    <td>式</td>
-    <td style="text-align:right;"><input type="number" id="fee_super" value="${window._feeSuper||0}" min="0" style="width:82px;" oninput="updFee()" onchange="updFee()"></td>
-    <td style="text-align:right;"><input type="number" value="1" readonly style="width:62px;background:var(--paper-w);"></td>
-    <td style="text-align:right;font-weight:500;" id="st_super">$ ${Math.round(window._feeSuper||0).toLocaleString('zh-TW')}</td>
-    <td></td>
-  </tr>`;
-
   tb.innerHTML=html;
   recalc();
 }
@@ -1341,10 +1318,7 @@ function upPrice(lid,v){
   recalc();
 }
 function recalc(){
-  const workSub=QLINES.reduce((a,l)=>a+l.price*l.qty,0);
-  const design=window._feeDesign||0;
-  const super_=window._feeSuper||0;
-  const sub=workSub+design+super_;
+  const sub=QLINES.reduce((a,l)=>a+l.price*l.qty,0);
   const tm=parseInt(document.getElementById('q-tax').value||0);
   const tax=tm>0?sub*tm/100:0;const tot=sub+tax;
   document.getElementById('s-items').textContent=QLINES.length+' 項';
@@ -1354,8 +1328,6 @@ function recalc(){
   // Per-cat breakdown
   const catTots={};
   QLINES.forEach(l=>{catTots[l.cat]=(catTots[l.cat]||0)+l.price*l.qty});
-  if(design>0)catTots['設計服務費']=design;
-  if(super_>0)catTots['工程監造費']=super_;
   const sorted=Object.entries(catTots).sort((a,b)=>catOrder(a[0])-catOrder(b[0]));
   document.getElementById('s-cats-list').innerHTML=sorted.map(([cat,amt])=>
     `<div class="sum-row" style="padding:5px 16px;font-size:12px;"><span class="lbl" style="font-size:11px;">${cat}</span><span class="val" style="font-size:12px;">$ ${Math.round(amt).toLocaleString('zh-TW')}</span></div>`
