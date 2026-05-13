@@ -627,7 +627,13 @@ function jsonpFetch(url){
 }
 async function syncToSheets(sheetName,rows){
   const url=getScriptUrl();if(!url)return;
-  try{await jsonpFetch(url+'?action=set&sheet='+sheetName+'&rows='+encodeURIComponent(JSON.stringify(rows)));}catch(e){console.warn('sync failed:',e)}
+  try{
+    await fetch(url,{
+      method:'POST',
+      body:JSON.stringify({sheet:sheetName,rows:rows}),
+      headers:{'Content-Type':'text/plain'}
+    });
+  }catch(e){console.warn('sync failed:',e)}
 }
 async function syncFromSheets(sheetName){
   const url=getScriptUrl();if(!url)return null;

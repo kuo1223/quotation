@@ -893,12 +893,14 @@ function jsonpFetch(url){
   });
 }
 
-async function syncToSheets(sheetName, rows){
+async function syncToSheets(sheetName,rows){
   const url=getScriptUrl();if(!url)return;
   try{
-    const params=new URLSearchParams({action:'set',sheet:sheetName,rows:JSON.stringify(rows)});
-    // Use JSONP for write too
-    await jsonpFetch(url+'?'+params.toString());
+    await fetch(url,{
+      method:'POST',
+      body:JSON.stringify({sheet:sheetName,rows:rows}),
+      headers:{'Content-Type':'text/plain'}
+    });
   }catch(e){console.warn('Sheets sync failed:',e)}
 }
 
