@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>報價系統 · 得森室內裝修設計有限公司</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+:root{
+  --sage:#C0C4B6;--sage-dk:#8a9082;--sage-pa:#eef0ea;
+  --beige:#EADFDB;--stone:#AEAFB1;--stone-dk:#7a7c7f;
+  --warm:#D8C2B5;--warm-dk:#b09080;--warm-pa:#f5ede8;
+  --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#c8c4be;
+  --paper:#faf9f6;--paper-w:#f5f2ee;--paper-c:#ffffff;
+  --border:#dddad4;--border-l:#eae8e2;
+  --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
+  --r:4px;--rl:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.7;min-height:100vh}
+
+/* LOCK */
+#lock{position:fixed;inset:0;z-index:1000;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px}
+.lk-logo{text-align:center}
+.lk-cn{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--ink);letter-spacing:5px;margin-top:14px}
+.lk-en{font-size:10px;color:var(--stone-dk);letter-spacing:4px;margin-top:3px}
+.lk-form{display:flex;flex-direction:column;gap:12px;width:272px}
+.lk-form input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--paper-c);font-family:var(--sans);font-size:14px;color:var(--ink);border-radius:var(--r);text-align:center;letter-spacing:6px;outline:none;transition:border-color .2s}
+.lk-form input:focus{border-color:var(--sage-dk)}
+.lk-form button{padding:11px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-family:var(--sans);font-size:13px;letter-spacing:3px;cursor:pointer}
+.lk-form button:hover{background:var(--ink-m)}
+.lk-err{font-size:12px;color:#8b3a3a;text-align:center;height:14px}
+.lk-hint{font-size:11px;color:var(--ink-f);letter-spacing:2px}
+
+/* APP */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.on{display:flex}
+
+/* NAV */
+nav{display:flex;flex-direction:column;background:var(--paper-c);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
+.nav-top{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:48px;gap:8px;}
+.nb{display:flex;align-items:center;flex-shrink:0}
+.nn{font-family:var(--serif);font-size:14px;font-weight:400;color:var(--ink);letter-spacing:3px}
+.nn small{font-size:10px;color:var(--stone-dk);letter-spacing:2px;display:block;font-family:var(--sans)}
+.ntabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-top:1px solid var(--border-l);background:var(--paper-w);}
+.ntabs::-webkit-scrollbar{display:none}
+.ntab{padding:0 14px;height:40px;display:flex;align-items:center;font-size:12px;color:var(--ink-l);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;letter-spacing:.5px;white-space:nowrap;flex-shrink:0;}
+.ntab:hover{color:var(--ink)}
+.ntab.on{color:var(--sage-dk);border-bottom-color:var(--sage-dk)}
+.btn-logout{font-size:12px;color:var(--ink-l);cursor:pointer;letter-spacing:1px;background:none;border:none;white-space:nowrap}
+.btn-logout:hover{color:#8b3a3a}
+
+/* PANELS */
+.panel{display:none;padding:28px}
+.panel.on{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border-l);gap:12px;flex-wrap:wrap}
+.ph-l h2{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--ink);letter-spacing:2px}
+.ph-l p{font-size:12px;color:var(--ink-l);margin-top:3px;letter-spacing:1px}
+.ph-r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-family:var(--sans);font-size:13px;border-radius:var(--r);cursor:pointer;transition:all .15s;letter-spacing:1px;border:1px solid transparent}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-primary:hover{background:var(--ink-m)}
+.btn-secondary{background:transparent;color:var(--ink-m);border-color:var(--border)}
+.btn-secondary:hover{border-color:var(--ink-m)}
+.btn-accent{background:var(--sage-dk);color:#fff;border-color:var(--sage-dk)}
+.btn-accent:hover{background:#5c6054}
+.btn-danger{background:transparent;color:#8b3a3a;border-color:#f5e0e0}
+.btn-danger:hover{background:#f5e0e0}
+.btn-warn{background:transparent;color:#7a5c20;border-color:#f0e4c4}
+.btn-warn:hover{background:#fdf5e0}
+.btn-sm{padding:4px 9px;font-size:12px}
+
+/* CARDS */
+.card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
+.card:last-child{margin-bottom:0}
+.card-hd{padding:12px 18px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w)}
+.card-hd h3{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--ink-m);letter-spacing:2px}
+
+/* FORM */
+.frow{display:grid;gap:10px;margin-bottom:10px}
+.fg label{display:block;font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:4px}
+.fc{width:100%;padding:7px 11px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--paper-c);outline:none;transition:border-color .2s}
+.fc:focus{border-color:var(--sage-dk)}
+textarea.fc{resize:vertical;min-height:56px;line-height:1.6}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:9px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--ink-l);letter-spacing:1.5px;background:var(--paper-w);border-bottom:1px solid var(--border)}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--border-l);font-size:13px;color:var(--ink-m);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--paper-w)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:11px;letter-spacing:1px;white-space:nowrap}
+.b-sage{background:var(--sage-pa);color:var(--sage-dk)}
+.b-warm{background:var(--warm-pa);color:var(--warm-dk)}
+.b-stone{background:#f0f0f1;color:var(--stone-dk)}
+.b-green{background:#e8f5e9;color:#2e7d32}
+.b-gold{background:#fef9e7;color:#8a6914}
+.b-red{background:#fdecea;color:#8b3a3a}
+
+/* SEARCH BAR */
+.sbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.sbar .fc{flex:1;min-width:140px;max-width:240px}
+
+/* ── CLIENTS ── */
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.client-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);padding:16px;cursor:pointer;transition:all .2s}
+.client-card:hover{border-color:var(--sage-dk);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.client-card.sel{border-color:var(--sage-dk);background:var(--sage-pa)}
+.cc-avatar{width:40px;height:40px;border-radius:50%;background:var(--sage-pa);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--sage-dk);flex-shrink:0}
+.cc-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.cc-name{font-family:var(--serif);font-size:15px;font-weight:400;color:var(--ink);letter-spacing:1px}
+.cc-info{font-size:12px;color:var(--ink-l);line-height:1.8}
+.cc-stats{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-l)}
+.cc-stat{font-size:11px;color:var(--ink-l);letter-spacing:1px}
+.cc-stat strong{color:var(--sage-dk);font-weight:500}
+
+/* ── QUOTES LIST ── */
+.qt-list-row{cursor:pointer}
+.qt-list-row:hover td{background:var(--sage-pa)!important}
+.status-badge{}
+
+/* ── QUOTE BUILDER ── */
+.qbl{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.picker-wrap{max-height:280px;overflow-y:auto;border:1px solid var(--border-l);border-radius:var(--r)}
+
+/* Work order category header in picker */
+.wcat-hd{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--paper-w);border-bottom:1px solid var(--border-l);font-size:12px;font-weight:500;color:var(--sage-dk);letter-spacing:2px;position:sticky;top:0;z-index:2}
+.wcat-hd .order-num{width:20px;height:20px;background:var(--sage-dk);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+
+/* Quote lines */
+.ql-tbl{width:100%;border-collapse:collapse}
+.ql-tbl th{padding:8px 10px;font-size:11px;font-weight:500;color:var(--ink-l);letter-spacing:1.5px;background:var(--paper-w);border-bottom:1px solid var(--border);text-align:left}
+.ql-tbl td{padding:7px 10px;border-bottom:1px solid var(--border-l);font-size:13px;vertical-align:middle}
+.ql-tbl .cat-header td{background:var(--sage-pa);color:var(--sage-dk);font-family:var(--serif);font-size:11px;letter-spacing:2px;padding:5px 10px}
+.ql-tbl input[type=number]{width:65px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;text-align:right;outline:none}
+.ql-tbl input[type=number]:focus{border-color:var(--sage-dk)}
+.ql-tbl input[type=text]{width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;outline:none;background:var(--paper-w)}
+.ql-tbl input[type=text]:focus{border-color:var(--sage-dk)}
+
+/* Summary sidebar */
+.sidebar{position:sticky;top:68px}
+.sum-box{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.sum-hd{padding:11px 16px;background:var(--ink);color:#fff;font-family:var(--serif);font-size:12px;letter-spacing:3px}
+.sum-row{display:flex;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border-l);font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sum-row.tot{background:var(--paper-w);font-family:var(--serif);font-size:15px;color:var(--sage-dk)}
+.sum-row .lbl{color:var(--ink-l)}
+.sum-row .val{font-variant-numeric:tabular-nums;font-weight:500}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;z-index:500;background:rgba(43,41,38,.5);align-items:center;justify-content:center}
+.mbg.on{display:flex}
+.modal{background:var(--paper-c);border-radius:var(--rl);width:540px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.modal.wide{width:720px}
+.mhd{padding:14px 18px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w);position:sticky;top:0;z-index:1}
+.mhd h3{font-family:var(--serif);font-size:14px;font-weight:400;color:var(--ink);letter-spacing:2px}
+.mcl{background:none;border:none;cursor:pointer;font-size:18px;color:var(--ink-l);line-height:1}
+.mbod{padding:18px}
+.mft{padding:12px 18px;border-top:1px solid var(--border-l);display:flex;justify-content:flex-end;gap:8px;background:var(--paper-w)}
+
+/* NOTIF */
+.notif{position:fixed;bottom:22px;right:22px;z-index:900;background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;letter-spacing:1px;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none}
+.notif.on{opacity:1;transform:translateY(0)}
+
+/* EMPTY */
+.empty{text-align:center;padding:36px 20px;color:var(--ink-l)}
+.empty p{font-size:13px;letter-spacing:1px}
+
+/* TABS inside panel */
+.ptabs{display:flex;border-bottom:1px solid var(--border-l);margin-bottom:18px}
+.ptab{padding:8px 18px;font-size:13px;color:var(--ink-l);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:1px}
+.ptab:hover{color:var(--ink)}
+.ptab.on{color:var(--sage-dk);border-bottom-color:var(--sage-dk)}
+.ptbod{display:none}
+.ptbod.on{display:block}
+
+/* SETTINGS */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* ══════════════════════════════
+   DOCUMENT (PRINT)
+   ══════════════════════════════ */
+#doc-wrap{max-width:800px;margin:0 auto}
+#quote-doc{background:#fff;font-family:var(--sans)}
+.doc-stripe{height:4px;background:linear-gradient(90deg,#C0C4B6 0%,#D8C2B5 50%,#EADFDB 100%)}
+.doc-header{padding:28px 44px 20px;border-bottom:2px solid var(--ink);display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start}
+.doc-la{display:flex;align-items:flex-start;gap:14px}
+.doc-lc{font-family:var(--serif);font-size:24px;font-weight:400;color:#4a4742;letter-spacing:4px}
+.doc-le{font-size:10px;color:var(--stone-dk);letter-spacing:3px;font-weight:300}
+.doc-lf{font-family:var(--serif);font-size:13px;color:var(--ink-m);letter-spacing:3px;margin-bottom:8px}
+.doc-bar{width:28px;height:3px;background:var(--sage);margin:7px 0}
+.doc-svc{font-size:11px;color:var(--stone-dk);letter-spacing:1.5px;line-height:2}
+.doc-ct{font-size:10px;color:var(--stone-dk);letter-spacing:1px;line-height:2;margin-top:4px}
+.doc-qm{text-align:right}
+.doc-ql{font-size:9px;color:var(--stone-dk);letter-spacing:3px;margin-bottom:3px}
+.doc-qn{font-family:var(--serif);font-size:26px;font-weight:300;color:var(--sage-dk);letter-spacing:2px}
+.doc-qd{font-size:11px;color:var(--stone-dk);margin-top:4px;letter-spacing:1px}
+.doc-cli{display:grid;grid-template-columns:1fr 1fr;padding:14px 44px;gap:20px;border-bottom:1px solid var(--border-l);background:var(--paper-w)}
+.doc-cll{font-size:9px;color:var(--stone-dk);letter-spacing:2.5px;margin-bottom:4px}
+.doc-clv{font-size:13px;color:var(--ink);line-height:1.8}
+.doc-tw{padding:0 44px}
+.doc-t{width:100%;border-collapse:collapse;margin:18px 0}
+.doc-t thead th{padding:7px 9px;font-size:10px;font-weight:500;color:#fff;letter-spacing:2px;background:var(--ink);text-align:left}
+.doc-t thead th.r{text-align:right}
+.doc-t tbody td{padding:8px 9px;font-size:12px;color:var(--ink-m);border-bottom:1px solid var(--border-l);vertical-align:top}
+.doc-t tbody td.r{text-align:right}
+.doc-t .cr td{background:var(--sage-pa);color:var(--sage-dk);font-family:var(--serif);font-size:10px;letter-spacing:2.5px;padding:5px 9px;border-bottom:none;font-weight:500}
+.doc-tots{margin:0 44px 20px;display:flex;justify-content:flex-end}
+.doc-tb{width:264px}
+.doc-tr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-l);font-size:12px}
+.doc-tr .lbl{color:var(--ink-l)}
+.doc-tr.grand{border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);padding:9px 0;font-family:var(--serif);font-size:15px;color:var(--sage-dk)}
+.doc-notes{margin:0 44px 20px;padding:12px 14px;border:1px solid var(--border-l);border-radius:var(--r);background:var(--paper-w)}
+.doc-nl{font-size:9px;color:var(--stone-dk);letter-spacing:2.5px;margin-bottom:5px}
+.doc-nt{font-size:11px;color:var(--ink-m);line-height:2}
+.doc-nt p{margin-bottom:2px}
+.doc-foot{padding:12px 44px;border-top:1px solid var(--border-l);display:flex;justify-content:space-between;align-items:center}
+.doc-fl{font-size:10px;color:var(--stone-dk);letter-spacing:2px;font-family:var(--serif)}
+.doc-fr{font-size:10px;color:var(--stone-dk);letter-spacing:1px}
+
+@media(max-width:900px){
+  .qbl{grid-template-columns:1fr}
+  .sg{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  nav{padding:0 12px}
+  .panel{padding:16px 12px}
+  .doc-header,.doc-cli,.doc-tw,.doc-tots,.doc-notes,.doc-foot{padding-left:16px;padding-right:16px}
+  .doc-header{grid-template-columns:1fr;padding-top:18px}
+  .doc-cli{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div id="lock">
+  <div class="lk-logo">
+    <img src="data:image/jpeg;base64,/9j/4QE4RXhpZgAATU0AKgAAAAgACAESAAMAAAABAAEAAAEaAAUAAAABAAAAbgEbAAUAAAABAAAAdgEoAAMAAAABAAIAAAExAAIAAAAhAAAAfgEyAAIAAAAUAAAAoAITAAMAAAABAAEAAIdpAAQAAAABAAAAtAAAAAAAAAEsAAAAAQAAASwAAAABQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkAADIwMTk6MTA6MjkgMTQ6MjE6NTAAAAiQAAAHAAAABDAyMjGQBAACAAAAFAAAARqRAQAHAAAABAECAwCgAAAHAAAABDAxMDCgAQADAAAAAQABAACgAgAEAAAAAQAAA4egAwAEAAAAAQAAAIWkBgADAAAAAQAAAAAAAAAAMjAxOToxMDoyOSAyMjoyMTo0NwAAAP/hNBRodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcEdJbWc9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9nL2ltZy8iIHhtbG5zOnBkZj0iaHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczppbGx1c3RyYXRvcj0iaHR0cDovL25zLmFkb2JlLmNvbS9pbGx1c3RyYXRvci8xLjAvIiBkYzpmb3JtYXQ9ImltYWdlL2pwZWciIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkiIHhtcDpNZXRhZGF0YURhdGU9IjIwMTktMTAtMjlUMjI6MjE6NDcrMDg6MDAiIHhtcDpDcmVhdGVEYXRlPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAxOS0xMC0yOVQxNDoyMTo1MFoiIHBkZjpQcm9kdWNlcj0iQWRvYmUgUERGIGxpYnJhcnkgMTAuMDEiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0idXVpZDo1RDIwODkyNDkzQkZEQjExOTE0QTg1OTBEMzE1MDhDOCIgeG1wTU06UmVuZGl0aW9uQ2xhc3M9InByb29mOnBkZiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1Zjk3MjFjOS1hM2JmLTRiZjEtYjVjMC02MTQ5ZThkMTE5ZmEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NWY5NzIxYzktYTNiZi00YmYxLWI1YzAtNjE0OWU4ZDExOWZhIiBpbGx1c3RyYXRvcjpTdGFydHVwUHJvZmlsZT0iUHJpbnQiPiA8ZGM6dGl0bGU+IDxyZGY6QWx0PiA8cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPuW+l+ajru+8v+WQjeeJh0HvvL/osaHniZnljaHvvL/nh5nph5HvvL/pm5npnaI155uSdzwvcmRmOmxpPiA8L3JkZjpBbHQ+IDwvZGM6dGl0bGU+IDx4bXA6VGh1bWJuYWlscz4gPHJkZjpBbHQ+IDxyZGY6bGkgeG1wR0ltZzpmb3JtYXQ9IkpQRUciIHhtcEdJbWc6aW1hZ2U9Ii85ai80QUFRU2taSlJnQUJBZ0VCTEFFc0FBRC83UUFzVUdodmRHOXphRzl3SURNdU1BQTRRa2xOQSswQUFBQUFBQkFCTEFBQUFBRUEmI3hBO0FRRXNBQUFBQVFBQi8rNEFEa0ZrYjJKbEFHVEFBQUFBQWYvYkFJUUFCZ1FFQkFVRUJnVUZCZ2tHQlFZSkN3Z0dCZ2dMREFvS0N3b0smI3hBO0RCQU1EQXdNREF3UURBNFBFQThPREJNVEZCUVRFeHdiR3hzY0h4OGZIeDhmSHg4Zkh3RUhCd2NOREEwWUVCQVlHaFVSRlJvZkh4OGYmI3hBO0h4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zi84QUFFUWdBbUFFQUF3RVImI3hBO0FBSVJBUU1SQWYvRUFhSUFBQUFIQVFFQkFRRUFBQUFBQUFBQUFBUUZBd0lHQVFBSENBa0tDd0VBQWdJREFRRUJBUUVBQUFBQUFBQUEmI3hBO0FRQUNBd1FGQmdjSUNRb0xFQUFDQVFNREFnUUNCZ2NEQkFJR0FuTUJBZ01SQkFBRklSSXhRVkVHRTJFaWNZRVVNcEdoQnhXeFFpUEImI3hBO1V0SGhNeFppOENSeWd2RWxRelJUa3FLeVkzUENOVVFuazZPek5oZFVaSFREMHVJSUpvTUpDaGdaaEpSRlJxUzBWdE5WS0JyeTQvUEUmI3hBOzFPVDBaWFdGbGFXMXhkWGw5V1oyaHBhbXRzYlc1dlkzUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8rQ2s1U1ZscGVZbVomI3hBO3FibkoyZW41S2pwS1dtcDZpcHFxdXNyYTZ2b1JBQUlDQVFJREJRVUVCUVlFQ0FNRGJRRUFBaEVEQkNFU01VRUZVUk5oSWdaeGdaRXkmI3hBO29iSHdGTUhSNFNOQ0ZWSmljdkV6SkRSRGdoYVNVeVdpWTdMQ0IzUFNOZUpFZ3hkVWt3Z0pDaGdaSmpaRkdpZGtkRlUzOHFPend5Z3AmI3hBOzArUHpoSlNrdE1UVTVQUmxkWVdWcGJYRjFlWDFSbFptZG9hV3ByYkcxdWIyUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8mI3hBOytEbEpXV2w1aVptcHVjblo2ZmtxT2twYWFucUttcXE2eXRycSt2L2FBQXdEQVFBQ0VRTVJBRDhBOVAyOXJiT2pNOFNNeGtrcXhVRS8mI3hBOzNqZU9WeGlEMDcyNmM1QTdFOGg5eXA5U3MvOEFmRWYvQUFDLzB5WEJIdVllTEx2THZxVm4vdmlQL2dGL3Bqd1I3bDhXWGVYZlVyUC8mI3hBO0FIeEgvd0FBdjlNZUNQY3ZpeTd5NzZsWi93QytJLzhBZ0YvcGp3UjdsOFdYZVhmVXJQOEEzeEgvQU1BdjlNZUNQY3ZpeTd5NzZsWi8mI3hBOzc0ai9BT0FYK21QQkh1WHhaZDVkOVNzLzk4Ui84QXY5TWVDUGN2aXk3eTc2bFovNzRqLzRCZjZZOEVlNWZGbDNsMzFLei8zeEgvd0MmI3hBOy93Qk1lQ1Bjdml5N3kxWnFxd2xWQUNpU1FBRFlBQ1JzRU9YelRsTy93SDNLK1RhM1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlZHMC91bS80eVMvOG5HeU1PWHorOW5rNS9BZmNyWkpnN0ZYWXE3RlhZcTdGWFlxN0ZYWXFvMm4mI3hBOzkwMy9BQmtsL3dDVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWVWJUKzZiL0FJeVMvd0RKeHNqRGw4L3ZaNU9md0gzSWE0MVJsbGxndGJkN2lXQTBtWS91NGtKVU9PVWpkZmhZZllESEpNRVomI3hBO0RJSllZNUJRaDFEQWlwRzRydFVERlYrS3V4VjJLdXhWMkt1eFYyS3FOcC9kTi94a2wvNU9Oa1ljdm45N1BKeitBKzVXeVRCMkt1eFYmI3hBOzJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VlJ0UDdwditNa3YvQUNjYkl3NWZQNzJlVG44Qjl5V1gmI3hBO0ZocW91cnA0SWJXV09XWDFvSG1kMWRHTUN3SFlSc09pbnYwT1NZSmpZMmkyOXZHcktvbkVjYVRPdjdSUmFkZGlmYkZVUmlyc1ZkaXImI3hBO3NWZGlyc1ZkaXFqYWYzVGY4WkpmK1RqWkdITDUvZXp5Yy9nUHVWc2t3ZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZkaXJzVlViVCs2Yi9qSkwveWNiSXc1ZlA3MmVUbjhCOXl0a21Ec1ZkaXJzVmRpcnNWZGlyc1ZkaXFqYWYzVGY4WkomI3hBO2YrVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVlE2TGMmI3hBO3hCbFJFZFN6TUdMbFQ4VEZ1bkZ2SHh5QUJEWVRFODcvQUI4VjNPOC8zMUgvQU1qRy93Q2FNTnk3dng4a1ZIdlB5L2E3bmVmNzZqLzUmI3hBO0dOL3pSamN1NzhmSmFqM241ZnRkenZQOTlSLzhqRy81b3h1WGQrUGt0Ujd6OHYydTUzbisrby8rUmpmODBZM0x1L0h5V285NStYN1gmI3hBO2M3ei9BSDFIL3dBakcvNW94dVhkK1BrdFI3ejh2MnU1M24rK28vOEFrWTMvQURSamN1NzhmSmFqM241ZnRkenZQOTlSL3dESXh2OEEmI3hBO21qRzVkMzQrUzFIdlB5L2E3bmVmNzZqL0FPUmpmODBZM0x1L0h5V285NStYN1hjN3ovZlVmL0l4dithTWJsM2ZqNUxVZTgvTDlxNkMmI3hBO05vNDZOVGtXWmpUb09URnFmampFVUVUTmxVeVRGMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3UmI3hBO3hWMkt1eFZLN0ZOU3ViU0tiNjh5OGh1REhHVFViRTFBWHJUd3lBSkxZUkVjNy9Id1YvcW1wZjhBTGVmK1JTWWFsMy9qNW91UGNmbismI3hBO3gzMVRVdjhBbHZQL0FDS1RHcGQvNCthM0h1UHovWTc2cHFYL0FDM24va1VtTlM3L0FNZk5iajNINS9zZDlVMUwvbHZQL0lwTWFsMy8mI3hBO0FJK2EzSHVQei9ZNzZwcVgvTGVmK1JTWTFMdi9BQjgxdVBjZm4reDMxVFV2K1c4Lzhpa3hxWGYrUG10eDdqOC8yTytxYWwveTNuL2smI3hBO1VtTlM3L3g4MXVQY2ZuK3gzMVRVditXOC93RElwTWFsMy9qNXJjZTQvUDhBWTc2cHFYL0xlZjhBa1VtTlM3L3g4MXVQY2ZuK3hKTmYmI3hBOzFmVTdEUmJtZUc1SW5qdWhDc2pMR2R1SUZLY2FidHY0NE9MMDJ5RUJ4QWQ5ZmF4ZTU4eitjdUpNV29CQ3BITC9BRWVJMUZkd0FRTzMmI3hBO2ZHcGQvd0NQbWk0ZHgrZjdFUEw1MDgyaU5ndW9xamtFSTVoaElEYml0S2I0K3J2L0FCODF1SGNmbit4UVBucnplMjZhaFVIcFNDSHcmI3hBOzkweDlYZjhBajVyY080L1A5aUFuL01uempFd1VYNVoyK3lub1ExQTdsdmdydGo2dS93REh6VzRkeCtmN0hTZm1GNTNWdVExUGtwR3kmI3hBO3JCQit2aGo2dTliaDNINS9zV2Y4ckc4N01DVjFQWUE5YmVEL0FKbzdlR1BxNzF1SGNmbit4MHY1a2VjVFFRNnB5cUtsaEJBYWY4azkmI3hBOzhmVjMvajVyY080L1A5amNINWgrZTNERWFoelZCdXdoZzY5YVU0WStydlc0ZHgrZjdFeGc4NytjVysxcVlKSUhTQ0dsVDJCNGl1R3AmI3hBO2QvNCthM0R1UHovWXJyNXg4M282TytwQ1NJMERLSUlRYXNSdlVMMndHd2tDSjVBL1A5ajFhSmkwU01keVZCUDNaTnFYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZVRm92L0hNZytUZjhTT1JoeStmM3M4blA0RDdrYmttRHNWZGlxVGVidGV2OUQwVjlRc05JdU5idVZkRVcmI3hBO3d0UDcxZzVvVzZIWmVwMnhWSjlUODk2elpSNmt5ZVZkU3Vtc0pMZU9KWVVMZldST3dWbmhvcEpFVmF0dDB4VmtGdnJjY3VwZm84MmwmI3hBOzNIS0VEbVo3ZVFXLzJGZmlKNmVtVDhkT3ZVRWRzVlRIRlhZcTdGV0grYVFEb1Y3VVZBdmlmK0Z5by9TZmkzais4SCtiK2hpYzlUdjAmI3hBO0hqMXkxb1MyZEZyOWl2VWdmUlVZRlFGemNOSEdSQ3ZxU0hjS093TzFUVEZVdlcwa2U1QUJEdExTUVQrKzNnZGdOdW5YRlhKcWVsUlcmI3hBOzZTSnpsZ2trOUFYS1J5TW5ObTQxNUJhY0NmMi9zKzlNVXRwZFdWNURKTll1c2tTczBieUlOZ3lIaWFkaWNVTGhGYlNKNmNSQlZSOGYmI3hBO0hxZDl3RGlxL1RxVFJ2d05Ja2NnOWlRUGhvRFhDcWFJdEZGRXAzQXIzNllxdmIrNURBY1R5VTllL0tudGtaOHZsOTdaajUvQS9jOXQmI3hBO2cvdUkvd0RWSDZzazFyOFZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcUMwWC9qbVFmSnYrSkhJdzVmUDcyZVRuOEI5eU55VEJ3SUlxT20mI3hBO0t1eFYyS3V4VjJLdXhWMkt1eFZodm0yditINzdhdjhBcDM4TXFQMG40dDQvdkIvbS9vWXBLZ0I1QVZyU29yMjJIVExXaExiMmVqQkkmI3hBO1J5bU80clhpQUsvYU5Odm93S2xaaWxqa1pxY3BmMnBUMFlEZXJmS3VLdFNXYlBheUloY0pNcFNTbXpLU0tjaDFwOUdLc2Rpc1BNUysmI3hBO1dyRFJvb0h0cnV5K3EyNzMwRTZDSjQ0V1ZaR1VncTlHaURmQ3lWREgvWllwVXZMY0VqUXVzVU53aXdYZDRwbjlXa1VpUVhMeFJ4Y08mI3hBO1JyKzdGS2xCOW5ydmlwWksxdWdVeklBQWFWWG9DUGw0NG9YV0laWXpKRjlwcER6V3UxSys0NjRWVENKbEtDUnFMeEJOU2FVN2Q4VmEmI3hBOzRTVGNYZXF4aGw5TkNhTjlvVVp2Znd5TStYeSs5c3g4L2dmdWU1UWYzRWYrcVAxWkpyWDRxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlUmI3hBO0Zvdi9BQnpJUGszL0FCSTVHSEw1L2V6eWMvZ1B1UzY1aWl1cnUrK3RNczBVRXZwaTNsa0t4ckg5V1NTb2lBNFNFeU4rMzIrN0pNRnUmI3hBO3JSMzEzNWZpVkdSQzMxVjFjTng1RGtyT0NCeFZSMzc3ZHNWU0NLejF1Mjh2M2tNTWxMaWFlRllvMGxSSkJHaUtrakYxa1hadVBhaDcmI3hBOzk5bFV1MU9mek5wUGxJK2hZeWF0ZkpxQ20zc1Z2bmlZUUtySUc5YUl1NVg0QWVMZkR2dDJYRlc5WDF6ekphMjBrMWg1Y252YmtUQkkmI3hBO1lScWpvR2dQcUQxR3FRcXNYaEJDOWxkYWtiNHFnYjdYUE9hdmYrajVabWtqaHYxdDdTVWFySVBXdG1Fckc1NGdoeHg0UmluK1YxMk8mI3hBO0tzaGJ6VjV1c3RNbmEzMEtLWVd0MUxEYncvWGZWbm10WXpMd25IcUttNzhFK0V0V2plSW9WVnllZVBOUmt2bzVkQ0VKdDV3bG8vcWUmI3hBO3FzOFhHWnVRNGZaTGVuR056dHovQU1rakZVODBUWE5TdWIvVTROVGhpdFlMYVFMWXlobC9mUmt2OGRSSkl2UlYyMkk3Z1lxbEhtNjQmI3hBO2pYeTVleUJnVU44YU1OeDltdVZINlQ4VytQMWovTi9RdzlwMUZ1MDY3by94R1Rmb05xOVBBWlkwSUxrb1pwSTNMaVNqRVZydFNtMkYmI3hBO1VEUGRjWXhNZzV4cU5vUVBqTk45dCt1M1RBcVYzT3MzRnpwaXMyanp6ck9XaXViRStpeGFJMURCdVVpSVZZZHVYZmNkY1VvQmRKMHEmI3hBOzIxK0F3NlRQR3RzbjdyVS9WcWxDcCtCZ1plYmtWNC9FcEF4VlVzTlMrbzZQUzIwaTdSNVo1R2UyWjRtbFV5bHBIbDVOSzY4UzdkT1YmI3hBO2FucFRGVXgrdXpHNEFTM2NLRVZ1YkZTckZ3MVYyWW1xY1FEdDMyNzRVTzA2NjRRenlWQVVPVElwNjdiZmZ0aXFLaGxrbGYxSk5vNjgmI3hBO2tqSklKcDBaaC9ERlVXMHpzYTdVcXA3ZnpaR2ZMNWZlMlkrZndQM0Y3dGIvQU54SC9xcitySk5hL0ZYWXE3RlhZcTdGWFlxN0ZYWXEmI3hBOzdGWFlxZ3RGL3dDT1pCOG0vd0NKSEl3NWZQNzJlVG44Qjl5dEpZV01yczhsdkU3dDlwbVJTVFFVM0pIaGttQ3I2Y2ZBSnhIQmRsV2cmI3hBO29BUEFZcTcwWXY1Ris0WXF4VDh4OVJmUzlEZ250N2krczNlNmpReWFYWUxxTTdEaTdtTXhGSDRxL0duT214cHZ2aXJBdE44OVhFWVQmI3hBO25jK2E5UWYwVEZ3T2d4Z2wvd0IzU1drY2EvNzdJcC9sNzlzVTBnb2Z6QWx0NyszTW1wZWFyaUdFeEM0Z2JRNEZFZ0VrY2JsbjRMNlkmI3hBO1BFbGo0TTFOK0l4V21UYS9lNnBiWCtyOE5aMXBFMGowZWNOdnBVRXlQeWhqbC9jdHdCbXI2TFZvZGpJUjJIRlFvUmVZcm1mVEFWMUgmI3hBO3pLajJNVHl5WGFhTkNEZGd3TGMwQWUza2pxaXhNbTNFRm5JcWRpRldZK1NkSjFXR3krdmFsckZ6cTBlb1FXOHR2QmUyc0Z0SmIvQVcmI3hBO2VxeEtwNVB6SEpXcnhJMnhWS3ZQand4ZVdMdm5zcDFFS1BtVnBsUitrL0Z2SDF4L3pmME1JZDlMa2g5TndDcG9XV2dvU054c2ZEcmwmI3hBO2pRc0V1amlvTUtGZUpCQlVIcnRpcVhUeWFYRTMraWowZHhYZ3EwOTZiZGZuaXFsUGYyTDdSc09KQjNCQXhWRHZjYVVLT3dCZWxBV0MmI3hBO3Nmb0pHS3JJYnV3RHNRS0wxb0tmUGZZZDhWVkpiL1RCRTFRUFRJK0k5cUg2TVZTNnh1Yk5uZVNST01TeU1ZSWUzMmpRa2VJd3FuQ2EmI3hBO2xaTUtFRGlPMWVveFZTbjFEVDBibXFJWktCUXhwMHJYSXo1ZkpzeDgvZ2Z1ZlJscWEyc0pIZEZQNERKTmFyaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZTM1NMcTJUVG9WZVZGWUExVXNBZnRIeHl1TWdPdmUzVGhJbllIa1B1U0xXOVUxR1B6Rkd1blRKS2ZRWXcyOHM3UlcmI3hBO3p5OFg0aVJsRW5FRnFWUEUvTE5UbXp5R3NpQkwwMTM3ZFdneGx4VTErbS96RE5yY3NkTzBPTzZVeC9WSXhxYzhrYmd0Kzg5UnphUmwmI3hBO2FMOW1pbXB6YjhZN3cyK0ZMdVB5UTdhMSthUDFhQmtzUEwvMWdqL1NJbTFHNENnODJGRVlXemZzY1R1T3BQaHU4WTd3dmhTN2o4bXQmI3hBO2FnOHc2NXBUV2VxNmZwTTFMY1NvaWFsY3hLYnhrWkdqTFJSSS9wY1dJNVYzcjluYkhqajNyNFV1NC9KaVY5K1hWeEZLWTdIUWRHdWImI3hBO2FUN1puMXJVMFllb3JpV245NVRlVjZVOXZBVWVPUGV2aHk3ajhtUXdhSHFrSzZmSEhwV2xLaE1ZMUJqckY2UkduR01TZWloaVBxSDQmI3hBO1dDaGl2UWVKeDR4M2hmQ2wzSDVLZjZHMTJEVTExTzAwalNFdnJKM05oY1ByRjdLR1YrY2Y3eUV4SWkxaWtQZC9pN2RHRHh4N3d2aFMmI3hBOzdqOGsxdGRlL01oL3F5ejZYb2tkVC9wa28xT1dpL3ZHQjlKQmJOei9BSFFVamt5N21tUEdPOEw0VXU0L0pPdEMxWFdaa25PdXcyRmsmI3hBOzZ2UzJGbmVOZEJrOFhNa052eFBzSzRlT1BldmhTN2o4bUMvbkZkbUh5WEpKR2FoOVlqQUk3Z294d1IzaWZpbWRpY2Y4MzduaXlhNWQmI3hBO3NwcUdJOXdjdjlQZTRaRSs0dHZyVjF4T3pFSHJVZFJqNmU5SHI3aWo5TDFUUlpMU2R0V2x2WTdsU1JBbHVpTWhIQTBMRnpVZkhTdnQmI3hBO1hJbXU4Tmc0dTQvSlkxMTVXVzZRSmMzeTIvQmpKKzRRc0pQajRoZmlXbyt4VSs1MndiZDRaZXJ1UHlRK29YdmwxclZQcTF4ZXlUVWImI3hBO2tIZ1JWRERseG9ROWZEOGNkdTlhbDNINUl4YnZ5S2xEOWUxUVJrc1c1VzBXd3ExTnhKMXB4cnQ0NDdkNFR2M0g1SVN5dXZLYzBVVW0mI3hBO29YT3BKSjFlT0tDTmtCNWdjdmlkYW5oVS9QSGJ2V3BkeCtTVzMxL2F4WGtxYVcwOHRsVUZKSjBDU0VrQXZ5VmFqWjZnYjlNUlhlZ2kmI3hBO1hjVmk2dGRiVVZ0dlk1TDA5NlBYM0g1T2ZWYmsvYURBQUd2VWRzakt1OW5qTWdkd2VSKzU5aWFjYTZmYW54aGovd0NJakFVQkVZcGQmI3hBO2lyc1ZkaXJzVmRpcnNWZGlyc1ZkaXFIVFQ3ZEVWRk1vVlFBbzlhWFlEYitiRlZOdEgwOXAxdUdqTFRxS0xNWGN1QjdOeXIzeUJ4Uk0mI3hBO3VJZ2NYZjFXbFg2bEQvTkwvd0FqcGY4QW1ySnE3NmxEL05ML0FNanBmK2FzVmQ5U2gvbWwvd0NSMHY4QXpWaXJ2cVVQODB2L0FDT2wmI3hBOy93Q2FzVmQ5U2gvbWwvNUhTLzhBTldLdStwUS96Uy84anBmK2FzVmQ5U2gvbWwvNUhTLzgxWXE3NmxEL0FEUy84anBmK2FzVlFHcysmI3hBO1ZOQjFxeE5ocWxyOWJ0VEt0d1k1SkpQN3hGNHEzSU1HMkhhdE1JTklJQjVwSVB5Zy9MZ2RORlQvQUpHei93RFZURHhsaDRVZTV2OEEmI3hBOzVWRCtYUDhBMVprLzVHei9BUFZUSGpLK0ZIdWEvd0NWUWZseC93QldWUDhBa2JQL0FOVk1lTXI0VVd2K1ZPL2x0LzFaRS81R3ovOEEmI3hBO1ZUSGlLZkRpMS95cHY4dFArckpIL3dBalovOEFxcGp4RmZERGgrVG41YWovQUtVa2YvSTJmL3FwanhGZkRpNy9BSlU1K1d2L0FGWkkmI3hBOy93RGtiUDhBOVZNZUlyNGNXaCtUUDVaaXRORVRjMS92cmp2L0FNOU1lSXJ3QnY4QTVVMytXbi9Wa1Qva2JjZjlWTWVJcjRZYWI4bXYmI3hBO3kwTks2S20zU2sxd1AxU1k4Ulh3d3pLT05JNDFqUVVSQUZVZUFBb01pelhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1hZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlgmI3hBO1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcWdOY251SU5OZDdlUXhTbVNHTVMmI3hBO0FLeFVTU29oSURCbHJSdTR4VkRSUnlXbW9JRWplYWVXRzRaakxKemQvU2tpVk9MRThVREI2OFZBR0twRnJObjVvZlc1cHJTUzQ5SXomI3hBO3hSUVJCcEJEUW1CaTc4UnNvQWF2YllqN1IzVlU5V2Z6V2ZNSmt0clc2TnJIT3FJeXlFUW1MNFdZOEsxLzNYVHJUNzZGVkJ5ZWF2TWMmI3hBO3V0NnZhdzZEcS9HeXVoRkJLWGVLQ2VQNGkwa1RTVzRRcUZRa0JHWWswSFVpcXFYYWg1OTgwV2R2Y3l4ZVZ0ZXVmcTl6RGJRUm96RnAmI3hBO3d3WW1VRDZ1ZmhIQlExSzd0MnBYRlZlMzgrZVk0YjY1L3dDZFkxMmI2cGZteFJaVCs1bWk0VEg2MnBNSzFqQmlIUS90TDhzVlRIV2YmI3hBO3pLOHc2YzE4c1hrelU3MDJ0MkxhSDZ1Q3duaWIxZjMwWkNGZjkwaXExMjVMVTRxbTE1NXgxU0piazJ2bDIrdW10cGxpSzhXajVJV2wmI3hBO1V5cnpYNHdQU0IrRGw5b2ZTcXlqRlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1ZPNHRyZTVoYUc0aVNhRnFjbzVGREthR29xRFViRVZ4VlN0dE0wMjFrTXR0YVF3U0VGUzhjYW8zRWtFaXFnYmJERlZ6NmZZTzVkN2EmI3hBO0puWTFaaWlrays1SXhWYitqTk4vNVpJZitSYS8weFY1ejVoMGJ6WmIrY0k3ZXdpMUM3MGU5WlpIdWJlUFRWdHJSWlpBcFFpUlBYZjAmI3hBO2hIeTI3T2Q5dGxXUHlYSDVudEZadC9oclVva3M0ZjhBVFpHazBaUFZLaU9zamwxNyttK3lnZmFPdytFaFN0MERXZk9Wd0VzcjdTNzYmI3hBO3pNOTNGYnlhbE0yalA5WFFNbnFPWTBUa1J4aWZuOEpweU5DS2JLcTl2TjUxMDJhU2Q3Ty8xbTNzN2lhMkVaL1F5cGNoQ3NRbTVLRWsmI3hBO1VmQ1pBb1d0VFR4NHFFTlBiL21GSHBOeGN2RnFrTXl5S3NNY3I2QVN5TTBxQitTeDBRcUdVbGFIb3UvMnNVdmM4VU94VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMktvRFdvTmNtc3VHaTNkdlpYbklIMXImI3hBO3FCN21QalExSHBwTGJtdlRmbGlyRnRmMGY4ekpkRGhoZzFtd3ViZ3JKSHFVWDZMRHBjTE5JRkFXT1c3VlZXT05pR3F4NWZoaWxnUysmI3hBO1ZmUHYxQ1hVSlBMZHFkU2t1SmtFSTByVHZVQ01QVVdhbjZUSzA1U3pwdktTZWRhVXJ5Q3BscU5oNXdpdjViU1B5aGF5YWVkUm52UHImI3hBO0VlbTJVd2UybzA2d01rbDRoOWVTVFl6YkRsdlR1U3FCbDBMOHhyeUhoY2VXN2N4UzNFWWlpbDBuU1hhSll5cGFXWGpxQVVnbjdQRTgmI3hBO2hUNVZDdjhBLzlrPSIgeG1wR0ltZzp3aWR0aD0iMjU2IiB4bXBHSW1nOmhlaWdodD0iMTUyIi8+IDwvcmRmOkFsdD4gPC94bXA6VGh1bWJuYWlscz4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENTNiAoTWFjaW50b3NoKSIgc3RFdnQ6Y2hhbmdlZD0iLyIgc3RFdnQ6d2hlbj0iMjAxNi0wOS0xM1QxMToyNjo1OSswODowMCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowNzgwMTE3NDA3MjA2ODExODIyQUJFRjE0ODg5RUJGRiIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENDIChNYWNpbnRvc2gpIiBzdEV2dDpjaGFuZ2VkPSIvIiBzdEV2dDp3aGVuPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjVmOTcyMWM5LWEzYmYtNGJmMS1iNWMwLTYxNDllOGQxMTlmYSIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOnJlbmRpdGlvbkNsYXNzPSJwcm9vZjpwZGYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Mjk2Yzg5MzMtYjZmYy00M2U5LThiZDctZWMyODA1N2NiMWRmIiBzdFJlZjppbnN0YW5jZUlEPSJ1dWlkOjgzOTg0Y2U3LTZiNjQtOTk0NS05ZWZlLWE3Y2ZkNmUwMjNlZSIgc3RSZWY6b3JpZ2luYWxEb2N1bWVudElEPSJ1dWlkOjVEMjA4OTI0OTNCRkRCMTE5MTRBODU5MEQzMTUwOEM4Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg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" style="width:160px;max-width:60vw;height:auto;display:block;margin:0 auto;">
+  </div>
+  <div class="lk-form">
+    <input type="password" id="pwd" placeholder="請輸入密碼" autocomplete="current-password">
+    <button onclick="doLogin()">進 入 系 統</button>
+    <div class="lk-err" id="lerr"></div>
+  </div>
+  <span class="lk-hint">預設密碼：0000</span>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav>
+    <div class="nav-top">
+      <div class="nb">
+      <img src="data:image/jpeg;base64,/9j/4QE4RXhpZgAATU0AKgAAAAgACAESAAMAAAABAAEAAAEaAAUAAAABAAAAbgEbAAUAAAABAAAAdgEoAAMAAAABAAIAAAExAAIAAAAhAAAAfgEyAAIAAAAUAAAAoAITAAMAAAABAAEAAIdpAAQAAAABAAAAtAAAAAAAAAEsAAAAAQAAASwAAAABQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkAADIwMTk6MTA6MjkgMTQ6MjE6NTAAAAiQAAAHAAAABDAyMjGQBAACAAAAFAAAARqRAQAHAAAABAECAwCgAAAHAAAABDAxMDCgAQADAAAAAQABAACgAgAEAAAAAQAAA4egAwAEAAAAAQAAAIWkBgADAAAAAQAAAAAAAAAAMjAxOToxMDoyOSAyMjoyMTo0NwAAAP/hNBRodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcEdJbWc9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9nL2ltZy8iIHhtbG5zOnBkZj0iaHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczppbGx1c3RyYXRvcj0iaHR0cDovL25zLmFkb2JlLmNvbS9pbGx1c3RyYXRvci8xLjAvIiBkYzpmb3JtYXQ9ImltYWdlL2pwZWciIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkiIHhtcDpNZXRhZGF0YURhdGU9IjIwMTktMTAtMjlUMjI6MjE6NDcrMDg6MDAiIHhtcDpDcmVhdGVEYXRlPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAxOS0xMC0yOVQxNDoyMTo1MFoiIHBkZjpQcm9kdWNlcj0iQWRvYmUgUERGIGxpYnJhcnkgMTAuMDEiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0idXVpZDo1RDIwODkyNDkzQkZEQjExOTE0QTg1OTBEMzE1MDhDOCIgeG1wTU06UmVuZGl0aW9uQ2xhc3M9InByb29mOnBkZiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1Zjk3MjFjOS1hM2JmLTRiZjEtYjVjMC02MTQ5ZThkMTE5ZmEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NWY5NzIxYzktYTNiZi00YmYxLWI1YzAtNjE0OWU4ZDExOWZhIiBpbGx1c3RyYXRvcjpTdGFydHVwUHJvZmlsZT0iUHJpbnQiPiA8ZGM6dGl0bGU+IDxyZGY6QWx0PiA8cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPuW+l+ajru+8v+WQjeeJh0HvvL/osaHniZnljaHvvL/nh5nph5HvvL/pm5npnaI155uSdzwvcmRmOmxpPiA8L3JkZjpBbHQ+IDwvZGM6dGl0bGU+IDx4bXA6VGh1bWJuYWlscz4gPHJkZjpBbHQ+IDxyZGY6bGkgeG1wR0ltZzpmb3JtYXQ9IkpQRUciIHhtcEdJbWc6aW1hZ2U9Ii85ai80QUFRU2taSlJnQUJBZ0VCTEFFc0FBRC83UUFzVUdodmRHOXphRzl3SURNdU1BQTRRa2xOQSswQUFBQUFBQkFCTEFBQUFBRUEmI3hBO0FRRXNBQUFBQVFBQi8rNEFEa0ZrYjJKbEFHVEFBQUFBQWYvYkFJUUFCZ1FFQkFVRUJnVUZCZ2tHQlFZSkN3Z0dCZ2dMREFvS0N3b0smI3hBO0RCQU1EQXdNREF3UURBNFBFQThPREJNVEZCUVRFeHdiR3hzY0h4OGZIeDhmSHg4Zkh3RUhCd2NOREEwWUVCQVlHaFVSRlJvZkh4OGYmI3hBO0h4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zi84QUFFUWdBbUFFQUF3RVImI3hBO0FBSVJBUU1SQWYvRUFhSUFBQUFIQVFFQkFRRUFBQUFBQUFBQUFBUUZBd0lHQVFBSENBa0tDd0VBQWdJREFRRUJBUUVBQUFBQUFBQUEmI3hBO0FRQUNBd1FGQmdjSUNRb0xFQUFDQVFNREFnUUNCZ2NEQkFJR0FuTUJBZ01SQkFBRklSSXhRVkVHRTJFaWNZRVVNcEdoQnhXeFFpUEImI3hBO1V0SGhNeFppOENSeWd2RWxRelJUa3FLeVkzUENOVVFuazZPek5oZFVaSFREMHVJSUpvTUpDaGdaaEpSRlJxUzBWdE5WS0JyeTQvUEUmI3hBOzFPVDBaWFdGbGFXMXhkWGw5V1oyaHBhbXRzYlc1dlkzUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8rQ2s1U1ZscGVZbVomI3hBO3FibkoyZW41S2pwS1dtcDZpcHFxdXNyYTZ2b1JBQUlDQVFJREJRVUVCUVlFQ0FNRGJRRUFBaEVEQkNFU01VRUZVUk5oSWdaeGdaRXkmI3hBO29iSHdGTUhSNFNOQ0ZWSmljdkV6SkRSRGdoYVNVeVdpWTdMQ0IzUFNOZUpFZ3hkVWt3Z0pDaGdaSmpaRkdpZGtkRlUzOHFPend5Z3AmI3hBOzArUHpoSlNrdE1UVTVQUmxkWVdWcGJYRjFlWDFSbFptZG9hV3ByYkcxdWIyUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8mI3hBOytEbEpXV2w1aVptcHVjblo2ZmtxT2twYWFucUttcXE2eXRycSt2L2FBQXdEQVFBQ0VRTVJBRDhBOVAyOXJiT2pNOFNNeGtrcXhVRS8mI3hBOzNqZU9WeGlEMDcyNmM1QTdFOGg5eXA5U3MvOEFmRWYvQUFDLzB5WEJIdVllTEx2THZxVm4vdmlQL2dGL3Bqd1I3bDhXWGVYZlVyUC8mI3hBO0FIeEgvd0FBdjlNZUNQY3ZpeTd5NzZsWi93QytJLzhBZ0YvcGp3UjdsOFdYZVhmVXJQOEEzeEgvQU1BdjlNZUNQY3ZpeTd5NzZsWi8mI3hBOzc0ai9BT0FYK21QQkh1WHhaZDVkOVNzLzk4Ui84QXY5TWVDUGN2aXk3eTc2bFovNzRqLzRCZjZZOEVlNWZGbDNsMzFLei8zeEgvd0MmI3hBOy93Qk1lQ1Bjdml5N3kxWnFxd2xWQUNpU1FBRFlBQ1JzRU9YelRsTy93SDNLK1RhM1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlZHMC91bS80eVMvOG5HeU1PWHorOW5rNS9BZmNyWkpnN0ZYWXE3RlhZcTdGWFlxN0ZYWXFvMm4mI3hBOzkwMy9BQmtsL3dDVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWVWJUKzZiL0FJeVMvd0RKeHNqRGw4L3ZaNU9md0gzSWE0MVJsbGxndGJkN2lXQTBtWS91NGtKVU9PVWpkZmhZZllESEpNRVomI3hBO0RJSllZNUJRaDFEQWlwRzRydFVERlYrS3V4VjJLdXhWMkt1eFYyS3FOcC9kTi94a2wvNU9Oa1ljdm45N1BKeitBKzVXeVRCMkt1eFYmI3hBOzJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VlJ0UDdwditNa3YvQUNjYkl3NWZQNzJlVG44Qjl5V1gmI3hBO0ZocW91cnA0SWJXV09XWDFvSG1kMWRHTUN3SFlSc09pbnYwT1NZSmpZMmkyOXZHcktvbkVjYVRPdjdSUmFkZGlmYkZVUmlyc1ZkaXImI3hBO3NWZGlyc1ZkaXFqYWYzVGY4WkpmK1RqWkdITDUvZXp5Yy9nUHVWc2t3ZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZkaXJzVlViVCs2Yi9qSkwveWNiSXc1ZlA3MmVUbjhCOXl0a21Ec1ZkaXJzVmRpcnNWZGlyc1ZkaXFqYWYzVGY4WkomI3hBO2YrVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVlE2TGMmI3hBO3hCbFJFZFN6TUdMbFQ4VEZ1bkZ2SHh5QUJEWVRFODcvQUI4VjNPOC8zMUgvQU1qRy93Q2FNTnk3dng4a1ZIdlB5L2E3bmVmNzZqLzUmI3hBO0dOL3pSamN1NzhmSmFqM241ZnRkenZQOTlSLzhqRy81b3h1WGQrUGt0Ujd6OHYydTUzbisrby8rUmpmODBZM0x1L0h5V285NStYN1gmI3hBO2M3ei9BSDFIL3dBakcvNW94dVhkK1BrdFI3ejh2MnU1M24rK28vOEFrWTMvQURSamN1NzhmSmFqM241ZnRkenZQOTlSL3dESXh2OEEmI3hBO21qRzVkMzQrUzFIdlB5L2E3bmVmNzZqL0FPUmpmODBZM0x1L0h5V285NStYN1hjN3ovZlVmL0l4dithTWJsM2ZqNUxVZTgvTDlxNkMmI3hBO05vNDZOVGtXWmpUb09URnFmampFVUVUTmxVeVRGMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3UmI3hBO3hWMkt1eFZLN0ZOU3ViU0tiNjh5OGh1REhHVFViRTFBWHJUd3lBSkxZUkVjNy9Id1YvcW1wZjhBTGVmK1JTWWFsMy9qNW91UGNmbismI3hBO3gzMVRVdjhBbHZQL0FDS1RHcGQvNCthM0h1UHovWTc2cHFYL0FDM24va1VtTlM3L0FNZk5iajNINS9zZDlVMUwvbHZQL0lwTWFsMy8mI3hBO0FJK2EzSHVQei9ZNzZwcVgvTGVmK1JTWTFMdi9BQjgxdVBjZm4reDMxVFV2K1c4Lzhpa3hxWGYrUG10eDdqOC8yTytxYWwveTNuL2smI3hBO1VtTlM3L3g4MXVQY2ZuK3gzMVRVditXOC93RElwTWFsMy9qNXJjZTQvUDhBWTc2cHFYL0xlZjhBa1VtTlM3L3g4MXVQY2ZuK3hKTmYmI3hBOzFmVTdEUmJtZUc1SW5qdWhDc2pMR2R1SUZLY2FidHY0NE9MMDJ5RUJ4QWQ5ZmF4ZTU4eitjdUpNV29CQ3BITC9BRWVJMUZkd0FRTzMmI3hBO2ZHcGQvd0NQbWk0ZHgrZjdFUEw1MDgyaU5ndW9xamtFSTVoaElEYml0S2I0K3J2L0FCODF1SGNmbit4UVBucnplMjZhaFVIcFNDSHcmI3hBOzkweDlYZjhBajVyY080L1A5aUFuL01uempFd1VYNVoyK3lub1ExQTdsdmdydGo2dS93REh6VzRkeCtmN0hTZm1GNTNWdVExUGtwR3kmI3hBO3JCQit2aGo2dTliaDNINS9zV2Y4ckc4N01DVjFQWUE5YmVEL0FKbzdlR1BxNzF1SGNmbit4MHY1a2VjVFFRNnB5cUtsaEJBYWY4azkmI3hBOzhmVjMvajVyY080L1A5amNINWgrZTNERWFoelZCdXdoZzY5YVU0WStydlc0ZHgrZjdFeGc4NytjVysxcVlKSUhTQ0dsVDJCNGl1R3AmI3hBO2QvNCthM0R1UHovWXJyNXg4M282TytwQ1NJMERLSUlRYXNSdlVMMndHd2tDSjVBL1A5ajFhSmkwU01keVZCUDNaTnFYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZVRm92L0hNZytUZjhTT1JoeStmM3M4blA0RDdrYmttRHNWZGlxVGVidGV2OUQwVjlRc05JdU5idVZkRVcmI3hBO3d0UDcxZzVvVzZIWmVwMnhWSjlUODk2elpSNmt5ZVZkU3Vtc0pMZU9KWVVMZldST3dWbmhvcEpFVmF0dDB4VmtGdnJjY3VwZm84MmwmI3hBOzNIS0VEbVo3ZVFXLzJGZmlKNmVtVDhkT3ZVRWRzVlRIRlhZcTdGV0grYVFEb1Y3VVZBdmlmK0Z5by9TZmkzais4SCtiK2hpYzlUdjAmI3hBO0hqMXkxb1MyZEZyOWl2VWdmUlVZRlFGemNOSEdSQ3ZxU0hjS093TzFUVEZVdlcwa2U1QUJEdExTUVQrKzNnZGdOdW5YRlhKcWVsUlcmI3hBOzZTSnpsZ2trOUFYS1J5TW5ObTQxNUJhY0NmMi9zKzlNVXRwZFdWNURKTll1c2tTczBieUlOZ3lIaWFkaWNVTGhGYlNKNmNSQlZSOGYmI3hBO0hxZDl3RGlxL1RxVFJ2d05Ja2NnOWlRUGhvRFhDcWFJdEZGRXAzQXIzNllxdmIrNURBY1R5VTllL0tudGtaOHZsOTdaajUvQS9jOXQmI3hBO2cvdUkvd0RWSDZzazFyOFZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcUMwWC9qbVFmSnYrSkhJdzVmUDcyZVRuOEI5eU55VEJ3SUlxT20mI3hBO0t1eFYyS3V4VjJLdXhWMkt1eFZodm0yditINzdhdjhBcDM4TXFQMG40dDQvdkIvbS9vWXBLZ0I1QVZyU29yMjJIVExXaExiMmVqQkkmI3hBO1J5bU80clhpQUsvYU5Odm93S2xaaWxqa1pxY3BmMnBUMFlEZXJmS3VLdFNXYlBheUloY0pNcFNTbXpLU0tjaDFwOUdLc2Rpc1BNUysmI3hBO1dyRFJvb0h0cnV5K3EyNzMwRTZDSjQ0V1ZaR1VncTlHaURmQ3lWREgvWllwVXZMY0VqUXVzVU53aXdYZDRwbjlXa1VpUVhMeFJ4Y08mI3hBO1JyKzdGS2xCOW5ydmlwWksxdWdVeklBQWFWWG9DUGw0NG9YV0laWXpKRjlwcER6V3UxSys0NjRWVENKbEtDUnFMeEJOU2FVN2Q4VmEmI3hBOzRTVGNYZXF4aGw5TkNhTjlvVVp2Znd5TStYeSs5c3g4L2dmdWU1UWYzRWYrcVAxWkpyWDRxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlUmI3hBO0Zvdi9BQnpJUGszL0FCSTVHSEw1L2V6eWMvZ1B1UzY1aWl1cnUrK3RNczBVRXZwaTNsa0t4ckg5V1NTb2lBNFNFeU4rMzIrN0pNRnUmI3hBO3JSMzEzNWZpVkdSQzMxVjFjTng1RGtyT0NCeFZSMzc3ZHNWU0NLejF1Mjh2M2tNTWxMaWFlRllvMGxSSkJHaUtrakYxa1hadVBhaDcmI3hBOzk5bFV1MU9mek5wUGxJK2hZeWF0ZkpxQ20zc1Z2bmlZUUtySUc5YUl1NVg0QWVMZkR2dDJYRlc5WDF6ekphMjBrMWg1Y252YmtUQkkmI3hBO1lScWpvR2dQcUQxR3FRcXNYaEJDOWxkYWtiNHFnYjdYUE9hdmYrajVabWtqaHYxdDdTVWFySVBXdG1Fckc1NGdoeHg0UmluK1YxMk8mI3hBO0tzaGJ6VjV1c3RNbmEzMEtLWVd0MUxEYncvWGZWbm10WXpMd25IcUttNzhFK0V0V2plSW9WVnllZVBOUmt2bzVkQ0VKdDV3bG8vcWUmI3hBO3FzOFhHWnVRNGZaTGVuR056dHovQU1rakZVODBUWE5TdWIvVTROVGhpdFlMYVFMWXlobC9mUmt2OGRSSkl2UlYyMkk3Z1lxbEhtNjQmI3hBO2pYeTVleUJnVU44YU1OeDltdVZINlQ4VytQMWovTi9RdzlwMUZ1MDY3by94R1Rmb05xOVBBWlkwSUxrb1pwSTNMaVNqRVZydFNtMkYmI3hBO1VEUGRjWXhNZzV4cU5vUVBqTk45dCt1M1RBcVYzT3MzRnpwaXMyanp6ck9XaXViRStpeGFJMURCdVVpSVZZZHVYZmNkY1VvQmRKMHEmI3hBOzIxK0F3NlRQR3RzbjdyVS9WcWxDcCtCZ1plYmtWNC9FcEF4VlVzTlMrbzZQUzIwaTdSNVo1R2UyWjRtbFV5bHBIbDVOSzY4UzdkT1YmI3hBO2FucFRGVXgrdXpHNEFTM2NLRVZ1YkZTckZ3MVYyWW1xY1FEdDMyNzRVTzA2NjRRenlWQVVPVElwNjdiZmZ0aXFLaGxrbGYxSk5vNjgmI3hBO2tqSklKcDBaaC9ERlVXMHpzYTdVcXA3ZnpaR2ZMNWZlMlkrZndQM0Y3dGIvQU54SC9xcitySk5hL0ZYWXE3RlhZcTdGWFlxN0ZYWXEmI3hBOzdGWFlxZ3RGL3dDT1pCOG0vd0NKSEl3NWZQNzJlVG44Qjl5dEpZV01yczhsdkU3dDlwbVJTVFFVM0pIaGttQ3I2Y2ZBSnhIQmRsV2cmI3hBO29BUEFZcTcwWXY1Ris0WXF4VDh4OVJmUzlEZ250N2krczNlNmpReWFYWUxxTTdEaTdtTXhGSDRxL0duT214cHZ2aXJBdE44OVhFWVQmI3hBO25jK2E5UWYwVEZ3T2d4Z2wvd0IzU1drY2EvNzdJcC9sNzlzVTBnb2Z6QWx0NyszTW1wZWFyaUdFeEM0Z2JRNEZFZ0VrY2JsbjRMNlkmI3hBO1BFbGo0TTFOK0l4V21UYS9lNnBiWCtyOE5aMXBFMGowZWNOdnBVRXlQeWhqbC9jdHdCbXI2TFZvZGpJUjJIRlFvUmVZcm1mVEFWMUgmI3hBO3pLajJNVHl5WGFhTkNEZGd3TGMwQWUza2pxaXhNbTNFRm5JcWRpRldZK1NkSjFXR3krdmFsckZ6cTBlb1FXOHR2QmUyc0Z0SmIvQVcmI3hBO2VxeEtwNVB6SEpXcnhJMnhWS3ZQand4ZVdMdm5zcDFFS1BtVnBsUitrL0Z2SDF4L3pmME1JZDlMa2g5TndDcG9XV2dvU054c2ZEcmwmI3hBO2pRc0V1amlvTUtGZUpCQlVIcnRpcVhUeWFYRTMraWowZHhYZ3EwOTZiZGZuaXFsUGYyTDdSc09KQjNCQXhWRHZjYVVLT3dCZWxBV0MmI3hBO3Nmb0pHS3JJYnV3RHNRS0wxb0tmUGZZZDhWVkpiL1RCRTFRUFRJK0k5cUg2TVZTNnh1Yk5uZVNST01TeU1ZSWUzMmpRa2VJd3FuQ2EmI3hBO2xaTUtFRGlPMWVveFZTbjFEVDBibXFJWktCUXhwMHJYSXo1ZkpzeDgvZ2Z1ZlJscWEyc0pIZEZQNERKTmFyaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZTM1NMcTJUVG9WZVZGWUExVXNBZnRIeHl1TWdPdmUzVGhJbllIa1B1U0xXOVUxR1B6Rkd1blRKS2ZRWXcyOHM3UlcmI3hBO3p5OFg0aVJsRW5FRnFWUEUvTE5UbXp5R3NpQkwwMTM3ZFdneGx4VTErbS96RE5yY3NkTzBPTzZVeC9WSXhxYzhrYmd0Kzg5UnphUmwmI3hBO2FMOW1pbXB6YjhZN3cyK0ZMdVB5UTdhMSthUDFhQmtzUEwvMWdqL1NJbTFHNENnODJGRVlXemZzY1R1T3BQaHU4WTd3dmhTN2o4bXQmI3hBO2FnOHc2NXBUV2VxNmZwTTFMY1NvaWFsY3hLYnhrWkdqTFJSSS9wY1dJNVYzcjluYkhqajNyNFV1NC9KaVY5K1hWeEZLWTdIUWRHdWImI3hBO2FUN1puMXJVMFllb3JpV245NVRlVjZVOXZBVWVPUGV2aHk3ajhtUXdhSHFrSzZmSEhwV2xLaE1ZMUJqckY2UkduR01TZWloaVBxSDQmI3hBO1dDaGl2UWVKeDR4M2hmQ2wzSDVLZjZHMTJEVTExTzAwalNFdnJKM05oY1ByRjdLR1YrY2Y3eUV4SWkxaWtQZC9pN2RHRHh4N3d2aFMmI3hBOzdqOGsxdGRlL01oL3F5ejZYb2tkVC9wa28xT1dpL3ZHQjlKQmJOei9BSFFVamt5N21tUEdPOEw0VXU0L0pPdEMxWFdaa25PdXcyRmsmI3hBOzZ2UzJGbmVOZEJrOFhNa052eFBzSzRlT1BldmhTN2o4bUMvbkZkbUh5WEpKR2FoOVlqQUk3Z294d1IzaWZpbWRpY2Y4MzduaXlhNWQmI3hBO3NwcUdJOXdjdjlQZTRaRSs0dHZyVjF4T3pFSHJVZFJqNmU5SHI3aWo5TDFUUlpMU2R0V2x2WTdsU1JBbHVpTWhIQTBMRnpVZkhTdnQmI3hBO1hJbXU4Tmc0dTQvSlkxMTVXVzZRSmMzeTIvQmpKKzRRc0pQajRoZmlXbyt4VSs1MndiZDRaZXJ1UHlRK29YdmwxclZQcTF4ZXlUVWImI3hBO2tIZ1JWRERseG9ROWZEOGNkdTlhbDNINUl4YnZ5S2xEOWUxUVJrc1c1VzBXd3ExTnhKMXB4cnQ0NDdkNFR2M0g1SVN5dXZLYzBVVW0mI3hBO29YT3BKSjFlT0tDTmtCNWdjdmlkYW5oVS9QSGJ2V3BkeCtTVzMxL2F4WGtxYVcwOHRsVUZKSjBDU0VrQXZ5VmFqWjZnYjlNUlhlZ2kmI3hBO1hjVmk2dGRiVVZ0dlk1TDA5NlBYM0g1T2ZWYmsvYURBQUd2VWRzakt1OW5qTWdkd2VSKzU5aWFjYTZmYW54aGovd0NJakFVQkVZcGQmI3hBO2lyc1ZkaXJzVmRpcnNWZGlyc1ZkaXFIVFQ3ZEVWRk1vVlFBbzlhWFlEYitiRlZOdEgwOXAxdUdqTFRxS0xNWGN1QjdOeXIzeUJ4Uk0mI3hBO3VJZ2NYZjFXbFg2bEQvTkwvd0FqcGY4QW1ySnE3NmxEL05ML0FNanBmK2FzVmQ5U2gvbWwvd0NSMHY4QXpWaXJ2cVVQODB2L0FDT2wmI3hBOy93Q2FzVmQ5U2gvbWwvNUhTLzhBTldLdStwUS96Uy84anBmK2FzVmQ5U2gvbWwvNUhTLzgxWXE3NmxEL0FEUy84anBmK2FzVlFHcysmI3hBO1ZOQjFxeE5ocWxyOWJ0VEt0d1k1SkpQN3hGNHEzSU1HMkhhdE1JTklJQjVwSVB5Zy9MZ2RORlQvQUpHei93RFZURHhsaDRVZTV2OEEmI3hBOzVWRCtYUDhBMVprLzVHei9BUFZUSGpLK0ZIdWEvd0NWUWZseC93QldWUDhBa2JQL0FOVk1lTXI0VVd2K1ZPL2x0LzFaRS81R3ovOEEmI3hBO1ZUSGlLZkRpMS95cHY4dFArckpIL3dBalovOEFxcGp4RmZERGgrVG41YWovQUtVa2YvSTJmL3FwanhGZkRpNy9BSlU1K1d2L0FGWkkmI3hBOy93RGtiUDhBOVZNZUlyNGNXaCtUUDVaaXRORVRjMS92cmp2L0FNOU1lSXJ3QnY4QTVVMytXbi9Wa1Qva2JjZjlWTWVJcjRZYWI4bXYmI3hBO3kwTks2S20zU2sxd1AxU1k4Ulh3d3pLT05JNDFqUVVSQUZVZUFBb01pelhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1hZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlgmI3hBO1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcWdOY251SU5OZDdlUXhTbVNHTVMmI3hBO0FLeFVTU29oSURCbHJSdTR4VkRSUnlXbW9JRWplYWVXRzRaakxKemQvU2tpVk9MRThVREI2OFZBR0twRnJObjVvZlc1cHJTUzQ5SXomI3hBO3hSUVJCcEJEUW1CaTc4UnNvQWF2YllqN1IzVlU5V2Z6V2ZNSmt0clc2TnJIT3FJeXlFUW1MNFdZOEsxLzNYVHJUNzZGVkJ5ZWF2TWMmI3hBO3V0NnZhdzZEcS9HeXVoRkJLWGVLQ2VQNGkwa1RTVzRRcUZRa0JHWWswSFVpcXFYYWg1OTgwV2R2Y3l4ZVZ0ZXVmcTl6RGJRUm96RnAmI3hBO3d3WW1VRDZ1ZmhIQlExSzd0MnBYRlZlMzgrZVk0YjY1L3dDZFkxMmI2cGZteFJaVCs1bWk0VEg2MnBNSzFqQmlIUS90TDhzVlRIV2YmI3hBO3pLOHc2YzE4c1hrelU3MDJ0MkxhSDZ1Q3duaWIxZjMwWkNGZjkwaXExMjVMVTRxbTE1NXgxU0piazJ2bDIrdW10cGxpSzhXajVJV2wmI3hBO1V5cnpYNHdQU0IrRGw5b2ZTcXlqRlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1ZPNHRyZTVoYUc0aVNhRnFjbzVGREthR29xRFViRVZ4VlN0dE0wMjFrTXR0YVF3U0VGUzhjYW8zRWtFaXFnYmJERlZ6NmZZTzVkN2EmI3hBO0puWTFaaWlrays1SXhWYitqTk4vNVpJZitSYS8weFY1ejVoMGJ6WmIrY0k3ZXdpMUM3MGU5WlpIdWJlUFRWdHJSWlpBcFFpUlBYZjAmI3hBO2hIeTI3T2Q5dGxXUHlYSDVudEZadC9oclVva3M0ZjhBVFpHazBaUFZLaU9zamwxNyttK3lnZmFPdytFaFN0MERXZk9Wd0VzcjdTNzYmI3hBO3pNOTNGYnlhbE0yalA5WFFNbnFPWTBUa1J4aWZuOEpweU5DS2JLcTl2TjUxMDJhU2Q3Ty8xbTNzN2lhMkVaL1F5cGNoQ3NRbTVLRWsmI3hBO1VmQ1pBb1d0VFR4NHFFTlBiL21GSHBOeGN2RnFrTXl5S3NNY3I2QVN5TTBxQitTeDBRcUdVbGFIb3UvMnNVdmM4VU94VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMktvRFdvTmNtc3VHaTNkdlpYbklIMXImI3hBO3FCN21QalExSHBwTGJtdlRmbGlyRnRmMGY4ekpkRGhoZzFtd3ViZ3JKSHFVWDZMRHBjTE5JRkFXT1c3VlZXT05pR3F4NWZoaWxnUysmI3hBO1ZmUHYxQ1hVSlBMZHFkU2t1SmtFSTByVHZVQ01QVVdhbjZUSzA1U3pwdktTZWRhVXJ5Q3BscU5oNXdpdjViU1B5aGF5YWVkUm52UHImI3hBO0VlbTJVd2UybzA2d01rbDRoOWVTVFl6YkRsdlR1U3FCbDBMOHhyeUhoY2VXN2N4UzNFWWlpbDBuU1hhSll5cGFXWGpxQVVnbjdQRTgmI3hBO2hUNVZDdjhBLzlrPSIgeG1wR0ltZzp3aWR0aD0iMjU2IiB4bXBHSW1nOmhlaWdodD0iMTUyIi8+IDwvcmRmOkFsdD4gPC94bXA6VGh1bWJuYWlscz4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENTNiAoTWFjaW50b3NoKSIgc3RFdnQ6Y2hhbmdlZD0iLyIgc3RFdnQ6d2hlbj0iMjAxNi0wOS0xM1QxMToyNjo1OSswODowMCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowNzgwMTE3NDA3MjA2ODExODIyQUJFRjE0ODg5RUJGRiIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENDIChNYWNpbnRvc2gpIiBzdEV2dDpjaGFuZ2VkPSIvIiBzdEV2dDp3aGVuPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjVmOTcyMWM5LWEzYmYtNGJmMS1iNWMwLTYxNDllOGQxMTlmYSIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOnJlbmRpdGlvbkNsYXNzPSJwcm9vZjpwZGYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Mjk2Yzg5MzMtYjZmYy00M2U5LThiZDctZWMyODA1N2NiMWRmIiBzdFJlZjppbnN0YW5jZUlEPSJ1dWlkOjgzOTg0Y2U3LTZiNjQtOTk0NS05ZWZlLWE3Y2ZkNmUwMjNlZSIgc3RSZWY6b3JpZ2luYWxEb2N1bWVudElEPSJ1dWlkOjVEMjA4OTI0OTNCRkRCMTE5MTRBODU5MEQzMTUwOEM4Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg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" style="height:40px;width:auto;display:block;flex-shrink:0;">
+    </div>
+    <div class="nav-r" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <input type="search" id="global-search" placeholder="🔍 搜尋…" oninput="globalSearch(this.value)"
+        style="font-size:12px;padding:4px 10px;border:1px solid var(--border);border-radius:14px;outline:none;width:120px;font-family:var(--sans);">
+      <a href="index.html" style="font-size:11px;color:var(--ink-l);text-decoration:none;padding:4px 8px;white-space:nowrap;">⌂ 首頁</a>
+      <a href="project-manager.html" style="font-size:11px;color:var(--sage-dk);text-decoration:none;border:1px solid var(--sage);padding:4px 8px;border-radius:4px;white-space:nowrap;">工程管理</a>
+      <button class="btn-logout" onclick="logout()">登出</button>
+    </div>
+  </div>
+  <div class="ntabs">
+    <div class="ntab on" onclick="go('clients')">客戶管理</div>
+    <div class="ntab" onclick="go('quotes')">報價紀錄</div>
+    <div class="ntab" onclick="go('new-quote')">建立報價單</div>
+    <div class="ntab" onclick="go('db')">品項資料庫</div>
+    <div class="ntab" onclick="go('settings')">設定</div>
+  </div>
+</nav>
+
+  <!-- ══ CLIENTS ══ -->
+  <div id="p-clients" class="panel on">
+    <div class="ph">
+      <div class="ph-l"><h2>客戶管理</h2><p>建立客戶資料，追蹤報價與案件狀態</p></div>
+      <div class="ph-r">
+        <input class="fc" type="search" id="cl-search" placeholder="搜尋客戶…" oninput="rClients()" style="max-width:200px;">
+        <button class="btn btn-primary" onclick="openClientM()">＋ 新增客戶</button>
+      </div>
+    </div>
+    <div id="client-grid" class="client-grid"></div>
+  </div>
+
+  <!-- ══ QUOTES LIST ══ -->
+  <div id="p-quotes" class="panel">
+    <div class="ph">
+      <div class="ph-l"><h2>報價紀錄</h2><p>查詢、檢視、複製或修改所有報價單</p></div>
+      <div class="ph-r">
+        <input class="fc" type="search" id="ql-search" placeholder="關鍵字搜尋…" oninput="rQuoteList()" style="max-width:180px;">
+        <select class="fc" id="ql-client" style="max-width:160px;" onchange="rQuoteList()"><option value="">所有客戶</option></select>
+        <select class="fc" id="ql-status" style="max-width:120px;" onchange="rQuoteList()">
+          <option value="">所有狀態</option>
+          <option value="draft">草稿</option>
+          <option value="sent">已送出</option>
+          <option value="approved">已成交</option>
+          <option value="rejected">未成交</option>
+        </select>
+        <button class="btn btn-accent" onclick="go('new-quote');newQuote()">＋ 新建報價單</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr>
+            <th style="width:110px;">報價單號</th>
+            <th style="width:90px;">日期</th>
+            <th>客戶</th>
+            <th>案件名稱</th>
+            <th style="width:80px;text-align:right;">總金額</th>
+            <th style="width:80px;text-align:center;">狀態</th>
+            <th style="width:160px;text-align:center;">操作</th>
+          </tr></thead>
+          <tbody id="ql-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ NEW/EDIT QUOTE ══ -->
+  <div id="p-new-quote" class="panel">
+    <div class="ph">
+      <div class="ph-l"><h2 id="nq-title">建立報價單</h2><p id="nq-sub">依施工邏輯工序排列，自動彙整金額</p></div>
+      <div class="ph-r">
+        <button class="btn btn-secondary" onclick="go('quotes')">← 返回列表</button>
+        <button class="btn btn-secondary" onclick="saveQuoteDraft()">儲存草稿</button>
+        <button class="btn btn-secondary" onclick="expXL()">Excel</button>
+        <button class="btn btn-secondary" onclick="expPDF()">PDF</button>
+        <button class="btn btn-accent" onclick="saveQuoteFinal()">確認送出</button>
+      </div>
+    </div>
+    <div class="qbl">
+      <div>
+        <!-- Client + info -->
+        <div class="card">
+          <div class="card-hd"><h3>基本資訊</h3></div>
+          <div style="padding:14px;">
+            <div class="frow" style="grid-template-columns:1fr 1fr;">
+              <div class="fg">
+                <label>選擇客戶</label>
+                <select class="fc" id="q-client-sel" onchange="fillClientInfo()"><option value="">請選擇客戶</option></select>
+              </div>
+              <div class="fg"><label>報價單編號</label><input class="fc" id="q-no" placeholder="自動產生"></div>
+            </div>
+            <div class="frow" style="grid-template-columns:1fr 1fr;">
+              <div class="fg"><label>委託方 / 業主</label><input class="fc" id="q-cl" placeholder="姓名或公司"></div>
+              <div class="fg"><label>聯絡電話</label><input class="fc" id="q-ph" placeholder=""></div>
+            </div>
+            <div class="frow" style="grid-template-columns:2fr 1fr;">
+              <div class="fg"><label>案件名稱 / 工程地址</label><input class="fc" id="q-pj" placeholder="例：台南市中西區住宅裝修案"></div>
+              <div class="fg"><label>施工面積（坪）</label><input class="fc" id="q-area" type="number" min="0" step="0.1" placeholder="0"></div>
+            </div>
+            <div class="frow" style="grid-template-columns:1fr 1fr;">
+              <div class="fg"><label>稅別</label>
+                <select class="fc" id="q-tax" onchange="recalc()">
+                  <option value="0">免稅（含稅報價）</option>
+                  <option value="5">加計 5% 營業稅</option>
+                </select>
+              </div>
+              <div class="fg"><label>狀態</label>
+                <select class="fc" id="q-status">
+                  <option value="draft">草稿</option>
+                  <option value="sent">已送出</option>
+                  <option value="approved">已成交</option>
+                  <option value="rejected">未成交</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg"><label>備註 / 特殊說明</label><textarea class="fc" id="q-nt" rows="2" placeholder="付款條件、特殊說明…"></textarea></div>
+          </div>
+        </div>
+
+        <!-- Picker -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>從品項資料庫加入</h3>
+            <input class="fc" type="search" id="pk-s" placeholder="關鍵字搜尋品項…" oninput="rPick()" style="max-width:220px;margin:0;">
+          </div>
+          <div style="padding:12px;">
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="cat-btns"></div>
+            <div class="picker-wrap" id="picker-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Lines -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>已選工項明細</h3>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span id="lct" style="font-size:12px;color:var(--ink-l);"></span>
+              <button class="btn btn-sm btn-secondary" onclick="openCustomLine()">＋ 自訂品項</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="ql-tbl">
+              <thead><tr>
+                <th style="width:90px;">工種</th><th>品項</th>
+                <th style="width:50px;">單位</th><th style="width:90px;text-align:right;">單價</th>
+                <th style="width:70px;text-align:right;">數量</th><th style="width:90px;text-align:right;">小計</th>
+                <th style="width:36px;"></th>
+              </tr></thead>
+              <tbody id="q-lines-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sum-box">
+          <div class="sum-hd">報 價 摘 要</div>
+          <div class="sum-row"><span class="lbl">工程項目</span><span class="val" id="s-items">0 項</span></div>
+          <div id="s-cats-list"></div>
+          <div class="sum-row"><span class="lbl">小計</span><span class="val" id="s-sub">$ 0</span></div>
+          <div class="sum-row"><span class="lbl">稅額</span><span class="val" id="s-tax">—</span></div>
+          <div class="sum-row tot"><span class="lbl">合計</span><span class="val" id="s-tot">$ 0</span></div>
+        </div>
+        <button class="btn btn-accent" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="saveQuoteFinal()">確認送出</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="openPreviewM()">預覽報價單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DB ══ -->
+  <div id="p-db" class="panel">
+    <div class="ph">
+      <div class="ph-l"><h2>品項資料庫</h2><p>管理各工種品項，依施工順序排列</p></div>
+      <div class="ph-r">
+        <button class="btn btn-secondary" onclick="exportDB()">匯出備份</button>
+        <button class="btn btn-primary" onclick="openItemM()">＋ 新增品項</button>
+      </div>
+    </div>
+    <div class="sbar">
+      <input class="fc" type="search" id="ds" placeholder="搜尋品項…" oninput="rDB()">
+      <select class="fc" id="dc" style="max-width:180px;" onchange="rDB()"><option value="">所有工種</option></select>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3>品項列表（依施工工序）</h3><span id="dct" style="font-size:12px;color:var(--ink-l);letter-spacing:1px;"></span></div>
+      <div style="overflow-x:auto;"><table class="tbl">
+        <thead><tr>
+          <th style="width:28px;">序</th><th style="width:120px;">工種類別</th><th>品項名稱</th>
+          <th style="width:60px;">單位</th><th style="width:90px;text-align:right;">單價</th>
+          <th>備註</th><th style="width:110px;text-align:center;">操作</th>
+        </tr></thead>
+        <tbody id="dtb"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div id="p-settings" class="panel">
+    <div class="ph">
+      <div class="ph-l"><h2>系統設定</h2><p>公司資訊、報價單格式、密碼管理</p></div>
+      <button class="btn btn-primary" onclick="saveSets()">儲存設定</button>
+    </div>
+
+    <!-- 雲端同步 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-hd"><h3>☁️ 雲端同步（Google Sheets）</h3></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div class="fg">
+          <label>Google Apps Script 網址</label>
+          <input class="fc" id="su-url" placeholder="https://script.google.com/macros/s/xxxxxx/exec">
+          <div style="font-size:11px;color:var(--ink-l);margin-top:4px;">設定後所有資料自動同步到 Google Sheets，任何裝置都能看到相同資料</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-accent" onclick="saveScriptUrl()">儲存網址</button>
+          <button class="btn btn-secondary" onclick="pullFromSheets()">⬇ 從雲端載入資料</button>
+          <button class="btn btn-secondary" onclick="pushAllToSheets()">⬆ 推送所有資料到雲端</button>
+        </div>
+        <div id="sync-status" style="font-size:12px;color:var(--sage-dk);"></div>
+      </div>
+    </div>
+
+    <div class="sg">
+      <div>
+        <div class="card">
+          <div class="card-hd"><h3>公司資訊</h3></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="fg"><label>公司名稱</label><input class="fc" id="sn" placeholder="得森室內裝修設計有限公司"></div>
+            <div class="fg"><label>英文名稱</label><input class="fc" id="se" placeholder="ERIC KUO SPACE DESIGN"></div>
+            <div class="fg"><label>服務項目（｜分隔）</label><input class="fc" id="ss2" placeholder="商業空間｜展示設計｜老屋改造｜住宅規劃"></div>
+            <div class="frow" style="grid-template-columns:1fr 1fr;">
+              <div class="fg"><label>手機</label><input class="fc" id="smob" placeholder="0939-977966"></div>
+              <div class="fg"><label>電話</label><input class="fc" id="stel" placeholder="07-7220069"></div>
+            </div>
+            <div class="fg"><label>Email</label><input class="fc" id="sem" placeholder="kuo1223@gmail.com"></div>
+            <div class="fg"><label>地址</label><input class="fc" id="sadr" placeholder="高雄市苓雅區中正一路121巷5弄6-1號"></div>
+            <div class="fg"><label>執照字號</label><input class="fc" id="slic" placeholder="內營室技字第40EB020646號"></div>
+            <div class="fg"><label>負責人</label><input class="fc" id="sown" placeholder="郭先生"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-hd"><h3>報價單格式</h3></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="fg"><label>有效期限說明</label><input class="fc" id="svd" placeholder="本報價單有效期限為30天"></div>
+            <div class="fg"><label>付款條件</label><textarea class="fc" id="spay" placeholder="簽約30%、開工30%、完工40%"></textarea></div>
+            <div class="fg"><label>注意事項</label><textarea class="fc" id="sdis" placeholder="本報價單含工帶料，不含設計費及監工費…"></textarea></div>
+            <div class="fg"><label>編號前綴</label><input class="fc" id="spfx" placeholder="QT" style="max-width:80px;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>密碼修改</h3></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="fg"><label>新密碼</label><input class="fc" type="password" id="sp1" placeholder="留空不修改"></div>
+            <div class="fg"><label>確認新密碼</label><input class="fc" type="password" id="sp2" placeholder=""></div>
+            <button class="btn btn-secondary" onclick="chgPwd()">更新密碼</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Client Modal -->
+<div class="mbg" id="client-modal">
+  <div class="modal">
+    <div class="mhd"><h3 id="cm-title">新增客戶</h3><button class="mcl" onclick="closeCM()">✕</button></div>
+    <div class="mbod">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>姓名 / 公司名稱 *</label><input class="fc" id="cm-name" placeholder="陳先生 / 某某有限公司"></div>
+        <div class="fg"><label>稱謂</label><input class="fc" id="cm-title2" placeholder="先生、小姐、總監…"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>手機</label><input class="fc" id="cm-mob" placeholder="09xx-xxxxxx"></div>
+        <div class="fg"><label>電話</label><input class="fc" id="cm-tel" placeholder=""></div>
+      </div>
+      <div class="fg" style="margin-bottom:10px;"><label>Email</label><input class="fc" id="cm-email" placeholder=""></div>
+      <div class="fg" style="margin-bottom:10px;"><label>地址</label><input class="fc" id="cm-addr" placeholder=""></div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>客戶類型</label>
+          <select class="fc" id="cm-type">
+            <option value="residential">住宅業主</option>
+            <option value="commercial">商業客戶</option>
+            <option value="contractor">工程合作</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="fg"><label>來源管道</label>
+          <select class="fc" id="cm-source">
+            <option value="referral">親友介紹</option>
+            <option value="social">社群媒體</option>
+            <option value="repeat">回頭客</option>
+            <option value="walk-in">自行上門</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>備註</label><textarea class="fc" id="cm-note" rows="2" placeholder="偏好風格、特殊需求、注意事項…"></textarea></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeCM()">取消</button>
+      <button class="btn btn-primary" onclick="saveClient()">儲存客戶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Item Modal -->
+<div class="mbg" id="item-modal">
+  <div class="modal">
+    <div class="mhd"><h3 id="im-title">新增品項</h3><button class="mcl" onclick="closeIM()">✕</button></div>
+    <div class="mbod">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>工種類別 *</label>
+          <select class="fc" id="im-cat"><option value="">請選擇工種</option></select>
+        </div>
+        <div class="fg"><label>品項名稱 *</label><input class="fc" id="im-name" placeholder="例：系統天花板"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="fg"><label>單位</label>
+          <input class="fc" id="im-unit" list="unitdl" placeholder="坪、㎡、才…">
+          <datalist id="unitdl"><option value="坪"><option value="㎡"><option value="才"><option value="式"><option value="組"><option value="個"><option value="m"><option value="樘"><option value="m²"><option value="迴路"><option value="處"></datalist>
+        </div>
+        <div class="fg"><label>單價（元）</label><input class="fc" id="im-price" type="number" min="0" placeholder="0"></div>
+        <div class="fg"><label>含稅</label><select class="fc" id="im-taxed"><option value="0">未稅</option><option value="1">含稅</option></select></div>
+      </div>
+      <div class="fg"><label>備註 / 規格說明</label><textarea class="fc" id="im-note" rows="2" placeholder="材質、施工範圍、特殊規格…"></textarea></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeIM()">取消</button>
+      <button class="btn btn-primary" onclick="saveItem()">儲存品項</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Line Modal -->
+<div class="mbg" id="custom-modal">
+  <div class="modal">
+    <div class="mhd"><h3>新增自訂工項</h3><button class="mcl" onclick="closeCustomM()">✕</button></div>
+    <div class="mbod">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>工種類別</label><input class="fc" id="cu-cat" list="cu-catdl" placeholder=""><datalist id="cu-catdl"></datalist></div>
+        <div class="fg"><label>品項名稱 *</label><input class="fc" id="cu-name" placeholder=""></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="fg"><label>單位</label><input class="fc" id="cu-unit" list="unitdl" placeholder="坪、式…"></div>
+        <div class="fg"><label>單價</label><input class="fc" id="cu-price" type="number" min="0" placeholder="0"></div>
+        <div class="fg"><label>數量</label><input class="fc" id="cu-qty" type="number" min="0" step="0.01" placeholder="1"></div>
+      </div>
+      <div class="fg"><label>備註</label><input class="fc" id="cu-note" placeholder=""></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeCustomM()">取消</button>
+      <button class="btn btn-primary" onclick="saveCustomLine()">加入明細</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="mbg" id="preview-modal">
+  <div class="modal wide">
+    <div class="mhd">
+      <h3>報價單預覽</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-sm btn-secondary" onclick="expXL()">Excel</button>
+        <button class="btn btn-sm btn-primary" onclick="expPDF()">下載 PDF</button>
+        <button class="mcl" onclick="closePrevM()">✕</button>
+      </div>
+    </div>
+    <div class="mbod" style="padding:0;" id="preview-content"></div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════
+const KP='ds_pwd',KC='ds_clients',KD='ds_db',KS='ds_set',KQ='ds_quotes',KSQ='ds_seq';
+
+// ── WORK ORDER (台灣室內裝修施工邏輯工序) ──
+const WORK_ORDER=[
+  {order:1,  cat:'假設工程',  icon:'🔧', desc:'工地圍籬、臨時水電、工務所設置'},
+  {order:2,  cat:'拆除工程',  icon:'🔨', desc:'既有隔間、天花、地坪、門窗拆除'},
+  {order:3,  cat:'清運工程',  icon:'🚛', desc:'廢棄物清運、垃圾處理'},
+  {order:4,  cat:'結構工程',  icon:'🏗️', desc:'結構補強、RC牆、樓板開口'},
+  {order:5,  cat:'水電工程',  icon:'⚡', desc:'給排水配管、電路配管配線（粗工）'},
+  {order:6,  cat:'空調工程',  icon:'❄️', desc:'冷氣系統、通風換氣、排風管路'},
+  {order:7,  cat:'防水工程',  icon:'💧', desc:'浴室、廚房、陽台防水處理'},
+  {order:8,  cat:'泥作工程',  icon:'🧱', desc:'磚牆隔間、磁磚鋪貼、粉刷'},
+  {order:9,  cat:'鋁窗工程',  icon:'🪟', desc:'鋁窗、氣密窗、採光罩更換'},
+  {order:10, cat:'石材工程',  icon:'💎', desc:'大理石、石英石、花崗岩施工'},
+  {order:11, cat:'木作工程',  icon:'🪵', desc:'天花板、隔間、木皮、造型木作'},
+  {order:12, cat:'鐵件工程',  icon:'⚙️', desc:'鐵件樓梯、格柵、框架'},
+  {order:13, cat:'系統櫃',    icon:'🗄️', desc:'系統板材、廚具、衣櫃安裝'},
+  {order:14, cat:'地板工程',  icon:'🏠', desc:'木地板、磁磚地坪、環氧樹脂'},
+  {order:15, cat:'弱電工程',  icon:'📡', desc:'網路、電話、監視、門禁、對講機'},
+  {order:16, cat:'衛浴設備',  icon:'🚿', desc:'衛浴設備安裝、廚具設備安裝'},
+  {order:17, cat:'油漆工程',  icon:'🖌️', desc:'批土、乳膠漆、特殊塗料'},
+  {order:18, cat:'玻璃工程',  icon:'🔲', desc:'強化玻璃、鏡面、隔間玻璃'},
+  {order:19, cat:'照明工程',  icon:'💡', desc:'燈具安裝、LED、間接照明'},
+  {order:20, cat:'軟裝配置',  icon:'🛋️', desc:'窗簾、地毯、家具、藝術品'},
+  {order:21, cat:'清潔工程',  icon:'🧹', desc:'工程清潔、入住清潔'},
+  {order:22, cat:'雜項工程',  icon:'📋', desc:'其他未分類工程'},
+];
+
+const CAT_ORDER=WORK_ORDER.reduce((m,w)=>{m[w.cat]=w.order;return m},{});
+
+const DS_DEFAULTS={
+  name:'得森室內裝修設計有限公司',nameEn:'ERIC KUO SPACE DESIGN',
+  services:'商業空間｜展示設計｜老屋改造｜住宅規劃',
+  mob:'0939-977966',tel:'07-7220069',email:'kuo1223@gmail.com',
+  addr:'高雄市苓雅區中正一路121巷5弄6-1號',
+  lic:'內營室技字第40EB020646號',owner:'',
+  validity:'本報價單有效期限為30天',
+  payment:'簽約30%、開工30%、完工前40%',
+  disclaimer:'本報價單含工帶料，不含設計費及監工費。實際施工數量以現場丈量為準，差異部分依實結算。',
+  prefix:'QT'
+};
+
+const SAMPLE_CLIENTS=[
+  {id:uid(),name:'陳建志',title:'先生',mob:'0912-345678',tel:'06-2345678',email:'',addr:'台南市中西區',type:'residential',source:'referral',note:'喜好日式簡約風',quotes:[]},
+  {id:uid(),name:'林怡君',title:'小姐',mob:'0922-111222',tel:'',email:'lin@example.com',addr:'高雄市三民區',type:'residential',source:'social',note:'',quotes:[]},
+];
+
+const SAMPLE_DB=[
+  // 假設工程
+  {id:uid(),cat:'假設工程',name:'工地防護圍籬（含搭拆）',unit:'式',price:8000,taxed:0,note:''},
+  {id:uid(),cat:'假設工程',name:'電梯樓層防護工程',unit:'式',price:5000,taxed:0,note:'保護大樓公共區域'},
+  {id:uid(),cat:'假設工程',name:'工地臨時水電申請',unit:'式',price:3000,taxed:0,note:''},
+  // 拆除工程
+  {id:uid(),cat:'拆除工程',name:'輕隔間牆拆除',unit:'㎡',price:350,taxed:0,note:''},
+  {id:uid(),cat:'拆除工程',name:'磁磚地坪拆除（含底層）',unit:'㎡',price:320,taxed:0,note:''},
+  {id:uid(),cat:'拆除工程',name:'木作天花拆除',unit:'㎡',price:280,taxed:0,note:''},
+  {id:uid(),cat:'拆除工程',name:'門窗拆除',unit:'樘',price:1200,taxed:0,note:''},
+  // 清運工程
+  {id:uid(),cat:'清運工程',name:'廢棄物清運（含裝卸）',unit:'車',price:6000,taxed:0,note:'3噸車/車'},
+  {id:uid(),cat:'清運工程',name:'垃圾袋清運費',unit:'式',price:3000,taxed:0,note:''},
+  // 水電工程
+  {id:uid(),cat:'水電工程',name:'電路配管配線（新設迴路）',unit:'迴路',price:3500,taxed:0,note:'含管材'},
+  {id:uid(),cat:'水電工程',name:'給水配管（PVC）',unit:'m',price:350,taxed:0,note:''},
+  {id:uid(),cat:'水電工程',name:'排水配管',unit:'m',price:400,taxed:0,note:''},
+  {id:uid(),cat:'水電工程',name:'插座更換（單孔）',unit:'個',price:600,taxed:0,note:'含材料'},
+  {id:uid(),cat:'水電工程',name:'開關更換',unit:'個',price:500,taxed:0,note:''},
+  {id:uid(),cat:'水電工程',name:'電箱整合更新',unit:'式',price:15000,taxed:0,note:''},
+  // 空調工程
+  {id:uid(),cat:'空調工程',name:'分離式冷氣安裝',unit:'台',price:4500,taxed:0,note:'不含主機費用'},
+  {id:uid(),cat:'空調工程',name:'全熱交換機安裝',unit:'式',price:18000,taxed:0,note:'不含主機費用'},
+  {id:uid(),cat:'空調工程',name:'排風管路配置',unit:'m',price:800,taxed:0,note:''},
+  // 防水工程
+  {id:uid(),cat:'防水工程',name:'浴室防水（彈性水泥2層）',unit:'㎡',price:850,taxed:0,note:'含壁面上推30cm'},
+  {id:uid(),cat:'防水工程',name:'廚房地坪防水',unit:'㎡',price:750,taxed:0,note:''},
+  {id:uid(),cat:'防水工程',name:'陽台防水處理',unit:'㎡',price:700,taxed:0,note:''},
+  // 泥作工程
+  {id:uid(),cat:'泥作工程',name:'磁磚舖貼（壁面）',unit:'㎡',price:1200,taxed:0,note:'含基本材料'},
+  {id:uid(),cat:'泥作工程',name:'磁磚舖貼（地坪）',unit:'㎡',price:980,taxed:0,note:''},
+  {id:uid(),cat:'泥作工程',name:'水泥砂漿粉刷',unit:'㎡',price:480,taxed:0,note:''},
+  {id:uid(),cat:'泥作工程',name:'紅磚牆砌築',unit:'㎡',price:2800,taxed:0,note:'含材料'},
+  {id:uid(),cat:'泥作工程',name:'輕質隔間（白磚）',unit:'㎡',price:2200,taxed:0,note:''},
+  // 鋁窗工程
+  {id:uid(),cat:'鋁窗工程',name:'氣密窗更換',unit:'樘',price:18000,taxed:0,note:'依尺寸議價'},
+  {id:uid(),cat:'鋁窗工程',name:'採光罩（鋁架+PC板）',unit:'㎡',price:3500,taxed:0,note:''},
+  // 木作工程
+  {id:uid(),cat:'木作工程',name:'木作天花板（矽酸鈣板）',unit:'坪',price:3800,taxed:0,note:''},
+  {id:uid(),cat:'木作工程',name:'木作天花（間接燈槽造型）',unit:'坪',price:4500,taxed:0,note:'含燈槽骨架'},
+  {id:uid(),cat:'木作工程',name:'木作輕隔間（矽酸鈣板）',unit:'坪',price:4200,taxed:0,note:''},
+  {id:uid(),cat:'木作工程',name:'造型電視牆（木皮）',unit:'式',price:45000,taxed:0,note:'依圖面'},
+  {id:uid(),cat:'木作工程',name:'木作臥榻',unit:'式',price:28000,taxed:0,note:'含掀蓋收納'},
+  {id:uid(),cat:'木作工程',name:'木作層板',unit:'才',price:550,taxed:0,note:''},
+  // 系統櫃
+  {id:uid(),cat:'系統櫃',name:'系統衣櫃（含門片）',unit:'才',price:950,taxed:0,note:''},
+  {id:uid(),cat:'系統櫃',name:'系統書櫃',unit:'才',price:850,taxed:0,note:''},
+  {id:uid(),cat:'系統櫃',name:'廚具上下櫃',unit:'才',price:1100,taxed:0,note:''},
+  // 地板工程
+  {id:uid(),cat:'地板工程',name:'超耐磨木地板（含底板）',unit:'坪',price:3200,taxed:0,note:''},
+  {id:uid(),cat:'地板工程',name:'海島型木地板',unit:'坪',price:5500,taxed:0,note:'含安裝'},
+  {id:uid(),cat:'地板工程',name:'拋光石英磚（含工帶料）',unit:'坪',price:4500,taxed:0,note:''},
+  {id:uid(),cat:'地板工程',name:'地坪環氧樹脂',unit:'㎡',price:1800,taxed:0,note:''},
+  // 弱電工程
+  {id:uid(),cat:'弱電工程',name:'網路線配管配線',unit:'點',price:1800,taxed:0,note:''},
+  {id:uid(),cat:'弱電工程',name:'監視攝影系統',unit:'式',price:18000,taxed:0,note:'4路含螢幕'},
+  {id:uid(),cat:'弱電工程',name:'視訊對講機',unit:'式',price:12000,taxed:0,note:''},
+  {id:uid(),cat:'弱電工程',name:'門禁系統',unit:'式',price:15000,taxed:0,note:''},
+  // 衛浴設備
+  {id:uid(),cat:'衛浴設備',name:'浴室設備安裝（含馬桶、面盆、龍頭）',unit:'式',price:15000,taxed:0,note:'不含設備費'},
+  {id:uid(),cat:'衛浴設備',name:'廚具設備安裝',unit:'式',price:8000,taxed:0,note:'不含設備費'},
+  {id:uid(),cat:'衛浴設備',name:'浴缸安裝',unit:'式',price:6000,taxed:0,note:''},
+  // 油漆工程
+  {id:uid(),cat:'油漆工程',name:'全室乳膠漆（批土3道）',unit:'坪',price:1800,taxed:0,note:'含材料'},
+  {id:uid(),cat:'油漆工程',name:'天花板乳膠漆',unit:'坪',price:1200,taxed:0,note:''},
+  {id:uid(),cat:'油漆工程',name:'珪藻土塗料',unit:'㎡',price:680,taxed:0,note:''},
+  {id:uid(),cat:'油漆工程',name:'特殊塗料（礦物漆）',unit:'㎡',price:850,taxed:0,note:''},
+  // 玻璃工程
+  {id:uid(),cat:'玻璃工程',name:'強化清玻璃（8mm）',unit:'㎡',price:2200,taxed:0,note:''},
+  {id:uid(),cat:'玻璃工程',name:'霧面玻璃隔間',unit:'㎡',price:2800,taxed:0,note:''},
+  {id:uid(),cat:'玻璃工程',name:'鏡面安裝',unit:'㎡',price:1800,taxed:0,note:''},
+  // 照明工程
+  {id:uid(),cat:'照明工程',name:'嵌燈安裝（LED）',unit:'個',price:850,taxed:0,note:'不含燈具'},
+  {id:uid(),cat:'照明工程',name:'間接照明燈管',unit:'m',price:350,taxed:0,note:''},
+  {id:uid(),cat:'照明工程',name:'吊燈安裝',unit:'個',price:1200,taxed:0,note:'不含燈具'},
+  // 清潔工程
+  {id:uid(),cat:'清潔工程',name:'工程完工清潔',unit:'式',price:8000,taxed:0,note:''},
+  {id:uid(),cat:'清潔工程',name:'細部清潔（入住前）',unit:'坪',price:250,taxed:0,note:''},
+  // 雜項工程
+  {id:uid(),cat:'雜項工程',name:'工程保險',unit:'式',price:5000,taxed:0,note:''},
+  {id:uid(),cat:'雜項工程',name:'設計費',unit:'坪',price:2500,taxed:0,note:''},
+  {id:uid(),cat:'雜項工程',name:'監工管理費',unit:'式',price:30000,taxed:0,note:'含每週工地監督'},
+];
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let EID_CLIENT=null, EID_ITEM=null, EDITING_QID=null;
+let QLINES=[]; // current quote lines
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function gDB(){return JSON.parse(localStorage.getItem(KD)||'null')||SAMPLE_DB}
+function sDB(d){localStorage.setItem(KD,JSON.stringify(d))}
+function gClients(){return JSON.parse(localStorage.getItem(KC)||'null')||SAMPLE_CLIENTS}
+function sClients(d){localStorage.setItem(KC,JSON.stringify(d))}
+function gQuotes(){return JSON.parse(localStorage.getItem(KQ)||'[]')}
+function sQuotes(d){localStorage.setItem(KQ,JSON.stringify(d))}
+function gS(){return{...DS_DEFAULTS,...JSON.parse(localStorage.getItem(KS)||'{}')}}
+function fmt(n){return '$ '+Math.round(n).toLocaleString('zh-TW')}
+function notify(m,type){
+  const e=document.getElementById('notif');e.textContent=m;
+  e.style.background=type==='err'?'#8b3a3a':type==='ok'?'#2e6b5e':'var(--ink)';
+  e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2500);
+}
+function nxtNo(){
+  const s=gS(); let seq=parseInt(localStorage.getItem(KSQ)||'0')+1;
+  localStorage.setItem(KSQ,seq);
+  const y=new Date().getFullYear().toString().slice(2);
+  return (s.prefix||'QT')+y+String(seq).padStart(3,'0');
+}
+function catOrder(cat){return CAT_ORDER[cat]??99}
+function sortedCats(){return[...new Set(gDB().map(i=>i.cat))].sort((a,b)=>catOrder(a)-catOrder(b))}
+function today(){return new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'})}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function statusLabel(s){return{draft:'草稿',sent:'已送出',approved:'已成交',rejected:'未成交'}[s]||s}
+function statusBadge(s){const map={draft:'b-stone',sent:'b-gold',approved:'b-green',rejected:'b-red'};return`<span class="badge ${map[s]||'b-stone'}">${statusLabel(s)}</span>`}
+function clientName(cl){const clients=gClients();const c=clients.find(x=>x.id===cl);return c?c.name:''}
+
+// ════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════
+async function h(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function doLogin(){
+  const v=document.getElementById('pwd').value;
+  const stored=localStorage.getItem(KP)||await h('0000');
+  if(await h(v)===stored){
+    document.getElementById('lock').style.display='none';
+    document.getElementById('app').classList.add('on');
+    init();
+  } else {
+    document.getElementById('lerr').textContent='密碼錯誤，請再試一次';
+    document.getElementById('pwd').value='';
+    setTimeout(()=>document.getElementById('lerr').textContent='',2000);
+  }
+}
+document.getElementById('pwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+function saveScriptUrl(){
+  const url=document.getElementById('su-url').value.trim();
+  localStorage.setItem(KSU,url);
+  document.getElementById('sync-status').textContent=url?'✅ 已儲存網址，資料將自動同步':'已清除網址';
+  notify('Script 網址已儲存','ok');
+}
+
+async function pushAllToSheets(){
+  const url=getScriptUrl();
+  if(!url){notify('請先設定 Script 網址','err');return}
+  notify('推送資料中…');
+  try{
+    const clients=gClients();
+    const quotes=gQuotes();
+    const cRows=clients.map(c=>[c.id,c.name,c.mob||'',c.addr||'',c.type||'',JSON.stringify(c)]);
+    const qRows=quotes.map(q=>[q.id,q.no||'',q.clientName||'',q.project||'',q.total||0,q.status||'',q.date||'',JSON.stringify(q)]);
+    await syncToSheets('clients',cRows);
+    await syncToSheets('quotes',qRows);
+    notify('所有資料已推送到雲端','ok');
+    document.getElementById('sync-status').textContent='✅ 最後同步：'+new Date().toLocaleTimeString('zh-TW');
+  }catch(e){notify('推送失敗：'+e.message,'err')}
+}
+
+function logout(){document.getElementById('app').classList.remove('on');document.getElementById('lock').style.display='flex';document.getElementById('pwd').value=''}
+
+// ════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ════════════════════════════════════════
+const KSU='ds_script_url'; // script url key
+
+function getScriptUrl(){return localStorage.getItem(KSU)||''}
+
+async function syncToSheets(sheetName, rows){
+  const url=getScriptUrl();if(!url)return;
+  try{
+    await fetch(url+'?action=set&sheet='+sheetName+'&rows='+encodeURIComponent(JSON.stringify(rows)),{method:'GET',mode:'no-cors'});
+  }catch(e){console.warn('Sheets sync failed:',e)}
+}
+
+async function syncFromSheets(sheetName){
+  const url=getScriptUrl();if(!url)return null;
+  try{
+    const r=await fetch(url+'?action=get&sheet='+sheetName);
+    const d=await r.json();
+    return d.data||null;
+  }catch(e){console.warn('Sheets fetch failed:',e);return null}
+}
+
+// Override sP and sC to also sync
+const _origSP=window.sP;
+function sP(d){
+  localStorage.setItem('ds_projects',JSON.stringify(d));
+  // Sync projects to sheets
+  if(getScriptUrl()){
+    const rows=d.map(p=>[p.id,p.name,p.ownerName||'',p.ownerPhone||'',p.address||'',p.startDate||'',p.endDate||'',p.status||'',p.budget||0,p.color||'',JSON.stringify(p)]);
+    syncToSheets('projects',rows);
+  }
+}
+
+function sSave(key,arr,sheetName,rowFn){
+  localStorage.setItem(key,JSON.stringify(arr));
+  if(getScriptUrl()){
+    const rows=arr.map(rowFn);
+    syncToSheets(sheetName,rows);
+  }
+}
+
+async function pullFromSheets(){
+  notify('從雲端載入資料…');
+  try{
+    // Pull clients
+    const cData=await syncFromSheets('clients');
+    if(cData&&cData.length>0){
+      const clients=cData.map(r=>JSON.parse(r[r.length-1]||'{}')).filter(c=>c.id);
+      if(clients.length)localStorage.setItem('ds_clients',JSON.stringify(clients));
+    }
+    // Pull quotes
+    const qData=await syncFromSheets('quotes');
+    if(qData&&qData.length>0){
+      const quotes=qData.map(r=>JSON.parse(r[r.length-1]||'{}')).filter(q=>q.id);
+      if(quotes.length)localStorage.setItem('ds_quotes',JSON.stringify(quotes));
+    }
+    notify('雲端資料載入完成','ok');
+    init();
+  }catch(e){notify('載入失敗：'+e.message,'err')}
+}
+
+function globalSearch(q){
+  if(!q||q.length<1){return}
+  const kw=q.toLowerCase();
+  // Search in DB
+  const dbHits=gDB().filter(i=>i.name.toLowerCase().includes(kw)||i.cat.toLowerCase().includes(kw)||(i.note||'').toLowerCase().includes(kw));
+  // Search in quotes
+  const qHits=gQuotes().filter(x=>(x.no||'').toLowerCase().includes(kw)||(x.clientName||'').toLowerCase().includes(kw)||(x.project||'').toLowerCase().includes(kw));
+  // Search in clients
+  const cHits=gClients().filter(c=>c.name.toLowerCase().includes(kw)||(c.mob||'').includes(kw)||(c.addr||'').toLowerCase().includes(kw));
+
+  if(!dbHits.length&&!qHits.length&&!cHits.length){notify('找不到「'+q+'」相關資料','err');return}
+
+  // Show results in a simple overlay
+  let existing=document.getElementById('search-overlay');
+  if(existing)existing.remove();
+  const div=document.createElement('div');
+  div.id='search-overlay';
+  div.style.cssText='position:fixed;top:56px;right:12px;width:360px;max-height:70vh;overflow-y:auto;background:#fff;border:1px solid var(--border);border-radius:var(--rl);box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:300;font-size:13px;';
+  div.innerHTML=`<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);font-size:11px;color:var(--ink-l);letter-spacing:1px;display:flex;justify-content:space-between;">
+    搜尋「${q}」的結果
+    <span onclick="document.getElementById('search-overlay').remove();document.getElementById('global-search').value='';" style="cursor:pointer;color:var(--ink-l);">✕</span>
+  </div>`+
+  (cHits.length?`<div style="padding:8px 14px;font-size:10px;color:var(--sage-dk);letter-spacing:2px;background:var(--paper-w);">客戶</div>`+
+    cHits.map(c=>`<div onclick="go('clients');document.getElementById('search-overlay').remove();document.getElementById('global-search').value='';" style="padding:8px 14px;border-bottom:1px solid var(--border-l);cursor:pointer;" onmouseover="this.style.background='var(--sage-pa)'" onmouseout="this.style.background=''">
+      <div style="font-weight:400;">${c.name}</div><div style="font-size:11px;color:var(--ink-l);">${c.mob||''} ${c.addr||''}</div>
+    </div>`).join(''):'')+
+  (qHits.length?`<div style="padding:8px 14px;font-size:10px;color:var(--sage-dk);letter-spacing:2px;background:var(--paper-w);">報價單</div>`+
+    qHits.map(x=>`<div onclick="editQuote('${x.id}');document.getElementById('search-overlay').remove();document.getElementById('global-search').value='';" style="padding:8px 14px;border-bottom:1px solid var(--border-l);cursor:pointer;" onmouseover="this.style.background='var(--sage-pa)'" onmouseout="this.style.background=''">
+      <div style="font-weight:400;">${x.no} — ${x.clientName||''}</div><div style="font-size:11px;color:var(--ink-l);">${x.project||''}</div>
+    </div>`).join(''):'')+
+  (dbHits.length?`<div style="padding:8px 14px;font-size:10px;color:var(--sage-dk);letter-spacing:2px;background:var(--paper-w);">品項資料庫</div>`+
+    dbHits.slice(0,8).map(i=>`<div onclick="go('db');document.getElementById('ds').value='${i.name}';rDB();document.getElementById('search-overlay').remove();document.getElementById('global-search').value='';" style="padding:8px 14px;border-bottom:1px solid var(--border-l);cursor:pointer;" onmouseover="this.style.background='var(--sage-pa)'" onmouseout="this.style.background=''">
+      <div>${i.name}</div><div style="font-size:11px;color:var(--ink-l);">${i.cat} · ${i.unit||''} · $ ${i.price.toLocaleString('zh-TW')}</div>
+    </div>`).join(''):'');
+  document.body.appendChild(div);
+  // Close on outside click
+  setTimeout(()=>document.addEventListener('click',function h(e){if(!div.contains(e.target)&&e.target.id!=='global-search'){div.remove();document.removeEventListener('click',h)}},true),100);
+}
+async function chgPwd(){
+  const p1=document.getElementById('sp1').value,p2=document.getElementById('sp2').value;
+  if(!p1)return notify('請輸入新密碼','err');
+  if(p1!==p2)return notify('兩次密碼不一致','err');
+  localStorage.setItem(KP,await h(p1));
+  document.getElementById('sp1').value=document.getElementById('sp2').value='';
+  notify('密碼已更新','ok');
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+function init(){
+  loadSets();
+  rClients();
+  rQuoteList();
+  rDB();
+  rebCatSelects();
+  initNewQuote();
+}
+
+// ════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════
+function go(id){
+  const panels=['clients','quotes','new-quote','db','settings'];
+  panels.forEach(p=>document.getElementById('p-'+p).classList.toggle('on',p===id));
+  document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('on',panels[i]===id));
+  if(id==='quotes')rQuoteList();
+  if(id==='clients')rClients();
+}
+
+// ════════════════════════════════════════
+// CLIENTS
+// ════════════════════════════════════════
+function rClients(){
+  const q=(document.getElementById('cl-search').value||'').toLowerCase();
+  const clients=gClients().filter(c=>!q||c.name.toLowerCase().includes(q)||c.mob?.includes(q)||c.addr?.toLowerCase().includes(q));
+  const grid=document.getElementById('client-grid');
+  if(!clients.length){grid.innerHTML=`<div style="grid-column:1/-1;"><div class="empty"><p>尚無客戶資料</p></div></div>`;return}
+  grid.innerHTML=clients.map(c=>{
+    const quotes=gQuotes().filter(q=>q.clientId===c.id);
+    const total=quotes.filter(q=>q.status==='approved').reduce((s,q)=>s+q.total,0);
+    const initials=c.name.slice(0,1);
+    const typeMap={residential:'住宅',commercial:'商業',contractor:'合作',other:'其他'};
+    return `<div class="client-card" onclick="openClientDetail('${c.id}')">
+      <div class="cc-top">
+        <div class="cc-avatar">${initials}</div>
+        <div>
+          <div class="cc-name">${c.name}${c.title?' '+c.title:''}</div>
+          <span class="badge b-sage" style="font-size:10px;">${typeMap[c.type]||'其他'}</span>
+        </div>
+      </div>
+      <div class="cc-info">
+        ${c.mob?'📱 '+c.mob+'<br>':''}
+        ${c.email?'✉ '+c.email+'<br>':''}
+        ${c.addr?'📍 '+c.addr:''}
+      </div>
+      <div class="cc-stats">
+        <div class="cc-stat">報價 <strong>${quotes.length}</strong> 件</div>
+        <div class="cc-stat">成交 <strong>${quotes.filter(q=>q.status==='approved').length}</strong> 件</div>
+        ${total>0?`<div class="cc-stat">累計 <strong>$ ${Math.round(total).toLocaleString('zh-TW')}</strong></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openClientM(id){
+  EID_CLIENT=id||null;
+  document.getElementById('cm-title').textContent=id?'編輯客戶':'新增客戶';
+  if(id){
+    const c=gClients().find(x=>x.id===id);
+    if(!c)return;
+    document.getElementById('cm-name').value=c.name||'';
+    document.getElementById('cm-title2').value=c.title||'';
+    document.getElementById('cm-mob').value=c.mob||'';
+    document.getElementById('cm-tel').value=c.tel||'';
+    document.getElementById('cm-email').value=c.email||'';
+    document.getElementById('cm-addr').value=c.addr||'';
+    document.getElementById('cm-type').value=c.type||'residential';
+    document.getElementById('cm-source').value=c.source||'referral';
+    document.getElementById('cm-note').value=c.note||'';
+  } else {
+    ['cm-name','cm-title2','cm-mob','cm-tel','cm-email','cm-addr','cm-note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('cm-type').value='residential';
+    document.getElementById('cm-source').value='referral';
+  }
+  document.getElementById('client-modal').classList.add('on');
+  setTimeout(()=>document.getElementById('cm-name').focus(),80);
+}
+function closeCM(){document.getElementById('client-modal').classList.remove('on');EID_CLIENT=null}
+function saveClient(){
+  const name=document.getElementById('cm-name').value.trim();
+  if(!name){notify('請填寫客戶姓名','err');return}
+  const c={
+    id:EID_CLIENT||uid(), name,
+    title:document.getElementById('cm-title2').value.trim(),
+    mob:document.getElementById('cm-mob').value.trim(),
+    tel:document.getElementById('cm-tel').value.trim(),
+    email:document.getElementById('cm-email').value.trim(),
+    addr:document.getElementById('cm-addr').value.trim(),
+    type:document.getElementById('cm-type').value,
+    source:document.getElementById('cm-source').value,
+    note:document.getElementById('cm-note').value.trim(),
+    createdAt:EID_CLIENT?(gClients().find(x=>x.id===EID_CLIENT)?.createdAt||todayISO()):todayISO()
+  };
+  const clients=gClients();
+  if(EID_CLIENT){const i=clients.findIndex(x=>x.id===EID_CLIENT);if(i>=0)clients[i]=c}
+  else clients.push(c);
+  sClients(clients);
+  rebClientSelects();
+  rClients();
+  closeCM();
+  notify(EID_CLIENT?'客戶資料已更新':'客戶已新增','ok');
+}
+function openClientDetail(id){
+  const c=gClients().find(x=>x.id===id);if(!c)return;
+  const quotes=gQuotes().filter(q=>q.clientId===id);
+  const msg=`客戶：${c.name}\n報價紀錄：${quotes.length} 件\n\n選擇：\n[編輯客戶] 或 [新增報價單]`;
+  // Simple action picker
+  const action=confirm(`${c.name} — 點確定前往新增報價單，取消則編輯客戶資料`);
+  if(action){
+    go('new-quote');newQuote(id);
+  } else {
+    openClientM(id);
+  }
+}
+function deleteClient(id){
+  if(!confirm('確定刪除此客戶？相關報價單不會刪除。'))return;
+  sClients(gClients().filter(c=>c.id!==id));
+  rClients();notify('已刪除客戶','ok');
+}
+
+// ════════════════════════════════════════
+// QUOTES LIST
+// ════════════════════════════════════════
+function rQuoteList(){
+  const q=(document.getElementById('ql-search').value||'').toLowerCase();
+  const cFilter=document.getElementById('ql-client').value;
+  const sFilter=document.getElementById('ql-status').value;
+  let quotes=gQuotes();
+  if(q)quotes=quotes.filter(x=>x.no?.toLowerCase().includes(q)||x.clientName?.toLowerCase().includes(q)||x.project?.toLowerCase().includes(q));
+  if(cFilter)quotes=quotes.filter(x=>x.clientId===cFilter);
+  if(sFilter)quotes=quotes.filter(x=>x.status===sFilter);
+  quotes.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const tb=document.getElementById('ql-tbody');
+  if(!quotes.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><p>尚無報價紀錄</p></div></td></tr>`;return}
+  tb.innerHTML=quotes.map(q=>`<tr class="qt-list-row">
+    <td style="font-family:var(--serif);letter-spacing:1px;">${q.no||'—'}</td>
+    <td style="color:var(--ink-l);font-size:12px;">${q.date||''}</td>
+    <td><strong>${q.clientName||'—'}</strong></td>
+    <td style="color:var(--ink-l);">${q.project||'—'}</td>
+    <td class="num"><strong>${fmt(q.total||0)}</strong></td>
+    <td style="text-align:center;">${statusBadge(q.status)}</td>
+    <td style="text-align:center;">
+      <button class="btn btn-sm btn-secondary" onclick="editQuote('${q.id}')" style="margin-right:4px;">編輯</button>
+      <button class="btn btn-sm btn-secondary" onclick="copyQuote('${q.id}')" style="margin-right:4px;">複製</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteQuote('${q.id}')">刪除</button>
+    </td>
+  </tr>`).join('');
+}
+function editQuote(id){
+  const q=gQuotes().find(x=>x.id===id);if(!q)return;
+  EDITING_QID=id;QLINES=q.lines||[];
+  go('new-quote');
+  document.getElementById('nq-title').textContent='修改報價單';
+  document.getElementById('nq-sub').textContent='編輯中：'+q.no;
+  document.getElementById('q-no').value=q.no||'';
+  document.getElementById('q-cl').value=q.clientName||'';
+  document.getElementById('q-ph').value=q.clientPhone||'';
+  document.getElementById('q-pj').value=q.project||'';
+  document.getElementById('q-area').value=q.area||'';
+  document.getElementById('q-tax').value=q.taxMode||0;
+  document.getElementById('q-status').value=q.status||'draft';
+  document.getElementById('q-nt').value=q.notes||'';
+  document.getElementById('q-client-sel').value=q.clientId||'';
+  rLines();rPick();
+}
+function copyQuote(id){
+  const q=gQuotes().find(x=>x.id===id);if(!q)return;
+  const newQ={...q,id:uid(),no:nxtNo(),date:todayISO(),status:'draft'};
+  const quotes=gQuotes();quotes.push(newQ);sQuotes(quotes);
+  rQuoteList();notify('已複製為新草稿','ok');
+}
+function deleteQuote(id){
+  if(!confirm('確定刪除此報價單？'))return;
+  sQuotes(gQuotes().filter(q=>q.id!==id));rQuoteList();notify('已刪除','ok');
+}
+
+// ════════════════════════════════════════
+// NEW / EDIT QUOTE
+// ════════════════════════════════════════
+function initNewQuote(){rebClientSelects();rLines();rPick();rebCatBtns()}
+function newQuote(clientId){
+  EDITING_QID=null;QLINES=[];
+  document.getElementById('nq-title').textContent='建立報價單';
+  document.getElementById('nq-sub').textContent='依施工邏輯工序排列，自動彙整金額';
+  document.getElementById('q-no').value=nxtNo();
+  document.getElementById('q-cl').value='';document.getElementById('q-ph').value='';
+  document.getElementById('q-pj').value='';document.getElementById('q-area').value='';
+  document.getElementById('q-tax').value='0';document.getElementById('q-status').value='draft';
+  document.getElementById('q-nt').value='';
+  document.getElementById('q-client-sel').value=clientId||'';
+  if(clientId)fillClientInfo();
+  rLines();rPick();
+}
+function fillClientInfo(){
+  const id=document.getElementById('q-client-sel').value;
+  if(!id)return;
+  const c=gClients().find(x=>x.id===id);if(!c)return;
+  document.getElementById('q-cl').value=c.name+(c.title?' '+c.title:'');
+  document.getElementById('q-ph').value=c.mob||c.tel||'';
+}
+function rebClientSelects(){
+  const clients=gClients();
+  // quote builder sel
+  const sel=document.getElementById('q-client-sel');
+  const v=sel.value;
+  sel.innerHTML='<option value="">請選擇客戶</option>';
+  clients.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.title?' '+c.title:'');sel.appendChild(o)});
+  sel.value=v;
+  // quotes list filter
+  const qlsel=document.getElementById('ql-client');
+  const v2=qlsel.value;
+  qlsel.innerHTML='<option value="">所有客戶</option>';
+  clients.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;qlsel.appendChild(o)});
+  qlsel.value=v2;
+}
+
+// ── PICKER ──
+function rebCatBtns(){
+  const cats=sortedCats();
+  const el=document.getElementById('cat-btns');
+  const cuCatDl=document.getElementById('cu-catdl');
+  el.innerHTML=`<button class="btn btn-sm btn-secondary on" onclick="filterCat('',this)">全部</button>`+
+    cats.map(c=>`<button class="btn btn-sm btn-secondary" onclick="filterCat('${c}',this)">${c}</button>`).join('');
+  // Fill custom modal datalist
+  cuCatDl.innerHTML='';
+  WORK_ORDER.forEach(w=>{const o=document.createElement('option');o.value=w.cat;cuCatDl.appendChild(o)});
+}
+let pickCatFilter='';
+function filterCat(cat,btn){
+  pickCatFilter=cat;
+  document.querySelectorAll('#cat-btns .btn').forEach(b=>b.classList.remove('on','btn-accent'));
+  btn.classList.add('btn-accent');btn.classList.remove('btn-secondary');
+  rPick();
+}
+function rPick(){
+  const q=(document.getElementById('pk-s').value||'').toLowerCase();
+  const db=gDB();
+  // Group by cat in work order
+  const cats=sortedCats().filter(c=>!pickCatFilter||c===pickCatFilter);
+  let html='';
+  cats.forEach(cat=>{
+    const items=db.filter(i=>i.cat===cat&&(!q||i.name.toLowerCase().includes(q)||i.note?.toLowerCase().includes(q)));
+    if(!items.length)return;
+    const wo=WORK_ORDER.find(w=>w.cat===cat);
+    html+=`<div class="wcat-hd"><div class="order-num">${wo?.order||'—'}</div>${cat}</div>`;
+    items.forEach(i=>{
+      html+=`<div style="display:flex;align-items:center;padding:7px 12px;border-bottom:1px solid var(--border-l);gap:8px;font-size:13px;">
+        <div style="flex:1;"><span style="color:var(--ink);">${i.name}</span>${i.note?'<span style="font-size:11px;color:var(--ink-l);margin-left:6px;">'+i.note+'</span>':''}</div>
+        <div style="font-size:12px;color:var(--ink-l);white-space:nowrap;">${i.unit||''}</div>
+        <div style="font-size:12px;color:var(--sage-dk);white-space:nowrap;min-width:72px;text-align:right;">$ ${Math.round(i.price).toLocaleString('zh-TW')}</div>
+        <button class="btn btn-sm btn-accent" onclick="addLine('${i.id}')" style="white-space:nowrap;flex-shrink:0;">加入</button>
+      </div>`;
+    });
+  });
+  if(!html)html=`<div class="empty" style="padding:24px;"><p>無符合品項</p></div>`;
+  document.getElementById('picker-wrap').innerHTML=html;
+}
+function addLine(itemId){
+  const item=gDB().find(i=>i.id===itemId);if(!item)return;
+  const ex=QLINES.find(l=>l.itemId===itemId);
+  if(ex){ex.qty=(ex.qty||1)+1}
+  else QLINES.push({lid:uid(),itemId,cat:item.cat,name:item.name,unit:item.unit,price:item.price,qty:1,note:item.note,custom:false});
+  rLines();notify('已加入：'+item.name,'ok');
+}
+function rmLine(lid){QLINES=QLINES.filter(l=>l.lid!==lid);rLines()}
+function upQty(lid,v){const l=QLINES.find(x=>x.lid===lid);if(l){l.qty=parseFloat(v)||0;recalc()}}
+function upPrice(lid,v){const l=QLINES.find(x=>x.lid===lid);if(l){l.price=parseFloat(v)||0;recalc()}}
+
+function rLines(){
+  const tb=document.getElementById('q-lines-tbody');
+  document.getElementById('lct').textContent=QLINES.length+' 項';
+  if(!QLINES.length){
+    tb.innerHTML=`<tr><td colspan="7"><div class="empty" style="padding:24px;"><p>尚未加入工項 — 從上方品項資料庫選取</p></div></td></tr>`;
+    recalc();return;
+  }
+  const sorted=[...QLINES].sort((a,b)=>catOrder(a.cat)-catOrder(b.cat));
+  let html='';let lastCat='';let catSubtotal=0;let catLines=[];
+
+  const flushCat=()=>{
+    if(!lastCat)return;
+    html+=`<tr style="background:var(--sage-pa);">
+      <td colspan="5" style="padding:4px 10px;font-size:11px;color:var(--sage-dk);text-align:right;letter-spacing:1px;">
+        ${lastCat} 小計
+      </td>
+      <td style="text-align:right;font-weight:600;color:var(--sage-dk);font-size:13px;padding:4px 10px;">
+        $ ${Math.round(catSubtotal).toLocaleString('zh-TW')}
+      </td>
+      <td></td>
+    </tr>`;
+    catSubtotal=0;
+  };
+
+  sorted.forEach(l=>{
+    if(l.cat!==lastCat){
+      flushCat();
+      const wo=WORK_ORDER.find(w=>w.cat===l.cat);
+      html+=`<tr class="cat-header"><td colspan="7">${wo?wo.order+'. ':''} ${l.cat}</td></tr>`;
+      lastCat=l.cat;
+    }
+    catSubtotal+=l.price*l.qty;
+    html+=`<tr>
+      <td style="font-size:11px;color:var(--ink-l);"></td>
+      <td>${l.name}${l.note?'<br><span style="font-size:11px;color:var(--ink-l);">'+l.note+'</span>':''}</td>
+      <td>${l.unit||'—'}</td>
+      <td style="text-align:right;">
+        <input type="number" id="p_${l.lid}" value="${l.price}" min="0" style="width:82px;"
+          oninput="upPrice('${l.lid}',this.value)" onchange="upPrice('${l.lid}',this.value)">
+      </td>
+      <td style="text-align:right;">
+        <input type="number" id="q_${l.lid}" value="${l.qty}" min="0" step="0.01" style="width:62px;"
+          oninput="upQty('${l.lid}',this.value)" onchange="upQty('${l.lid}',this.value)">
+      </td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500;" id="st_${l.lid}">
+        $ ${Math.round(l.price*l.qty).toLocaleString('zh-TW')}
+      </td>
+      <td style="text-align:center;"><button class="btn btn-sm btn-danger" onclick="rmLine('${l.lid}')">✕</button></td>
+    </tr>`;
+  });
+  flushCat();
+
+  // Design & supervision fee rows (always at bottom)
+  html+=`<tr style="background:var(--paper-w);">
+    <td colspan="7" style="padding:6px 10px;font-size:11px;color:var(--ink-l);letter-spacing:1.5px;border-top:2px solid var(--border);">
+      ── 設計與監造費用
+    </td>
+  </tr>
+  <tr>
+    <td style="font-size:11px;color:var(--ink-l);"></td>
+    <td>設計服務費</td>
+    <td>式</td>
+    <td style="text-align:right;"><input type="number" id="fee_design" value="${window._feeDesign||0}" min="0" style="width:82px;" oninput="updFee()" onchange="updFee()"></td>
+    <td style="text-align:right;"><input type="number" value="1" readonly style="width:62px;background:var(--paper-w);"></td>
+    <td style="text-align:right;font-weight:500;" id="st_design">$ ${Math.round(window._feeDesign||0).toLocaleString('zh-TW')}</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td style="font-size:11px;color:var(--ink-l);"></td>
+    <td>工程監造費</td>
+    <td>式</td>
+    <td style="text-align:right;"><input type="number" id="fee_super" value="${window._feeSuper||0}" min="0" style="width:82px;" oninput="updFee()" onchange="updFee()"></td>
+    <td style="text-align:right;"><input type="number" value="1" readonly style="width:62px;background:var(--paper-w);"></td>
+    <td style="text-align:right;font-weight:500;" id="st_super">$ ${Math.round(window._feeSuper||0).toLocaleString('zh-TW')}</td>
+    <td></td>
+  </tr>`;
+
+  tb.innerHTML=html;
+  recalc();
+}
+
+function updFee(){
+  window._feeDesign=parseFloat(document.getElementById('fee_design')?.value)||0;
+  window._feeSuper=parseFloat(document.getElementById('fee_super')?.value)||0;
+  const sd=document.getElementById('st_design');
+  const ss=document.getElementById('st_super');
+  if(sd)sd.textContent='$ '+Math.round(window._feeDesign).toLocaleString('zh-TW');
+  if(ss)ss.textContent='$ '+Math.round(window._feeSuper).toLocaleString('zh-TW');
+  recalc();
+}
+
+function upQty(lid,v){
+  const l=QLINES.find(x=>x.lid===lid);
+  if(!l)return;
+  l.qty=parseFloat(v)||0;
+  // Update this row's subtotal in place without full re-render
+  const st=document.getElementById('st_'+lid);
+  if(st)st.textContent='$ '+Math.round(l.price*l.qty).toLocaleString('zh-TW');
+  recalc();
+}
+
+function upPrice(lid,v){
+  const l=QLINES.find(x=>x.lid===lid);
+  if(!l)return;
+  l.price=parseFloat(v)||0;
+  const st=document.getElementById('st_'+lid);
+  if(st)st.textContent='$ '+Math.round(l.price*l.qty).toLocaleString('zh-TW');
+  recalc();
+}
+function recalc(){
+  const workSub=QLINES.reduce((a,l)=>a+l.price*l.qty,0);
+  const design=window._feeDesign||0;
+  const super_=window._feeSuper||0;
+  const sub=workSub+design+super_;
+  const tm=parseInt(document.getElementById('q-tax').value||0);
+  const tax=tm>0?sub*tm/100:0;const tot=sub+tax;
+  document.getElementById('s-items').textContent=QLINES.length+' 項';
+  document.getElementById('s-sub').textContent=fmt(sub);
+  document.getElementById('s-tax').textContent=tm>0?fmt(tax):'—';
+  document.getElementById('s-tot').textContent=fmt(tot);
+  // Per-cat breakdown
+  const catTots={};
+  QLINES.forEach(l=>{catTots[l.cat]=(catTots[l.cat]||0)+l.price*l.qty});
+  if(design>0)catTots['設計服務費']=design;
+  if(super_>0)catTots['工程監造費']=super_;
+  const sorted=Object.entries(catTots).sort((a,b)=>catOrder(a[0])-catOrder(b[0]));
+  document.getElementById('s-cats-list').innerHTML=sorted.map(([cat,amt])=>
+    `<div class="sum-row" style="padding:5px 16px;font-size:12px;"><span class="lbl" style="font-size:11px;">${cat}</span><span class="val" style="font-size:12px;">$ ${Math.round(amt).toLocaleString('zh-TW')}</span></div>`
+  ).join('');
+}
+
+// ── CUSTOM LINE ──
+function openCustomLine(){document.getElementById('custom-modal').classList.add('on')}
+function closeCustomM(){document.getElementById('custom-modal').classList.remove('on')}
+function saveCustomLine(){
+  const name=document.getElementById('cu-name').value.trim();if(!name){notify('請填寫品項名稱','err');return}
+  const cat=document.getElementById('cu-cat').value.trim()||'雜項工程';
+  QLINES.push({lid:uid(),itemId:null,cat,name,unit:document.getElementById('cu-unit').value,
+    price:parseFloat(document.getElementById('cu-price').value)||0,
+    qty:parseFloat(document.getElementById('cu-qty').value)||1,
+    note:document.getElementById('cu-note').value,custom:true});
+  ['cu-cat','cu-name','cu-unit','cu-price','cu-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cu-qty').value='1';
+  rLines();closeCustomM();notify('已加入自訂工項','ok');
+}
+
+// ── SAVE QUOTE ──
+function collectQuote(status){
+  const tm=parseInt(document.getElementById('q-tax').value||0);
+  const sub=QLINES.reduce((a,l)=>a+l.price*l.qty,0);
+  const tax=tm>0?sub*tm/100:0;
+  return{
+    id:EDITING_QID||uid(),
+    no:document.getElementById('q-no').value,
+    date:todayISO(),
+    clientId:document.getElementById('q-client-sel').value||null,
+    clientName:document.getElementById('q-cl').value,
+    clientPhone:document.getElementById('q-ph').value,
+    project:document.getElementById('q-pj').value,
+    area:document.getElementById('q-area').value,
+    taxMode:tm,
+    status:status||document.getElementById('q-status').value,
+    notes:document.getElementById('q-nt').value,
+    lines:QLINES,sub,tax,total:sub+tax
+  };
+}
+function persistQuote(q){
+  const quotes=gQuotes();
+  if(EDITING_QID){const i=quotes.findIndex(x=>x.id===EDITING_QID);if(i>=0)quotes[i]=q;else quotes.push(q)}
+  else quotes.push(q);
+  sQuotes(quotes);EDITING_QID=q.id;
+}
+function saveQuoteDraft(){persistQuote(collectQuote('draft'));notify('草稿已儲存','ok')}
+function saveQuoteFinal(){
+  if(!document.getElementById('q-cl').value){notify('請填寫委託方姓名','err');return}
+  persistQuote(collectQuote());notify('報價單已儲存','ok');
+}
+
+// ════════════════════════════════════════
+// DB PANEL
+// ════════════════════════════════════════
+function rebCatSelects(){
+  const cats=sortedCats();
+  // DB filter
+  const dc=document.getElementById('dc');const v=dc.value;
+  dc.innerHTML='<option value="">所有工種</option>';
+  cats.forEach(c=>{const o=document.createElement('option');o.value=o.textContent=c;dc.appendChild(o)});
+  dc.value=v;
+  // Item modal cat
+  const imcat=document.getElementById('im-cat');const v2=imcat.value;
+  imcat.innerHTML='<option value="">請選擇工種</option>';
+  WORK_ORDER.forEach(w=>{const o=document.createElement('option');o.value=o.textContent=w.cat;imcat.appendChild(o)});
+  imcat.value=v2;
+}
+function rDB(){
+  const q=(document.getElementById('ds').value||'').toLowerCase();
+  const cat=document.getElementById('dc').value;
+  const db=gDB();
+  const rows=db.filter(i=>(!cat||i.cat===cat)&&(!q||i.name.toLowerCase().includes(q)||i.note?.toLowerCase().includes(q)));
+  rows.sort((a,b)=>catOrder(a.cat)-catOrder(b.cat)||a.name.localeCompare(b.name));
+  document.getElementById('dct').textContent=rows.length+' 筆';
+  const tb=document.getElementById('dtb');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><p>無符合資料</p></div></td></tr>`;return}
+  let lastCat='';
+  tb.innerHTML=rows.map(i=>{
+    const wo=WORK_ORDER.find(w=>w.cat===i.cat);
+    let catCell='';
+    if(i.cat!==lastCat){lastCat=i.cat;catCell=`<span class="badge b-sage">${i.cat}</span>`}
+    else catCell='';
+    return`<tr>
+      <td style="text-align:center;font-size:11px;color:var(--ink-f);">${wo?.order||'—'}</td>
+      <td>${catCell}</td>
+      <td>${i.name}</td>
+      <td>${i.unit||'—'}</td>
+      <td class="num">$ ${Math.round(i.price).toLocaleString('zh-TW')}</td>
+      <td style="font-size:12px;color:var(--ink-l);">${i.note||''}</td>
+      <td style="text-align:center;">
+        <button class="btn btn-sm btn-secondary" onclick="openItemM('${i.id}')" style="margin-right:4px;">編輯</button>
+        <button class="btn btn-sm btn-danger" onclick="delItem('${i.id}')">刪除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function openItemM(id){
+  EID_ITEM=id||null;
+  document.getElementById('im-title').textContent=id?'編輯品項':'新增品項';
+  if(id){
+    const item=gDB().find(i=>i.id===id);if(!item)return;
+    document.getElementById('im-cat').value=item.cat;document.getElementById('im-name').value=item.name;
+    document.getElementById('im-unit').value=item.unit||'';document.getElementById('im-price').value=item.price||0;
+    document.getElementById('im-taxed').value=item.taxed||0;document.getElementById('im-note').value=item.note||'';
+  } else {
+    document.getElementById('im-cat').value='';document.getElementById('im-name').value='';
+    document.getElementById('im-unit').value='';document.getElementById('im-price').value='';
+    document.getElementById('im-taxed').value='0';document.getElementById('im-note').value='';
+  }
+  document.getElementById('item-modal').classList.add('on');
+  setTimeout(()=>document.getElementById('im-name').focus(),80);
+}
+function closeIM(){document.getElementById('item-modal').classList.remove('on');EID_ITEM=null}
+function saveItem(){
+  const cat=document.getElementById('im-cat').value;const name=document.getElementById('im-name').value.trim();
+  if(!cat||!name){notify('請選擇工種並填寫品項名稱','err');return}
+  const item={id:EID_ITEM||uid(),cat,name,
+    unit:document.getElementById('im-unit').value.trim(),
+    price:parseFloat(document.getElementById('im-price').value)||0,
+    taxed:parseInt(document.getElementById('im-taxed').value),
+    note:document.getElementById('im-note').value.trim()};
+  const db=gDB();
+  if(EID_ITEM){const i=db.findIndex(x=>x.id===EID_ITEM);if(i>=0)db[i]=item}else db.push(item);
+  sDB(db);rebCatSelects();rebCatBtns();rDB();rPick();closeIM();notify(EID_ITEM?'品項已更新':'品項已新增','ok');
+}
+function delItem(id){
+  if(!confirm('確定刪除？'))return;
+  sDB(gDB().filter(i=>i.id!==id));rebCatSelects();rebCatBtns();rDB();rPick();notify('已刪除','ok');
+}
+function exportDB(){
+  const a=document.createElement('a');
+  a.href='data:application/json,'+encodeURIComponent(JSON.stringify(gDB(),null,2));
+  a.download='得森_品項資料庫.json';a.click();notify('已匯出');
+}
+
+// ════════════════════════════════════════
+// DOCUMENT GENERATION
+// ════════════════════════════════════════
+function buildDoc(q){
+  const s=gS();
+  const svcItems=(s.services||DS_DEFAULTS.services).split('｜');
+  const svcHtml=svcItems.map((x,i)=>`${x}${i<svcItems.length-1?'<span style="color:#C0C4B6;margin:0 5px;">｜</span>':''}`).join('');
+  const groups={};
+  const sorted=[...(q.lines||[])].sort((a,b)=>catOrder(a.cat)-catOrder(b.cat));
+  sorted.forEach(l=>{if(!groups[l.cat])groups[l.cat]=[];groups[l.cat].push(l)});
+  let rows='';let seq=1;
+  Object.entries(groups).forEach(([cat,lines])=>{
+    const wo=WORK_ORDER.find(w=>w.cat===cat);
+    rows+=`<tr class="cr"><td colspan="6">${wo?wo.order+'.&nbsp;':''} ${cat}</td></tr>`;
+    lines.forEach(l=>{
+      rows+=`<tr>
+        <td style="color:#aeafb1;width:24px;">${seq++}</td>
+        <td>${l.name}${l.note?'<br><span style="font-size:10px;color:#aeafb1;">'+l.note+'</span>':''}</td>
+        <td style="text-align:center;">${l.unit||'—'}</td>
+        <td class="r">$ ${Math.round(l.price).toLocaleString('zh-TW')}</td>
+        <td class="r">${l.qty}</td>
+        <td class="r" style="font-weight:500;">$ ${Math.round(l.price*l.qty).toLocaleString('zh-TW')}</td>
+      </tr>`;
+    });
+  });
+  const tm=q.taxMode||0;const sub=q.sub||0;const tax=q.tax||0;const tot=q.total||0;
+  const nt=q.notes||'';
+  return`<div id="quote-doc">
+    <div class="doc-stripe"></div>
+    <div class="doc-header">
+      <div class="doc-la">
+        <svg width="50" height="44" viewBox="0 0 50 44" fill="none">
+          <rect x="2" y="13" width="22" height="29" rx="1" stroke="#AEAFB1" stroke-width="1.4" fill="none"/>
+          <line x1="2" y1="13" x2="13" y2="2" stroke="#AEAFB1" stroke-width="1.4"/>
+          <line x1="24" y1="13" x2="13" y2="2" stroke="#AEAFB1" stroke-width="1.4"/>
+          <circle cx="9" cy="24" r="3" fill="#C0C4B6"/>
+          <line x1="28" y1="22" x2="31" y2="22" stroke="#C0C4B6" stroke-width="1"/>
+          <text x="31" y="27" font-family="serif" font-size="14" fill="#6a6860" letter-spacing="3">得森</text>
+        </svg>
+        <div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
+            <span class="doc-lc">得 森</span>
+            <span class="doc-le">${s.nameEn||DS_DEFAULTS.nameEn}</span>
+          </div>
+          <div class="doc-lf">${s.name||DS_DEFAULTS.name}</div>
+          <div class="doc-bar"></div>
+          <div class="doc-svc">${svcHtml}</div>
+          <div class="doc-ct">
+            ${s.mob?'M｜'+s.mob+'&nbsp;&nbsp;&nbsp;':''}${s.tel?'T｜'+s.tel+'&nbsp;&nbsp;&nbsp;':''}${s.email||''}<br>
+            ${s.addr||''}
+            ${s.lic?'<br>'+s.lic:''}
+          </div>
+        </div>
+      </div>
+      <div class="doc-qm">
+        <div class="doc-ql">報 價 單</div>
+        <div class="doc-qn">${q.no||'—'}</div>
+        <div class="doc-qd">${q.date||today()}</div>
+      </div>
+    </div>
+    <div class="doc-cli">
+      <div>
+        <div class="doc-cll">委 託 方</div>
+        <div class="doc-clv">${q.clientName||'—'}${q.clientPhone?' &nbsp;（'+q.clientPhone+'）':''}</div>
+      </div>
+      <div>
+        <div class="doc-cll">工 程 地 點</div>
+        <div class="doc-clv">${q.project||'—'}${q.area?' &nbsp;（約'+q.area+'坪）':''}</div>
+      </div>
+    </div>
+    <div class="doc-tw">
+      <table class="doc-t">
+        <thead><tr>
+          <th style="width:24px;">項</th><th>品項說明</th>
+          <th class="r" style="width:48px;">單位</th>
+          <th class="r" style="width:96px;">單價</th>
+          <th class="r" style="width:48px;">數量</th>
+          <th class="r" style="width:108px;">小計</th>
+        </tr></thead>
+        <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:20px;color:#aeafb1;">（無品項）</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div class="doc-tots">
+      <div class="doc-tb">
+        <div class="doc-tr"><span class="lbl">工程小計</span><span>$ ${Math.round(sub).toLocaleString('zh-TW')}</span></div>
+        ${tm>0?`<div class="doc-tr"><span class="lbl">營業稅（${tm}%）</span><span>$ ${Math.round(tax).toLocaleString('zh-TW')}</span></div>`:''}
+        <div class="doc-tr grand"><span class="lbl">合計總價</span><span>$ ${Math.round(tot).toLocaleString('zh-TW')}</span></div>
+      </div>
+    </div>
+    ${(nt||s.payment||s.disclaimer)?`<div class="doc-notes">
+      <div class="doc-nl">備　　註</div>
+      <div class="doc-nt">
+        ${nt?'<p>'+nt+'</p>':''}
+        ${s.payment?'<p>付款方式：'+s.payment+'</p>':''}
+        ${s.disclaimer?'<p>'+s.disclaimer+'</p>':''}
+      </div>
+    </div>`:''}
+    <div class="doc-foot">
+      <div class="doc-fl">${s.name||DS_DEFAULTS.name}${s.owner?' ／ '+s.owner:''}</div>
+      <div class="doc-fr">${s.validity||DS_DEFAULTS.validity}</div>
+    </div>
+    <div class="doc-stripe"></div>
+  </div>`;
+}
+
+function openPreviewM(){
+  saveQuoteDraft();
+  document.getElementById('preview-content').innerHTML=buildDoc(collectQuote());
+  document.getElementById('preview-modal').classList.add('on');
+}
+function closePrevM(){document.getElementById('preview-modal').classList.remove('on')}
+
+// ── EXPORT ──
+async function expPDF(){
+  saveQuoteDraft();
+  const q=collectQuote();
+  // Render to hidden div
+  let tmp=document.getElementById('_pdf_tmp');
+  if(!tmp){tmp=document.createElement('div');tmp.id='_pdf_tmp';tmp.style.cssText='position:fixed;left:-9999px;top:0;width:800px;z-index:-1;background:#fff;';document.body.appendChild(tmp)}
+  tmp.innerHTML=buildDoc(q);
+  const docEl=tmp.querySelector('#quote-doc');
+  notify('PDF 產生中…');
+  await new Promise(r=>setTimeout(r,200));
+  const canvas=await html2canvas(docEl,{scale:1.5,useCORS:true,backgroundColor:'#ffffff',logging:false});
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+  const ratio=canvas.width/canvas.height;const iw=pw,ih=iw/ratio;
+  const toJpeg=c=>c.toDataURL('image/jpeg',0.82);
+  if(ih<=ph){pdf.addImage(toJpeg(canvas),'JPEG',0,0,iw,ih)}
+  else{let pos=0;while(pos<canvas.height){const slH=Math.min(canvas.height-pos,Math.round(canvas.width*(ph/pw)));const sl=document.createElement('canvas');sl.width=canvas.width;sl.height=slH;sl.getContext('2d').drawImage(canvas,0,pos,canvas.width,slH,0,0,canvas.width,slH);if(pos>0)pdf.addPage();pdf.addImage(toJpeg(sl),'JPEG',0,0,pw,slH*pw/canvas.width);pos+=slH;}}
+  pdf.save('報價單_'+(q.no||'QT')+'.pdf');
+  notify('PDF 已下載','ok');
+}
+function expXL(){
+  saveQuoteDraft();
+  const s=gS();const q=collectQuote();
+  const wb=XLSX.utils.book_new();
+  const rows=[[s.name||DS_DEFAULTS.name,'','','','',''],
+    ['報價單號：'+q.no,'','','','日期：'+q.date,''],
+    ['委託方：'+q.clientName,'','','','地點：'+q.project,''],
+    ['','','','','',''],['序','工項說明','單位','單價','數量','小計']];
+  let seq=1;const sorted=[...QLINES].sort((a,b)=>catOrder(a.cat)-catOrder(b.cat));
+  let lastCat='';
+  sorted.forEach(l=>{
+    if(l.cat!==lastCat){rows.push(['['+l.cat+']','','','','','']);lastCat=l.cat}
+    rows.push([seq++,l.name+(l.note?'（'+l.note+'）':''),l.unit||'',l.price,l.qty,Math.round(l.price*l.qty)]);
+  });
+  rows.push(['','','','','',''],['','','','','工程小計',Math.round(q.sub)]);
+  if(q.taxMode>0)rows.push(['','','','','稅額('+q.taxMode+'%)',Math.round(q.tax)]);
+  rows.push(['','','','','合計總價',Math.round(q.total)]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:6},{wch:40},{wch:8},{wch:12},{wch:8},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'報價單');
+  XLSX.writeFile(wb,'報價單_'+(q.no||'QT')+'.xlsx');
+  notify('Excel 已下載','ok');
+}
+
+// ════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════
+function loadSets(){
+  const s=gS();
+  const map={sn:'name',se:'nameEn',ss2:'services',smob:'mob',stel:'tel',sem:'email',sadr:'addr',slic:'lic',sown:'owner',svd:'validity',spay:'payment',sdis:'disclaimer',spfx:'prefix'};
+  Object.entries(map).forEach(([el,k])=>{document.getElementById(el).value=s[k]||''});
+  // Load script URL
+  const urlEl=document.getElementById('su-url');
+  if(urlEl)urlEl.value=getScriptUrl();
+  const statusEl=document.getElementById('sync-status');
+  if(statusEl&&getScriptUrl())statusEl.textContent='✅ 雲端同步已啟用';
+}
+function saveSets(){
+  localStorage.setItem(KS,JSON.stringify({
+    name:document.getElementById('sn').value,nameEn:document.getElementById('se').value,
+    services:document.getElementById('ss2').value,mob:document.getElementById('smob').value,
+    tel:document.getElementById('stel').value,email:document.getElementById('sem').value,
+    addr:document.getElementById('sadr').value,lic:document.getElementById('slic').value,
+    owner:document.getElementById('sown').value,validity:document.getElementById('svd').value,
+    payment:document.getElementById('spay').value,disclaimer:document.getElementById('sdis').value,
+    prefix:document.getElementById('spfx').value||'QT'
+  }));
+  notify('設定已儲存','ok');
+}
+</script>
+</body>
+</html>
+<!-- ═══════════════════════════════════════════
+  PATCH v3: 快速估價 + 範本系統 + PDF手機優化
+  Appended block — injected before </body>
+  ═══════════════════════════════════════════ -->
+<style>
+/* ── QUICK ESTIMATE ── */
+.qe-wrap{max-width:780px;margin:0 auto}
+.qe-hero{background:linear-gradient(135deg,var(--sage-pa) 0%,var(--warm-pa) 100%);border:1px solid var(--border-l);border-radius:var(--rl);padding:24px 28px;margin-bottom:20px}
+.qe-hero h3{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--ink);letter-spacing:3px;margin-bottom:6px}
+.qe-hero p{font-size:13px;color:var(--ink-l);letter-spacing:1px}
+.qe-modes{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.qe-mode{padding:8px 18px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all .2s;background:var(--paper-c)}
+.qe-mode:hover{border-color:var(--sage-dk);color:var(--sage-dk)}
+.qe-mode.on{background:var(--sage-dk);color:#fff;border-color:var(--sage-dk)}
+.qe-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.qe-input-block{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);padding:16px}
+.qe-input-block label{font-size:11px;color:var(--ink-l);letter-spacing:1.5px;display:block;margin-bottom:6px}
+.qe-big-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-size:22px;font-family:var(--serif);color:var(--ink);outline:none;text-align:right;background:var(--paper-c)}
+.qe-big-input:focus{border-color:var(--sage-dk)}
+.qe-unit{font-size:12px;color:var(--ink-l);letter-spacing:1px;margin-top:4px;text-align:right}
+.qe-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px}
+.qe-cat-toggle{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-l);border-radius:var(--r);cursor:pointer;transition:all .2s;background:var(--paper-c)}
+.qe-cat-toggle:hover{border-color:var(--sage-dk)}
+.qe-cat-toggle.on{background:var(--sage-pa);border-color:var(--sage-dk)}
+.qe-cat-toggle .icon{font-size:16px}
+.qe-cat-toggle .label{font-size:12px;color:var(--ink);letter-spacing:1px;flex:1}
+.qe-cat-toggle .chk{width:14px;height:14px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff}
+.qe-cat-toggle.on .chk{background:var(--sage-dk);border-color:var(--sage-dk)}
+.qe-result{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden}
+.qe-result-hd{padding:12px 18px;background:var(--ink);color:#fff;font-family:var(--serif);font-size:13px;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center}
+.qe-result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border-l);font-size:13px}
+.qe-result-row:last-child{border-bottom:none}
+.qe-result-row .cat-lbl{display:flex;align-items:center;gap:8px;color:var(--ink-m)}
+.qe-result-row .range{font-family:var(--serif);color:var(--sage-dk);font-size:14px}
+.qe-total-row{background:var(--paper-w);padding:14px 18px;display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink)}
+.qe-total-row .lbl{font-family:var(--serif);font-size:14px;color:var(--ink);letter-spacing:2px}
+.qe-total-row .amt{font-family:var(--serif);font-size:22px;color:var(--sage-dk)}
+.qe-total-row .amt small{font-size:13px;color:var(--ink-l);margin-left:8px;}
+.qe-actions{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--border-l);background:var(--paper-w)}
+
+/* ── TEMPLATES ── */
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.tpl-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .2s}
+.tpl-card:hover{border-color:var(--sage-dk);box-shadow:0 3px 12px rgba(0,0,0,.08);transform:translateY(-1px)}
+.tpl-thumb{height:80px;display:flex;align-items:center;justify-content:center;font-size:36px;background:var(--sage-pa)}
+.tpl-body{padding:14px}
+.tpl-name{font-family:var(--serif);font-size:14px;color:var(--ink);letter-spacing:2px;margin-bottom:4px}
+.tpl-desc{font-size:12px;color:var(--ink-l);line-height:1.7;margin-bottom:10px}
+.tpl-tags{display:flex;gap:4px;flex-wrap:wrap}
+.tpl-tag{font-size:10px;padding:2px 7px;background:var(--beige);color:var(--ink-l);border-radius:2px;letter-spacing:1px}
+.tpl-footer{padding:10px 14px;border-top:1px solid var(--border-l);display:flex;justify-content:space-between;align-items:center;background:var(--paper-w);font-size:12px;color:var(--ink-l)}
+
+/* PDF mobile optimization */
+@media print{
+  body{background:#fff}
+  nav,#lock,.panel:not(.on){display:none!important}
+}
+</style>
+
+<script>
+// ══════════════════════════════════════════
+// PATCH: inject new nav tabs + panels
+// ══════════════════════════════════════════
+(function(){
+  // Add nav tabs
+  const ntabs=document.querySelector('.ntabs');
+  const t1=document.createElement('div');
+  t1.className='ntab';t1.textContent='快速估價';t1.onclick=()=>go('estimate');
+  const t2=document.createElement('div');
+  t2.className='ntab';t2.textContent='報價範本';t2.onclick=()=>go('templates');
+  ntabs.appendChild(t1);ntabs.appendChild(t2);
+
+  // Add panels
+  const app=document.getElementById('app');
+
+  // Estimate panel
+  const ep=document.createElement('div');
+  ep.id='p-estimate';ep.className='panel';
+  ep.innerHTML=`
+    <div class="ph">
+      <div class="ph-l"><h2>快速估價</h2><p>現場或電話中，30秒給客戶參考數字</p></div>
+    </div>
+    <div class="qe-wrap">
+      <div class="qe-hero">
+        <h3>估價計算機</h3>
+        <p>輸入空間坪數或工項數量，系統依你的資料庫單價自動估算各工種費用區間</p>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--ink-l);letter-spacing:2px;margin-bottom:8px;">估價模式</div>
+        <div class="qe-modes">
+          <div class="qe-mode on" onclick="setQEMode('space',this)">🏠 整體空間坪數</div>
+          <div class="qe-mode" onclick="setQEMode('item',this)">📦 單項工程</div>
+        </div>
+      </div>
+      <div class="qe-grid">
+        <div class="qe-input-block">
+          <label id="qe-main-label">空間坪數</label>
+          <input class="qe-big-input" id="qe-size" type="number" min="0" step="0.5" placeholder="0" oninput="calcEstimate()">
+          <div class="qe-unit" id="qe-main-unit">坪（1坪 ≈ 3.3㎡）</div>
+        </div>
+        <div class="qe-input-block">
+          <label>裝修等級</label>
+          <select class="fc" id="qe-grade" onchange="calcEstimate()" style="font-size:15px;padding:10px;">
+            <option value="basic">基本（實用為主）</option>
+            <option value="mid" selected>中階（品質均衡）</option>
+            <option value="high">高階（精緻用料）</option>
+          </select>
+          <div class="qe-unit">影響各工種單價係數</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-l);letter-spacing:2px;margin-bottom:10px;">選擇包含的工種</div>
+      <div class="qe-cats" id="qe-cats"></div>
+      <div class="qe-result" id="qe-result" style="display:none;">
+        <div class="qe-result-hd">
+          <span>估價結果</span>
+          <span style="font-size:11px;letter-spacing:1px;opacity:.7;">僅供參考，正式報價請建立報價單</span>
+        </div>
+        <div id="qe-rows"></div>
+        <div class="qe-total-row">
+          <span class="lbl">工程總估價</span>
+          <div>
+            <span class="amt" id="qe-tot-lo">—</span>
+            <span style="color:var(--ink-l);font-size:16px;"> ～ </span>
+            <span class="amt" id="qe-tot-hi">—</span>
+            <small id="qe-per-ping"></small>
+          </div>
+        </div>
+        <div class="qe-actions">
+          <button class="btn btn-accent" onclick="estimateToQuote()">轉為正式報價單 →</button>
+          <button class="btn btn-secondary" onclick="copyEstimate()">複製數字</button>
+        </div>
+      </div>
+    </div>`;
+  app.appendChild(ep);
+
+  // Templates panel
+  const tp=document.createElement('div');
+  tp.id='p-templates';tp.className='panel';
+  tp.innerHTML=`
+    <div class="ph">
+      <div class="ph-l"><h2>報價範本</h2><p>常用案型預設工項，一鍵載入省去重複選取</p></div>
+      <button class="btn btn-primary" onclick="openTplM()">＋ 儲存目前為範本</button>
+    </div>
+    <div class="tpl-grid" id="tpl-grid"></div>`;
+  app.appendChild(tp);
+
+  // Template save modal
+  const tm=document.createElement('div');
+  tm.className='mbg';tm.id='tpl-modal';
+  tm.innerHTML=`<div class="modal"><div class="mhd"><h3>儲存為範本</h3><button class="mcl" onclick="closeTplM()">✕</button></div>
+    <div class="mbod">
+      <div class="fg" style="margin-bottom:10px;"><label>範本名稱</label><input class="fc" id="tpl-name" placeholder="例：住宅翻新標準版"></div>
+      <div class="fg" style="margin-bottom:10px;"><label>說明</label><input class="fc" id="tpl-desc" placeholder="例：25坪以下住宅，含基本裝修所有工種"></div>
+      <div class="fg"><label>圖示</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="tpl-icon-pick">
+          ${['🏠','🏪','🏢','🍜','🎨','🛋️','🪵','⚡'].map(e=>`<div onclick="selTplIcon('${e}',this)" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:20px;">${e}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn btn-secondary" onclick="closeTplM()">取消</button><button class="btn btn-primary" onclick="saveTpl()">儲存範本</button></div>
+  </div>`;
+  document.body.appendChild(tm);
+
+  // Patch go() to support new panels
+  const origGo=window.go;
+  window.go=function(id){
+    const allPanels=['clients','quotes','new-quote','db','settings','estimate','templates'];
+    allPanels.forEach(p=>{const el=document.getElementById('p-'+p);if(el)el.classList.toggle('on',p===id)});
+    document.querySelectorAll('.ntab').forEach((t,i)=>{
+      const ids=['clients','quotes','new-quote','db','settings','estimate','templates'];
+      t.classList.toggle('on',ids[i]===id);
+    });
+    if(id==='quotes'){try{rQuoteList()}catch(e){}}
+    if(id==='clients'){try{rClients()}catch(e){}}
+    if(id==='estimate'){initQE()}
+    if(id==='templates'){rTpls()}
+  };
+})();
+
+// ════════════════════════════════════════
+// QUICK ESTIMATE
+// ════════════════════════════════════════
+
+// Per-ping unit price ranges by grade & category
+// [low, high] multiplier relative to DB avg price
+const QE_CATS=[
+  {cat:'拆除工程', icon:'🔨', modes:['space'], perPing:[800,1500]},
+  {cat:'清運工程', icon:'🚛', modes:['space'], perPing:[400,800]},
+  {cat:'水電工程', icon:'⚡', modes:['space'], perPing:[3000,5500]},
+  {cat:'空調工程', icon:'❄️', modes:['space','item'], perPing:[2000,4000]},
+  {cat:'防水工程', icon:'💧', modes:['space','item'], perPing:[800,1800]},
+  {cat:'泥作工程', icon:'🧱', modes:['space'], perPing:[4000,8000]},
+  {cat:'木作工程', icon:'🪵', modes:['space'], perPing:[8000,18000]},
+  {cat:'系統櫃',   icon:'🗄️', modes:['space'], perPing:[3000,7000]},
+  {cat:'地板工程', icon:'🏠', modes:['space'], perPing:[3200,6000]},
+  {cat:'油漆工程', icon:'🖌️', modes:['space'], perPing:[1800,3200]},
+  {cat:'玻璃工程', icon:'🔲', modes:['space','item'], perPing:[500,1500]},
+  {cat:'照明工程', icon:'💡', modes:['space'], perPing:[1500,3000]},
+  {cat:'弱電工程', icon:'📡', modes:['space'], perPing:[800,2000]},
+  {cat:'清潔工程', icon:'🧹', modes:['space'], perPing:[300,600]},
+];
+
+const GRADE_MUL={basic:0.75, mid:1.0, high:1.35};
+const KT_TPLS='ds_templates';
+let qeMode='space', qeSelCats=new Set(QE_CATS.map(c=>c.cat)), selTplIconVal='🏠';
+
+function initQE(){
+  const wrap=document.getElementById('qe-cats');if(!wrap)return;
+  wrap.innerHTML=QE_CATS.map(c=>`
+    <div class="qe-cat-toggle on" id="qet-${c.cat.replace(/\s/g,'_')}" onclick="toggleQECat('${c.cat}',this)">
+      <span class="icon">${c.icon}</span>
+      <span class="label">${c.cat}</span>
+      <div class="chk">✓</div>
+    </div>`).join('');
+  calcEstimate();
+}
+
+function setQEMode(mode,btn){
+  qeMode=mode;
+  document.querySelectorAll('.qe-mode').forEach(b=>{b.classList.remove('on')});
+  btn.classList.add('on');
+  const lbl=document.getElementById('qe-main-label');
+  const unit=document.getElementById('qe-main-unit');
+  if(mode==='space'){lbl.textContent='空間坪數';unit.textContent='坪（1坪 ≈ 3.3㎡）'}
+  else{lbl.textContent='主要面積 / 數量';unit.textContent='坪 or 數量（依工種）'}
+  calcEstimate();
+}
+
+function toggleQECat(cat,el){
+  el.classList.toggle('on');
+  el.querySelector('.chk').textContent=el.classList.contains('on')?'✓':'';
+  if(el.classList.contains('on'))qeSelCats.add(cat);else qeSelCats.delete(cat);
+  calcEstimate();
+}
+
+function calcEstimate(){
+  const size=parseFloat(document.getElementById('qe-size').value)||0;
+  if(size<=0){document.getElementById('qe-result').style.display='none';return}
+  const grade=document.getElementById('qe-grade').value;
+  const mul=GRADE_MUL[grade]||1;
+  document.getElementById('qe-result').style.display='block';
+
+  // Use DB prices where available, fall back to QE_CATS range
+  const db=gDB();
+  let totalLo=0,totalHi=0;
+  const rows=QE_CATS.filter(c=>qeSelCats.has(c.cat));
+  let html='';
+  rows.forEach(c=>{
+    // Try to compute from DB avg
+    const dbItems=db.filter(i=>i.cat===c.cat&&i.price>0);
+    let lo,hi;
+    if(dbItems.length>0){
+      const avg=dbItems.reduce((s,i)=>s+i.price,0)/dbItems.length;
+      lo=Math.round(avg*size*mul*0.8);
+      hi=Math.round(avg*size*mul*1.3);
+    } else {
+      lo=Math.round(c.perPing[0]*size*mul);
+      hi=Math.round(c.perPing[1]*size*mul);
+    }
+    totalLo+=lo;totalHi+=hi;
+    html+=`<div class="qe-result-row">
+      <div class="cat-lbl"><span>${c.icon}</span><span>${c.cat}</span></div>
+      <div class="range">$ ${lo.toLocaleString('zh-TW')} ～ $ ${hi.toLocaleString('zh-TW')}</div>
+    </div>`;
+  });
+  document.getElementById('qe-rows').innerHTML=html;
+  document.getElementById('qe-tot-lo').textContent='$ '+totalLo.toLocaleString('zh-TW');
+  document.getElementById('qe-tot-hi').textContent='$ '+totalHi.toLocaleString('zh-TW');
+  if(qeMode==='space'&&size>0)
+    document.getElementById('qe-per-ping').textContent=`（每坪約 $ ${Math.round(totalLo/size).toLocaleString('zh-TW')} ～ $ ${Math.round(totalHi/size).toLocaleString('zh-TW')}）`;
+  else document.getElementById('qe-per-ping').textContent='';
+
+  // Store for convert
+  window._qeResult={size,grade,cats:[...qeSelCats],totalLo,totalHi};
+}
+
+function estimateToQuote(){
+  go('new-quote');
+  try{newQuote()}catch(e){}
+  const size=document.getElementById('qe-size').value;
+  if(size)document.getElementById('q-area').value=size;
+  notify('已切換到報價單，請選擇客戶與品項','ok');
+}
+
+function copyEstimate(){
+  const r=window._qeResult;if(!r)return;
+  const txt=`工程估價參考：$ ${r.totalLo.toLocaleString('zh-TW')} ～ $ ${r.totalHi.toLocaleString('zh-TW')}（${r.size}坪，${r.grade==='basic'?'基本':r.grade==='mid'?'中階':'高階'}裝修）\n以上為參考數字，正式報價需現場丈量評估。`;
+  navigator.clipboard.writeText(txt).then(()=>notify('已複製，可直接貼到 LINE','ok'));
+}
+
+// ════════════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════════════
+const BUILT_IN_TPLS=[
+  {id:'tpl_res',name:'住宅翻新（全室）',icon:'🏠',desc:'含拆除到清潔的完整工序，適合25坪以下全室翻新',
+   tags:['住宅','全室','翻新'],
+   cats:['拆除工程','清運工程','水電工程','防水工程','泥作工程','木作工程','地板工程','油漆工程','照明工程','清潔工程']},
+  {id:'tpl_shop',name:'商業店面',icon:'🏪',desc:'輕裝修店面，重視施工速度與CP值',
+   tags:['商業','店面','輕裝修'],
+   cats:['拆除工程','清運工程','水電工程','泥作工程','木作工程','地板工程','玻璃工程','油漆工程','照明工程','弱電工程','清潔工程']},
+  {id:'tpl_rest',name:'餐飲空間',icon:'🍜',desc:'餐廳、咖啡廳，含廚房水電與空調規劃',
+   tags:['餐飲','廚房','空調'],
+   cats:['拆除工程','清運工程','水電工程','空調工程','防水工程','泥作工程','木作工程','地板工程','玻璃工程','油漆工程','照明工程','弱電工程','清潔工程']},
+  {id:'tpl_bath',name:'衛浴翻新',icon:'🚿',desc:'單一衛浴整體更新，防水泥作為核心',
+   tags:['衛浴','防水','局部'],
+   cats:['拆除工程','清運工程','水電工程','防水工程','泥作工程','衛浴設備','玻璃工程','清潔工程']},
+  {id:'tpl_old',name:'老屋改造',icon:'🔨',desc:'屋齡20年以上，含結構水電全面更新',
+   tags:['老屋','全室','水電'],
+   cats:['假設工程','拆除工程','清運工程','結構工程','水電工程','空調工程','防水工程','泥作工程','鋁窗工程','木作工程','系統櫃','地板工程','弱電工程','衛浴設備','油漆工程','照明工程','清潔工程']},
+  {id:'tpl_office',name:'辦公室',icon:'🏢',desc:'開放辦公室，重視弱電與系統傢具',
+   tags:['辦公','輕隔間','弱電'],
+   cats:['拆除工程','清運工程','水電工程','空調工程','木作工程','系統櫃','地板工程','玻璃工程','油漆工程','照明工程','弱電工程','清潔工程']},
+];
+
+function gTpls(){
+  const custom=JSON.parse(localStorage.getItem(KT_TPLS)||'[]');
+  return[...BUILT_IN_TPLS,...custom];
+}
+
+function rTpls(){
+  const grid=document.getElementById('tpl-grid');if(!grid)return;
+  const tpls=gTpls();
+  grid.innerHTML=tpls.map(t=>`
+    <div class="tpl-card">
+      <div class="tpl-thumb">${t.icon}</div>
+      <div class="tpl-body">
+        <div class="tpl-name">${t.name}</div>
+        <div class="tpl-desc">${t.desc}</div>
+        <div class="tpl-tags">${(t.tags||[]).map(tag=>`<span class="tpl-tag">${tag}</span>`).join('')}</div>
+      </div>
+      <div class="tpl-footer">
+        <span>${t.cats?.length||0} 工種</span>
+        <div style="display:flex;gap:6px;">
+          ${!t.id.startsWith('tpl_')?`<button class="btn btn-sm btn-danger" onclick="delTpl('${t.id}');event.stopPropagation()">刪除</button>`:''}
+          <button class="btn btn-sm btn-accent" onclick="applyTpl('${t.id}')">套用</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function applyTpl(id){
+  const tpl=gTpls().find(t=>t.id===id);if(!tpl)return;
+  if(!confirm(`套用「${tpl.name}」範本？\n這會將資料庫中「${tpl.cats?.join('、')}」的品項加入報價單。`))return;
+  go('new-quote');
+  try{if(!EDITING_QID)newQuote()}catch(e){}
+  const db=gDB();
+  const catSet=new Set(tpl.cats||[]);
+  // Add first item from each category as representative
+  const added=new Set();
+  db.filter(i=>catSet.has(i.cat)).forEach(item=>{
+    if(!QLINES.find(l=>l.itemId===item.id)){
+      QLINES.push({lid:uid(),itemId:item.id,cat:item.cat,name:item.name,unit:item.unit,price:item.price,qty:1,note:item.note,custom:false});
+      added.add(item.cat);
+    }
+  });
+  try{rLines();rPick()}catch(e){}
+  notify(`已載入「${tpl.name}」— ${QLINES.length} 項工項','ok`);
+}
+
+let _tplIconSel='🏠';
+function selTplIcon(icon,el){
+  _tplIconSel=icon;
+  document.querySelectorAll('#tpl-icon-pick > div').forEach(d=>{d.style.borderColor='var(--border)';d.style.background='var(--paper-c)'});
+  el.style.borderColor='var(--sage-dk)';el.style.background='var(--sage-pa)';
+}
+function openTplM(){document.getElementById('tpl-modal').classList.add('on')}
+function closeTplM(){document.getElementById('tpl-modal').classList.remove('on')}
+function saveTpl(){
+  const name=document.getElementById('tpl-name').value.trim();
+  if(!name){notify('請填寫範本名稱','err');return}
+  const cats=[...new Set(QLINES.map(l=>l.cat))];
+  const tpl={id:uid(),name,icon:_tplIconSel,
+    desc:document.getElementById('tpl-desc').value.trim(),
+    tags:[],cats};
+  const saved=JSON.parse(localStorage.getItem(KT_TPLS)||'[]');
+  saved.push(tpl);localStorage.setItem(KT_TPLS,JSON.stringify(saved));
+  closeTplM();rTpls();notify('範本已儲存','ok');
+}
+function delTpl(id){
+  if(!confirm('確定刪除此範本？'))return;
+  const saved=JSON.parse(localStorage.getItem(KT_TPLS)||'[]').filter(t=>t.id!==id);
+  localStorage.setItem(KT_TPLS,JSON.stringify(saved));rTpls();notify('已刪除','ok');
+}
+</script>
