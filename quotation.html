@@ -785,9 +785,23 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function gDB(){return JSON.parse(localStorage.getItem(KD)||'null')||SAMPLE_DB}
 function sDB(d){localStorage.setItem(KD,JSON.stringify(d))}
 function gClients(){return JSON.parse(localStorage.getItem(KC)||'null')||SAMPLE_CLIENTS}
-function sClients(d){localStorage.setItem(KC,JSON.stringify(d))}
+function sClients(d){
+  localStorage.setItem(KC,JSON.stringify(d));
+  // Auto-sync to Sheets
+  if(getScriptUrl()){
+    const rows=d.map(c=>[c.id,c.name||'',c.mob||'',c.type||'',c.addr||'',JSON.stringify(c)]);
+    syncToSheets('clients',rows);
+  }
+}
 function gQuotes(){return JSON.parse(localStorage.getItem(KQ)||'[]')}
-function sQuotes(d){localStorage.setItem(KQ,JSON.stringify(d))}
+function sQuotes(d){
+  localStorage.setItem(KQ,JSON.stringify(d));
+  // Auto-sync to Sheets
+  if(getScriptUrl()){
+    const rows=d.map(q=>[q.id,q.no||'',q.clientName||'',q.project||'',q.date||'',q.status||'',Math.round(q.total||0),JSON.stringify(q)]);
+    syncToSheets('quotes',rows);
+  }
+}
 function gS(){return{...DS_DEFAULTS,...JSON.parse(localStorage.getItem(KS)||'{}')}}
 function fmt(n){return '$ '+Math.round(n).toLocaleString('zh-TW')}
 function notify(m,type){
@@ -999,6 +1013,31 @@ function init(){
   rDB();
   rebCatSelects();
   initNewQuote();
+  // Auto-load from Sheets if URL is set
+  if(getScriptUrl()){
+    autoLoadFromSheets();
+  }
+}
+
+async function autoLoadFromSheets(){
+  try{
+    let loaded=0;
+    const cData=await syncFromSheets('clients');
+    if(cData&&cData.length>0){
+      const clients=cData.map(r=>{try{return JSON.parse(r[r.length-1])}catch{return null}}).filter(c=>c&&c.id);
+      if(clients.length){localStorage.setItem('ds_clients',JSON.stringify(clients));loaded+=clients.length;}
+    }
+    const qData=await syncFromSheets('quotes');
+    if(qData&&qData.length>0){
+      const quotes=qData.map(r=>{try{return JSON.parse(r[r.length-1])}catch{return null}}).filter(q=>q&&q.id);
+      if(quotes.length){localStorage.setItem('ds_quotes',JSON.stringify(quotes));loaded+=quotes.length;}
+    }
+    if(loaded>0){
+      rClients();rQuoteList();
+      const statusEl=document.getElementById('sync-status');
+      if(statusEl)statusEl.textContent='✅ 已自動同步：'+new Date().toLocaleTimeString('zh-TW');
+    }
+  }catch(e){console.warn('Auto-load failed:',e)}
 }
 
 // ════════════════════════════════════════
