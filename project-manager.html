@@ -1002,7 +1002,6 @@ function buildGantt(proj){
     allTasks.forEach((task,idx)=>{
       const wo=WORK_ORDER.find(w=>w.cat===task.cat);
       listRows+='<div onclick="openTaskM('+idx+')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-l);cursor:pointer;" onmouseover="this.style.background=\'var(--sage-pa)\'" onmouseout="this.style.background=\'\'">'
-        +'<div style="width:22px;height:22px;border-radius:50%;background:'+( wo?.color||'#8a9082')+';display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;">'+( wo?.order||'?')+'</div>'
         +'<span style="font-size:13px;">'+catIcon(task.cat)+' '+task.cat+'</span>'
         +'<span style="font-size:11px;color:var(--sage-dk);margin-left:auto;">點擊設定日期 →</span></div>';
     });
@@ -1056,7 +1055,6 @@ function buildGantt(proj){
     }
     rows+='<div style="display:flex;border-bottom:1px solid var(--border-l);min-height:44px;">'
       +'<div class="gantt-rl" onclick="openTaskM('+idx+')" style="background:'+( hasDate?'':' var(--paper-w)')+';width:'+LABEL_W+'px;">'
-      +'<div class="g-order" style="background:'+( wo?.color||'#8a9082')+';">'+( wo?.order||'?')+'</div>'
       +'<div style="flex:1;min-width:0;">'
       +'<div class="g-catname">'+catIcon(task.cat)+' '+task.cat+'</div>'
       +(worker?'<div style="font-size:10px;color:var(--sage-dk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+worker.name+'</div>':'')
