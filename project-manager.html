@@ -388,8 +388,6 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
         </div>
         <div class="fg"><label>坪數</label><input class="fc" id="pm-size" type="number" placeholder="0"></div>
       </div>
-      <div class="fg"><label>詳細地址（路名、巷弄、門號）</label>
-        <input class="fc" id="pm-addr" placeholder="例：中正一路121巷5弄6-1號"></div>
 
       <div class="frow" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="fg"><label>開工日期</label><input class="fc" id="pm-start" type="date"></div>
@@ -413,17 +411,27 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
           </select>
         </div>
         <div class="fg"><label>專案識別顏色</label>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;" id="color-picker">
-            <div data-color="#8a9082" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#8a9082;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="苔綠"></div>
-            <div data-color="#b09080" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#b09080;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="暖棕"></div>
-            <div data-color="#7a7c7f" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#7a7c7f;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="石灰"></div>
-            <div data-color="#5c7a6e" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#5c7a6e;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="青綠"></div>
-            <div data-color="#7a6e5c" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#7a6e5c;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="深褐"></div>
-            <div data-color="#6e7a8a" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#6e7a8a;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="灰藍"></div>
-            <div data-color="#c0392b" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#c0392b;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="紅"></div>
-            <div data-color="#8a6914" onclick="selColor(this)" style="width:36px;height:36px;border-radius:50%;background:#8a6914;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="金"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;" id="color-picker">
+            <div data-color="#8a9082" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#8a9082;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="苔綠"></div>
+            <div data-color="#5c7a6e" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#5c7a6e;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="青綠"></div>
+            <div data-color="#3d7a4a" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#3d7a4a;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="深綠"></div>
+            <div data-color="#b09080" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#b09080;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="暖棕"></div>
+            <div data-color="#8a6914" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#8a6914;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="金"></div>
+            <div data-color="#c8a84b" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#c8a84b;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="淺金"></div>
+            <div data-color="#7a7c7f" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#7a7c7f;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="石灰"></div>
+            <div data-color="#6e7a8a" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#6e7a8a;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="灰藍"></div>
+            <div data-color="#1565c0" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#1565c0;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="深藍"></div>
+            <div data-color="#6a1b9a" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#6a1b9a;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="紫"></div>
+            <div data-color="#c0392b" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#c0392b;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="紅"></div>
+            <div data-color="#e67e22" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#e67e22;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="橙"></div>
+            <div data-color="#2b2926" onclick="selColor(this)" style="width:32px;height:32px;border-radius:50%;background:#2b2926;cursor:pointer;border:4px solid transparent;transition:all .2s;box-sizing:border-box;" title="黑"></div>
           </div>
-          <div style="font-size:11px;color:var(--ink-l);margin-top:5px;letter-spacing:1px;">已選：<span id="color-chosen-name">苔綠</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <label style="font-size:11px;color:var(--ink-l);">自訂色碼：</label>
+            <input type="color" id="custom-color-picker" value="#8a9082" oninput="selCustomColor(this.value)" style="width:36px;height:28px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px;">
+            <input type="text" id="custom-color-hex" placeholder="#rrggbb" maxlength="7" oninput="if(this.value.match(/^#[0-9a-fA-F]{6}$/))selCustomColor(this.value)" style="width:80px;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--r);">
+          </div>
+          <div style="font-size:11px;color:var(--ink-l);margin-top:5px;">已選：<span id="color-chosen-name">苔綠</span></div>
         </div>
       </div>
       <div class="fg"><label>付款條件（格式：名稱:百分比，用逗號分隔）</label>
@@ -471,6 +479,10 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
         <div class="fg"><label>日薪/報價方式</label><input class="fc" id="wm-rate" placeholder="例：日薪3500 or 坪計"></div>
       </div>
       <div class="fg"><label>備註（施工習慣、注意事項）</label><textarea class="fc" id="wm-note" rows="2"></textarea></div>
+      <div class="fg"><label>近期合作案場（每行一筆，可累加）</label>
+        <textarea class="fc" id="wm-projects" rows="3" placeholder="例：橋頭三合院衛浴&#10;鳳山住宅水電工程"></textarea>
+        <div style="font-size:11px;color:var(--ink-l);margin-top:3px;">可用關鍵字在工班資料庫搜尋到此師傅</div>
+      </div>
     </div>
     <div class="mft">
       <button class="btn btn-secondary" onclick="closeWM()">取消</button>
@@ -492,6 +504,12 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
       </div>
       <div class="fg"><label>今日工班（師傅）</label>
         <div id="lm-workers-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--border-l);border-radius:12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" id="lm-other-check" onchange="toggleOtherWorker(this)" style="accent-color:var(--sage-dk);"> 其他
+          </label>
+          <input class="fc" id="lm-other-name" placeholder="自行填寫師傅姓名" style="display:none;max-width:200px;padding:4px 10px;font-size:12px;">
+        </div>
       </div>
       <div class="fg"><label>今日完成內容</label><textarea class="fc" id="lm-done" rows="2" placeholder="例：天花板骨架完成，約80%進度"></textarea></div>
       <div class="fg"><label>問題 / 待處理事項</label><textarea class="fc" id="lm-issue" rows="2" placeholder="例：廁所防水需補做，明日請師傅確認"></textarea></div>
@@ -552,8 +570,11 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
       <div class="fg"><label>備註</label><textarea class="fc" id="tm-note" rows="2"></textarea></div>
     </div>
     <div class="mft">
-      <button class="btn btn-secondary" onclick="closeTM()">取消</button>
-      <button class="btn btn-primary" onclick="saveTask()">儲存</button>
+      <button class="btn btn-danger" onclick="deleteTask()">刪除此工項</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeTM()">取消</button>
+        <button class="btn btn-primary" onclick="saveTask()">儲存</button>
+      </div>
     </div>
   </div>
 </div>
@@ -871,7 +892,9 @@ function renderDetail(proj){
         <!-- GANTT -->
         <div class="card">
           <div class="card-hd">
-            <h3>甘特圖 — 工程進度</h3>
+            <h3>甘特圖 — 工程進度
+              ${proj.startDate&&proj.endDate?`<span style="font-size:11px;color:var(--ink-l);font-weight:400;margin-left:10px;letter-spacing:1px;">工期：${fmtDateFull(proj.startDate)} ～ ${fmtDateFull(proj.endDate)}（共 ${daysBetween(proj.startDate,proj.endDate)} 天）</span>`:''}
+            </h3>
             <div style="display:flex;gap:6px;font-size:11px;color:var(--ink-l);align-items:center;">
               <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--sage-dk);display:inline-block;"></span>施工中</span>
               <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block;"></span>完成</span>
@@ -1188,6 +1211,16 @@ function highlightColor(c){
   const nameEl=document.getElementById('color-chosen-name');
   if(nameEl&&chosen)nameEl.textContent=chosen.getAttribute('title')||c;
 }
+function selCustomColor(c){
+  selColorVal=c;
+  document.querySelectorAll('#color-picker > div').forEach(d=>{d.style.borderColor='transparent';d.style.transform='scale(1)';});
+  const hexEl=document.getElementById('custom-color-hex');
+  if(hexEl)hexEl.value=c;
+  const pickerEl=document.getElementById('custom-color-picker');
+  if(pickerEl)pickerEl.value=c;
+  const nameEl=document.getElementById('color-chosen-name');
+  if(nameEl)nameEl.textContent=c;
+}
 function selColor(el){
   const c=el.getAttribute('data-color');
   selColorVal=c;
@@ -1259,6 +1292,12 @@ function openTaskM(idx){
   wsel.value=task.workerId||'';
   document.getElementById('task-modal').classList.add('on');
 }
+function deleteTask(){
+  if(!confirm('確定刪除此工項？刪除後甘特圖上的此工種將移除。'))return;
+  const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  proj.tasks.splice(CUR_TASK_IDX,1);
+  sP(projs);closeTM();renderDetail(proj);notify('工項已刪除','ok');
+}
 function closeTM(){document.getElementById('task-modal').classList.remove('on')}
 function saveTask(){
   const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
@@ -1315,6 +1354,9 @@ function openLogM(editIdx){
   }
   document.getElementById('log-modal').classList.add('on');
 }
+function toggleOtherWorker(cb){
+  document.getElementById('lm-other-name').style.display=cb.checked?'block':'none';
+}
 function toggleLog(id){
   const el=document.getElementById(id);if(!el)return;
   const isOpen=el.style.display!=='none';
@@ -1334,6 +1376,9 @@ function closeLogM(){document.getElementById('log-modal').classList.remove('on')
 function saveLog(){
   const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
   const selWorkers=[...document.querySelectorAll('#lm-workers-list input:checked')].map(cb=>{const w=gW().find(x=>x.id===cb.value);return w?w.name:''}).filter(Boolean);
+  const otherCheck=document.getElementById('lm-other-check');
+  const otherName=document.getElementById('lm-other-name').value.trim();
+  if(otherCheck&&otherCheck.checked&&otherName)selWorkers.push(otherName);
   const photoLinks=document.getElementById('lm-photos').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const log={
     id:(EDITING_LOG_IDX!==null?proj.logs[EDITING_LOG_IDX].id:null)||uid(),
@@ -1367,13 +1412,15 @@ function rebWorkerSelects(){
 function rWorkers(){
   const q=(document.getElementById('worker-search').value||'').toLowerCase();
   const trade=document.getElementById('worker-trade').value;
-  let workers=gW().filter(w=>(!trade||w.trades?.includes(trade))&&(!q||w.name.toLowerCase().includes(q)||(w.company||'').toLowerCase().includes(q)));
+  let workers=gW().filter(w=>(!trade||w.trades?.includes(trade))&&(!q||w.name.toLowerCase().includes(q)||(w.company||'').toLowerCase().includes(q)||(w.recentProjects||'').toLowerCase().includes(q)));
   const grid=document.getElementById('worker-grid');
   if(!workers.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--ink-l);">尚無符合工班</div>`;return}
   grid.innerHTML=workers.map(w=>`
     <div class="worker-card">
       <div class="wc-top">
-        <div class="wc-avatar">${w.name.slice(0,1)}</div>
+        <div class="wc-avatar" style="background:${catColor((w.trades||[])[0]||'')};">
+          <span style="font-size:11px;color:#fff;letter-spacing:0;">${((w.trades||[])[0]||'其他').slice(0,2)}</span>
+        </div>
         <div>
           <div class="wc-name">${w.name}</div>
           ${w.company?`<div class="wc-trade">${w.company}</div>`:''}
@@ -1387,6 +1434,7 @@ function rWorkers(){
         ${w.line?'<br>LINE: '+w.line:''}
         ${w.rate?'<br>💰 '+w.rate:''}
         ${w.note?'<br><span style="color:var(--ink-l);">'+w.note+'</span>':''}
+        ${w.recentProjects?'<br><span style="color:var(--ink-l);font-size:11px;">📋 '+w.recentProjects.split('\n').filter(Boolean).join('、')+'</span>':''}
       </div>
       <div class="wc-footer">
         <div class="wc-stars" style="font-size:13px;">${starsHTML(parseInt(w.rating)||3)}</div>
@@ -1406,6 +1454,7 @@ function openWorkerM(id){
     document.getElementById('wm-mob').value=w.mob||'';document.getElementById('wm-line').value=w.line||'';
     document.getElementById('wm-rating').value=w.rating||3;document.getElementById('wm-rate').value=w.rate||'';
     document.getElementById('wm-note').value=w.note||'';
+    document.getElementById('wm-projects').value=w.recentProjects||'';
     document.querySelectorAll('#wm-trades input').forEach(cb=>{cb.checked=(w.trades||[]).includes(cb.value)});
   } else {
     ['wm-name','wm-company','wm-mob','wm-line','wm-rate','wm-note'].forEach(id=>document.getElementById(id).value='');
@@ -1423,7 +1472,9 @@ function saveWorker(){
   const w={id:EID_WORKER||uid(),name,company:document.getElementById('wm-company').value,
     mob,line:document.getElementById('wm-line').value,trades,
     rating:parseInt(document.getElementById('wm-rating').value),
-    rate:document.getElementById('wm-rate').value,note:document.getElementById('wm-note').value};
+    rate:document.getElementById('wm-rate').value,
+    note:document.getElementById('wm-note').value,
+    recentProjects:document.getElementById('wm-projects').value};
   const workers=gW();
   if(EID_WORKER){const i=workers.findIndex(x=>x.id===EID_WORKER);workers.splice(i,1,w)}else workers.push(w);
   sW(workers);closeWM();rWorkers();notify(EID_WORKER?'已更新':'已新增','ok');
