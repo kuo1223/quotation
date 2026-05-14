@@ -160,7 +160,7 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
 .gantt-header{display:flex;border-bottom:2px solid var(--border);background:var(--paper-w)}
 .gantt-label-col{width:160px;flex-shrink:0;padding:8px 12px;font-size:10px;color:var(--ink-l);letter-spacing:1px;border-right:1px solid var(--border-l)}
 .gantt-dates{flex:1;display:flex;min-width:0}
-.gantt-dc{flex:1;min-width:36px;max-width:52px;text-align:center;padding:5px 2px;font-size:10px;color:var(--ink-l);border-right:1px solid var(--border-l);line-height:1.4;word-break:keep-all}
+.gantt-dc{flex:1;min-width:36px;max-width:52px;text-align:center;padding:5px 2px;font-size:12px;font-weight:500;color:var(--ink-m);border-right:1px solid var(--border-l);line-height:1.4;word-break:keep-all}
 .gantt-dc.gd-today{background:var(--sage-pa);color:var(--sage-dk);font-weight:600}
 .gantt-dc.gd-we{background:#f8f8f8;color:var(--ink-f)}
 .gantt-row{display:flex;border-bottom:1px solid var(--border-l);min-height:44px;align-items:stretch}
@@ -303,6 +303,15 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
       </div>
     </div>
     <div class="stats-row" id="stats-row"></div>
+    <!-- 今日進度總覽 -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-hd">
+        <h3>今日進度總覽</h3>
+        <span id="today-overview-date" style="font-size:11px;color:var(--ink-l);letter-spacing:1px;"></span>
+      </div>
+      <div id="today-overview"></div>
+    </div>
+
     <div class="today-widget">
       <div class="today-hd">
         <h3>今日工地動態</h3>
@@ -579,6 +588,22 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
   </div>
 </div>
 
+<!-- Add Task Modal -->
+<div class="mbg" id="add-task-modal">
+  <div class="modal">
+    <div class="mhd"><h3>新增工項</h3><button class="mcl" onclick="closeAddTaskM()">✕</button></div>
+    <div class="mbod">
+      <div class="fg"><label>選擇工種</label>
+        <select class="fc" id="add-task-sel"></select>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeAddTaskM()">取消</button>
+      <button class="btn btn-primary" onclick="saveAddTask()">新增</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -750,7 +775,73 @@ function go(id){
 // ════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════
+function renderTodayOverview(){
+  const today=todayStr();
+  const tomorrow=addDays(today,1);
+  const projs=gP();
+  const overviewEl=document.getElementById('today-overview');
+  if(!overviewEl)return;
+  const dateEl=document.getElementById('today-overview-date');
+  if(dateEl){const d=new Date();dateEl.textContent=`${d.getMonth()+1}/${d.getDate()} 星期${'日一二三四五六'[d.getDay()]}`;}
+
+  // Collect today's and tomorrow's tasks grouped by project
+  const todayItems=[];const tomorrowItems=[];
+  projs.forEach(proj=>{
+    (proj.tasks||[]).forEach(t=>{
+      if(!t.startDate||!t.endDate)return;
+      if(t.startDate<=today&&t.endDate>=today&&t.status!=='done'){
+        todayItems.push({proj,task:t});
+      } else if(t.startDate===tomorrow){
+        tomorrowItems.push({proj,task:t});
+      }
+    });
+  });
+
+  if(!todayItems.length&&!tomorrowItems.length){
+    overviewEl.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">今明兩日無排定工序</div>';
+    return;
+  }
+
+  let html='';
+  if(todayItems.length){
+    html+=`<div style="padding:8px 16px;font-size:10px;color:var(--sage-dk);letter-spacing:2px;background:var(--sage-pa);border-bottom:1px solid var(--border-l);">今日施工中</div>`;
+    html+=todayItems.map(({proj,task})=>{
+      const wo=WORK_ORDER.find(w=>w.cat===task.cat);
+      const worker=task.workerId?gW().find(w=>w.id===task.workerId):null;
+      const prog=task.progress||0;
+      return`<div style="padding:10px 16px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:10px;">
+        <div style="width:4px;align-self:stretch;border-radius:2px;background:${proj.color||wo?.color||'#8a9082'};flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;color:var(--ink);">${catIcon(task.cat)} ${task.cat}</div>
+          <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${proj.name}${worker?' · '+worker.name:''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:13px;color:var(--sage-dk);font-family:var(--serif);">${prog}%</div>
+          <div style="width:60px;height:4px;background:var(--border-l);border-radius:2px;margin-top:3px;overflow:hidden;">
+            <div style="height:100%;width:${prog}%;background:var(--sage-dk);border-radius:2px;"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  if(tomorrowItems.length){
+    html+=`<div style="padding:8px 16px;font-size:10px;color:var(--gold);letter-spacing:2px;background:var(--gold-pa);border-bottom:1px solid var(--border-l);">明日進場</div>`;
+    html+=tomorrowItems.map(({proj,task})=>{
+      const wo=WORK_ORDER.find(w=>w.cat===task.cat);
+      const worker=task.workerId?gW().find(w=>w.id===task.workerId):null;
+      return`<div style="padding:10px 16px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:10px;">
+        <div style="width:4px;align-self:stretch;border-radius:2px;background:var(--gold);flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--ink);">${catIcon(task.cat)} ${task.cat}</div>
+          <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${proj.name}${worker?' · '+worker.name:''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  overviewEl.innerHTML=html;
+}
 function rDash(){
+  renderTodayOverview();
   const projs=gP();
   const active=projs.filter(p=>p.status==='active');
   const planning=projs.filter(p=>p.status==='planning');
@@ -899,6 +990,7 @@ function renderDetail(proj){
               <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--sage-dk);display:inline-block;"></span>施工中</span>
               <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block;"></span>完成</span>
               <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);display:inline-block;"></span>延誤</span>
+              <button class="btn btn-sm btn-accent" onclick="openAddTaskM()" style="margin-left:8px;">＋ 新增工項</button>
             </div>
           </div>
           <div style="padding:0;" id="gantt-container">${buildGantt(proj)}</div>
@@ -990,10 +1082,16 @@ function renderDetail(proj){
 
 // ── GANTT BUILD ──
 const LABEL_W=160;
-const DAY_W=40;
+const DAY_W=48;
 
 function buildGantt(proj){
-  const allTasks=(proj.tasks||[]).slice().sort((a,b)=>catOrder(a.cat)-catOrder(b.cat));
+  const allTasks=(proj.tasks||[]).slice().sort((a,b)=>{
+    // 有日期的按開始日期排序，沒日期的按工種順序排後面
+    if(a.startDate&&b.startDate)return a.startDate.localeCompare(b.startDate);
+    if(a.startDate)return -1;
+    if(b.startDate)return 1;
+    return catOrder(a.cat)-catOrder(b.cat);
+  });
   if(!allTasks.length)return'<div style="text-align:center;padding:24px;color:var(--ink-l);font-size:13px;">請先在「編輯專案」勾選工程工序</div>';
   const datedTasks=allTasks.filter(t=>t.startDate&&t.endDate);
   const today=todayStr();
@@ -1019,7 +1117,7 @@ function buildGantt(proj){
     const d=addDays(minDate,i);const dd=new Date(d);
     const isToday=d===today;const isWE=dd.getDay()===0||dd.getDay()===6;
     const bg=isToday?'background:var(--sage-pa);color:var(--sage-dk);font-weight:600;':isWE?'background:#f4f4f4;color:var(--ink-f);':'';
-    dateHeaders+='<div style="width:'+DAY_W+'px;flex-shrink:0;text-align:center;padding:5px 0;font-size:10px;color:var(--ink-l);border-right:1px solid var(--border-l);line-height:1.4;'+bg+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br><span style="font-size:8px;">'+['日','一','二','三','四','五','六'][dd.getDay()]+'</span></div>';
+    dateHeaders+='<div style="width:'+DAY_W+'px;flex-shrink:0;text-align:center;padding:5px 0;font-size:12px;font-weight:500;color:var(--ink-m);border-right:1px solid var(--border-l);line-height:1.4;'+bg+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br><span style="font-size:10px;">'+['日','一','二','三','四','五','六'][dd.getDay()]+'</span></div>';
   }
   let cellBgs='';
   for(let i=0;i<totalDays;i++){
@@ -1354,6 +1452,23 @@ function openLogM(editIdx){
 }
 function toggleOtherWorker(cb){
   document.getElementById('lm-other-name').style.display=cb.checked?'block':'none';
+}
+function openAddTaskM(){
+  const proj=gP().find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  const existingCats=(proj.tasks||[]).map(t=>t.cat);
+  const available=WORK_ORDER.filter(w=>!existingCats.includes(w.cat));
+  if(!available.length){notify('所有工種已加入','err');return}
+  const sel=document.getElementById('add-task-sel');
+  sel.innerHTML=available.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
+  document.getElementById('add-task-modal').classList.add('on');
+}
+function closeAddTaskM(){document.getElementById('add-task-modal').classList.remove('on')}
+function saveAddTask(){
+  const cat=document.getElementById('add-task-sel').value;if(!cat)return;
+  const projs=gP();const proj=projs.find(p=>p.id===CUR_PROJECT);if(!proj)return;
+  if(!proj.tasks)proj.tasks=[];
+  proj.tasks.push({cat,startDate:'',endDate:'',status:'pending',progress:0,workerId:'',note:''});
+  sP(projs);closeAddTaskM();renderDetail(proj);notify('工項已新增','ok');
 }
 function toggleLog(id){
   const el=document.getElementById(id);if(!el)return;

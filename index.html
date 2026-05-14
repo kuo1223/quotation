@@ -11,7 +11,7 @@
   --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#c8c4be;
   --paper:#faf9f6;--paper-w:#f5f2ee;--paper-c:#ffffff;
   --border:#dddad4;--border-l:#eae8e2;--stone:#AEAFB1;
-  --red:#c0392b;--green:#2e7d32;
+  --red:#c0392b;--green:#2e7d32;--gold:#8a6914;--gold-pa:#fef9e7;
   --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
   --r:6px;--rl:14px;
 }
@@ -47,17 +47,17 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
 .cal-event:last-child{border-bottom:none;}
 .cal-dot{width:8px;height:8px;border-radius:50%;background:var(--sage-dk);flex-shrink:0;margin-top:5px;}
 .cal-dot.today{background:var(--red);}
-.cal-date{font-size:10px;color:var(--ink-l);letter-spacing:1px;white-space:nowrap;min-width:52px;padding-top:2px;}
+.cal-date{font-size:10px;color:var(--ink-l);white-space:nowrap;min-width:52px;padding-top:2px;}
 .cal-title{font-size:13px;color:var(--ink);line-height:1.5;}
 .cal-loc{font-size:11px;color:var(--ink-l);margin-top:2px;}
-.cal-empty{padding:20px;text-align:center;font-size:12px;color:var(--ink-l);}
+.cal-empty{padding:16px;text-align:center;font-size:12px;color:var(--ink-l);}
 .todo-input-wrap{padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;gap:8px;}
 .todo-input{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;font-size:13px;font-family:var(--sans);outline:none;}
 .todo-input:focus{border-color:var(--sage-dk);}
 .todo-add-btn{padding:6px 12px;background:var(--sage-dk);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;}
 .todo-item{padding:9px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:10px;}
 .todo-item:last-child{border-bottom:none;}
-.todo-check{width:18px;height:18px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.todo-check{width:18px;height:18px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .todo-check.done{background:var(--sage-dk);border-color:var(--sage-dk);color:#fff;font-size:11px;}
 .todo-text{flex:1;font-size:13px;color:var(--ink);}
 .todo-text.done{text-decoration:line-through;color:var(--ink-f);}
@@ -121,13 +121,20 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
     </div>
   </div>
   <div class="sidebar">
+    <!-- 今日/明日工程進度 -->
+    <div class="card">
+      <div class="card-hd"><h3>🏗️ 工程動態</h3></div>
+      <div id="site-overview"></div>
+    </div>
+    <!-- Google 日曆 -->
     <div class="card">
       <div class="card-hd">
         <h3>📅 近期行程</h3>
-        <span onclick="loadCalendar()" style="font-size:11px;color:var(--sage-dk);cursor:pointer;letter-spacing:1px;">重新整理</span>
+        <span onclick="loadCalendar()" style="font-size:11px;color:var(--sage-dk);cursor:pointer;">重新整理</span>
       </div>
       <div id="cal-body"><div class="cal-loading">載入行程中…</div></div>
     </div>
+    <!-- 待辦事項 -->
     <div class="card">
       <div class="card-hd"><h3>✅ 待辦事項</h3></div>
       <div class="todo-input-wrap">
@@ -142,6 +149,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw6H86-UzVOhptUuE6z3uBy96vzqpV93cXpTsvt5KgOYwbhqdE5J9jmOIMf6cAAyB5U/exec';
 const WEEKDAYS=['日','一','二','三','四','五','六'];
+const KPR='ds_projects';
 
 function updateHeaderDate(){
   const now=new Date();
@@ -150,19 +158,75 @@ function updateHeaderDate(){
 }
 updateHeaderDate();
 
+// ── 工程動態（從localStorage讀取）──
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+
+function renderSiteOverview(){
+  const today=todayStr();
+  const tomorrow=addDays(today,1);
+  const projs=JSON.parse(localStorage.getItem(KPR)||'[]');
+  const el=document.getElementById('site-overview');
+  const todayItems=[];const tomorrowItems=[];
+  projs.forEach(function(proj){
+    (proj.tasks||[]).forEach(function(t){
+      if(!t.startDate||!t.endDate)return;
+      if(t.startDate<=today&&t.endDate>=today&&t.status!=='done'){
+        todayItems.push({proj:proj,task:t});
+      } else if(t.startDate===tomorrow){
+        tomorrowItems.push({proj:proj,task:t});
+      }
+    });
+  });
+  if(!todayItems.length&&!tomorrowItems.length){
+    el.innerHTML='<div class="cal-empty">今明兩日無排定工序</div>';
+    return;
+  }
+  var html='';
+  if(todayItems.length){
+    html+='<div style="padding:6px 14px;font-size:10px;color:var(--sage-dk);letter-spacing:2px;background:var(--sage-pa);border-bottom:1px solid var(--border-l);">今日施工中</div>';
+    html+=todayItems.map(function(item){
+      var proj=item.proj;var t=item.task;
+      var prog=t.progress||0;
+      return '<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:8px;">'
+        +'<div style="width:4px;align-self:stretch;border-radius:2px;background:'+(proj.color||'#8a9082')+';flex-shrink:0;"></div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:12px;color:var(--ink);">'+t.cat+'</div>'
+        +'<div style="font-size:11px;color:var(--ink-l);margin-top:1px;">'+proj.name+'</div>'
+        +'</div>'
+        +'<div style="font-size:12px;color:var(--sage-dk);font-weight:500;">'+prog+'%</div>'
+        +'</div>';
+    }).join('');
+  }
+  if(tomorrowItems.length){
+    html+='<div style="padding:6px 14px;font-size:10px;color:var(--gold);letter-spacing:2px;background:var(--gold-pa);border-bottom:1px solid var(--border-l);">明日進場</div>';
+    html+=tomorrowItems.map(function(item){
+      var proj=item.proj;var t=item.task;
+      return '<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:8px;">'
+        +'<div style="width:4px;align-self:stretch;border-radius:2px;background:var(--gold);flex-shrink:0;"></div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:12px;color:var(--ink);">'+t.cat+'</div>'
+        +'<div style="font-size:11px;color:var(--ink-l);margin-top:1px;">'+proj.name+'</div>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }
+  el.innerHTML=html;
+}
+
+// ── JSONP ──
 function jsonpFetch(url){
-  return new Promise((resolve,reject)=>{
-    const cb='_cb_'+Date.now();
-    const s=document.createElement('script');
-    const t=setTimeout(()=>{
+  return new Promise(function(resolve,reject){
+    var cb='_cb_'+Date.now();
+    var s=document.createElement('script');
+    var t=setTimeout(function(){
       delete window[cb];
-      try{document.body.removeChild(s)}catch(e){}
+      try{document.body.removeChild(s);}catch(e){}
       reject(new Error('逾時'));
     },20000);
     window[cb]=function(d){
-      clearTimeout(t);
-      delete window[cb];
-      try{document.body.removeChild(s)}catch(e){}
+      clearTimeout(t);delete window[cb];
+      try{document.body.removeChild(s);}catch(e){}
       resolve(d);
     };
     s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
@@ -171,24 +235,21 @@ function jsonpFetch(url){
   });
 }
 
+// ── 日曆 ──
 async function loadCalendar(){
   document.getElementById('cal-body').innerHTML='<div class="cal-loading">載入中…</div>';
   try{
-    const data=await jsonpFetch(SCRIPT_URL+'?action=calendar');
-    if(!data||!data.ok){
-      document.getElementById('cal-body').innerHTML='<div class="cal-empty">無法取得行程資料</div>';
-      return;
-    }
-    if(!data.events||!data.events.length){
+    var data=await jsonpFetch(SCRIPT_URL+'?action=calendar');
+    if(!data||!data.ok||!data.events||!data.events.length){
       document.getElementById('cal-body').innerHTML='<div class="cal-empty">未來30天無行程</div>';
       return;
     }
-    const today=new Date();today.setHours(0,0,0,0);
-    const html=data.events.map(function(ev){
-      const d=new Date(ev.start);
-      const isToday=d.toDateString()===today.toDateString();
-      const dateStr=(d.getMonth()+1)+'/'+d.getDate()+' 星期'+WEEKDAYS[d.getDay()];
-      const timeStr=ev.allDay?'全天':(('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2));
+    var today=new Date();today.setHours(0,0,0,0);
+    var html=data.events.map(function(ev){
+      var d=new Date(ev.start);
+      var isToday=d.toDateString()===today.toDateString();
+      var dateStr=(d.getMonth()+1)+'/'+d.getDate()+' 星期'+WEEKDAYS[d.getDay()];
+      var timeStr=ev.allDay?'全天':(('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2));
       return '<div class="cal-event">'
         +'<div class="cal-dot'+(isToday?' today':'')+'"></div>'
         +'<div>'
@@ -200,17 +261,16 @@ async function loadCalendar(){
     document.getElementById('cal-body').innerHTML=html;
   }catch(e){
     document.getElementById('cal-body').innerHTML='<div class="cal-empty">載入失敗，請點重新整理</div>';
-    console.error('Calendar error:',e);
   }
 }
 
-const KT='ds_todos';
-function getTodos(){return JSON.parse(localStorage.getItem(KT)||'[]')}
-function saveTodos(d){localStorage.setItem(KT,JSON.stringify(d))}
-
+// ── 待辦事項 ──
+var KT='ds_todos';
+function getTodos(){return JSON.parse(localStorage.getItem(KT)||'[]');}
+function saveTodos(d){localStorage.setItem(KT,JSON.stringify(d));}
 function renderTodos(){
-  const todos=getTodos();
-  const el=document.getElementById('todo-list');
+  var todos=getTodos();
+  var el=document.getElementById('todo-list');
   if(!todos.length){el.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無待辦事項</div>';return;}
   el.innerHTML=todos.map(function(t,i){
     return '<div class="todo-item">'
@@ -220,25 +280,18 @@ function renderTodos(){
       +'</div>';
   }).join('');
 }
-
 function addTodo(){
-  const input=document.getElementById('todo-input');
-  const text=input.value.trim();if(!text)return;
-  const todos=getTodos();
+  var input=document.getElementById('todo-input');
+  var text=input.value.trim();if(!text)return;
+  var todos=getTodos();
   todos.unshift({id:Date.now(),text:text,done:false});
   saveTodos(todos);renderTodos();input.value='';
 }
+function toggleTodo(i){var todos=getTodos();todos[i].done=!todos[i].done;saveTodos(todos);renderTodos();}
+function deleteTodo(i){var todos=getTodos();todos.splice(i,1);saveTodos(todos);renderTodos();}
 
-function toggleTodo(i){
-  const todos=getTodos();todos[i].done=!todos[i].done;
-  saveTodos(todos);renderTodos();
-}
-
-function deleteTodo(i){
-  const todos=getTodos();todos.splice(i,1);
-  saveTodos(todos);renderTodos();
-}
-
+// Init
+renderSiteOverview();
 loadCalendar();
 renderTodos();
 </script>
