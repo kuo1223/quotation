@@ -872,7 +872,7 @@ function rDash(){
       <div class="dot" style="background:${catColor(task.cat)};"></div>
       <div class="info">
         <div class="proj">${catIcon(task.cat)} ${task.cat} <span style="color:var(--ink-l);font-size:12px;">｜ ${proj.name}</span></div>
-        <div class="detail">${proj.ownerName} · ${proj.address||''}</div>
+        <div class="detail">${proj.ownerName} · ${proj.address?`<a href="https://maps.google.com/?q=${encodeURIComponent(proj.address)}" target="_blank" style="color:var(--sage-dk);text-decoration:none;">📍${proj.address}</a>`:''}</div>
       </div>
       ${w?`<div class="worker">${w.name} ${w.mob}</div>`:''}
     </div>`;
@@ -1049,7 +1049,7 @@ function renderDetail(proj){
           <div class="card-hd"><h3>專案資訊</h3><button class="btn btn-sm btn-secondary" onclick="openEditProject('${proj.id}')">編輯</button></div>
           <div style="padding:4px 14px;">
             <div class="info-row"><span class="lbl">業主</span><span class="val">${proj.ownerName||'—'} ${proj.ownerPhone?'<br><a href="tel:'+proj.ownerPhone+'" style="color:var(--sage-dk);font-size:12px;">'+proj.ownerPhone+'</a>':''}</span></div>
-            <div class="info-row"><span class="lbl">地址</span><span class="val" style="font-size:12px;">${proj.address||'—'}</span></div>
+            <div class="info-row"><span class="lbl">地址</span><span class="val" style="font-size:12px;">${proj.address?`<a href="https://maps.google.com/?q=${encodeURIComponent(proj.address)}" target="_blank" style="color:var(--sage-dk);text-decoration:none;">📍 ${proj.address}</a>`:'—'}</span></div>
             <div class="info-row"><span class="lbl">坪數</span><span class="val">${proj.size||'—'} 坪</span></div>
             <div class="info-row"><span class="lbl">開工</span><span class="val">${fmtDateFull(proj.startDate)}</span></div>
             <div class="info-row"><span class="lbl">預計完工</span><span class="val">${fmtDateFull(proj.endDate)}</span></div>
