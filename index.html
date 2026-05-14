@@ -267,7 +267,31 @@ async function loadCalendar(){
 // ── 待辦事項 ──
 var KT='ds_todos';
 function getTodos(){return JSON.parse(localStorage.getItem(KT)||'[]');}
-function saveTodos(d){localStorage.setItem(KT,JSON.stringify(d));}
+function saveTodos(d){
+  localStorage.setItem(KT,JSON.stringify(d));
+  // Sync to Sheets
+  if(SCRIPT_URL){
+    var rows=d.map(function(t){return[t.id,t.text,t.done?'1':'0',t.createdAt||''];});
+    fetch(SCRIPT_URL,{
+      method:'POST',
+      body:JSON.stringify({sheet:'todos',rows:rows}),
+      headers:{'Content-Type':'text/plain'}
+    }).catch(function(e){console.warn('Todo sync failed:',e);});
+  }
+}
+async function loadTodosFromSheets(){
+  if(!SCRIPT_URL)return;
+  try{
+    var data=await jsonpFetch(SCRIPT_URL+'?action=get&sheet=todos');
+    if(data&&data.ok&&data.data&&data.data.length){
+      var todos=data.data.map(function(r){
+        return{id:r[0]||Date.now(),text:r[1]||'',done:r[2]==='1',createdAt:r[3]||''};
+      }).filter(function(t){return t.text;});
+      localStorage.setItem(KT,JSON.stringify(todos));
+      renderTodos();
+    }
+  }catch(e){console.warn('Todo load failed:',e);}
+}
 function renderTodos(){
   var todos=getTodos();
   var el=document.getElementById('todo-list');
@@ -284,7 +308,7 @@ function addTodo(){
   var input=document.getElementById('todo-input');
   var text=input.value.trim();if(!text)return;
   var todos=getTodos();
-  todos.unshift({id:Date.now(),text:text,done:false});
+  todos.unshift({id:Date.now(),text:text,done:false,createdAt:new Date().toISOString()});
   saveTodos(todos);renderTodos();input.value='';
 }
 function toggleTodo(i){var todos=getTodos();todos[i].done=!todos[i].done;saveTodos(todos);renderTodos();}
@@ -293,7 +317,7 @@ function deleteTodo(i){var todos=getTodos();todos.splice(i,1);saveTodos(todos);r
 // Init
 renderSiteOverview();
 loadCalendar();
-renderTodos();
+loadTodosFromSheets().then(function(){renderTodos();}).catch(function(){renderTodos();});
 </script>
 </body>
 </html>
