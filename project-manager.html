@@ -1184,73 +1184,119 @@ function renderDetail(proj){
         </div>
       </div>
 
-      <!-- SIDEBAR -->
-      <div class="detail-sidebar">
-        <!-- Project info -->
-        <div class="card">
-          <div class="card-hd"><h3>專案資訊</h3><button class="btn btn-sm btn-secondary" onclick="openEditProject('${proj.id}')">編輯</button></div>
-          <div style="padding:4px 14px;">
-            <div class="info-row"><span class="lbl">業主</span><span class="val">${proj.ownerName||'—'} ${proj.ownerPhone?'<br><a href="tel:'+proj.ownerPhone+'" style="color:var(--sage-dk);font-size:12px;">'+proj.ownerPhone+'</a>':''}</span></div>
-            <div class="info-row"><span class="lbl">地址</span><span class="val" style="font-size:12px;">${proj.address?`<a href="https://maps.google.com/?q=${encodeURIComponent(proj.address)}" target="_blank" style="color:var(--sage-dk);text-decoration:none;">📍 ${proj.address}</a>`:'—'}</span></div>
-            <div class="info-row"><span class="lbl">坪數</span><span class="val">${proj.size||'—'} 坪</span></div>
-            <div class="info-row"><span class="lbl">開工</span><span class="val">${fmtDateFull(proj.startDate)}</span></div>
-            <div class="info-row"><span class="lbl">預計完工</span><span class="val">${fmtDateFull(proj.endDate)}</span></div>
-            <div class="info-row"><span class="lbl">整體進度</span><span class="val" style="color:var(--sage-dk);font-family:var(--serif);">${pct}%</span></div>
-            <div class="info-row"><span class="lbl">狀態</span><span class="val">${projStatusBadge(proj.status)}</span></div>
+      <!-- 財務分頁區塊（獨立於主區域下方） -->
+      <div style="margin-top:20px;">
+        <!-- 財務頁籤 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;">
+            <button id="fin-tab-card" onclick="switchFinTab('card')" style="padding:6px 16px;font-size:12px;background:var(--sage-dk);color:#fff;border:none;cursor:pointer;letter-spacing:1px;">卡片</button>
+            <button id="fin-tab-table" onclick="switchFinTab('table')" style="padding:6px 16px;font-size:12px;background:var(--paper-w);color:var(--ink-l);border:none;cursor:pointer;letter-spacing:1px;">表列</button>
+          </div>
+          <div style="font-size:11px;color:var(--ink-l);">財務管理</div>
+        </div>
+
+        <!-- 案場資金摘要 -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-hd"><h3>案場資金</h3></div>
+          <div id="finance-summary-${proj.id}">${buildFinanceSummary(proj)}</div>
+        </div>
+
+        <!-- 卡片模式 -->
+        <div id="fin-view-card">
+          <!-- 收款進度 -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-hd">
+              <h3>收款進度</h3>
+              <button class="btn btn-sm btn-accent" onclick="openReceiptM('${proj.id}')">＋ 記錄收款</button>
+            </div>
+            <div>
+              ${receipts.length?receipts.slice().reverse().map((r,ri)=>{
+                const realIdx=receipts.length-1-ri;
+                return`<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:flex-start;gap:10px;">
+                  <div style="flex:1;">
+                    <div style="font-size:13px;color:var(--ink);">${r.label||'收款'}</div>
+                    <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${r.date||''} · ${r.method||''}</div>
+                    ${r.invoice?`<div style="font-size:11px;color:var(--sage-dk);margin-top:2px;">🧾 ${r.invoice}</div>`:''}
+                    ${r.invoiceDone?`<span style="font-size:10px;background:var(--green-pa);color:var(--green);padding:1px 6px;border-radius:10px;">發票已開</span>`:''}
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="font-size:14px;color:var(--green);font-weight:500;">+$ ${Math.round(r.amount||0).toLocaleString('zh-TW')}</div>
+                    <button class="btn btn-sm btn-secondary" onclick="openEditReceiptM('${proj.id}',${realIdx})" style="padding:2px 6px;font-size:11px;">編輯</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteReceipt('${proj.id}',${realIdx})" style="padding:2px 6px;font-size:11px;">✕</button>
+                  </div>
+                </div>`;
+              }).join(''):`<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無收款記錄</div>`}
+              <div style="padding:10px 14px;font-size:12px;color:var(--ink-l);border-top:1px solid var(--border-l);display:flex;justify-content:space-between;">
+                <span>已收總計</span>
+                <strong style="color:var(--green);">$ ${Math.round(paidSum).toLocaleString('zh-TW')} ／ 合約 $ ${Math.round(totalBudget).toLocaleString('zh-TW')}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- 廠商報價 -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-hd">
+              <h3>廠商報價</h3>
+              <button class="btn btn-sm btn-accent" onclick="openVendorM('${proj.id}')">＋ 新增報價</button>
+            </div>
+            ${buildVendorSummary(proj)}
+            <div id="vendor-list-${proj.id}">${buildVendorList(proj)}</div>
           </div>
         </div>
 
-        <!-- 收款進度 -->
-        <div class="card">
-          <div class="card-hd">
-            <h3>收款進度</h3>
-            <button class="btn btn-sm btn-accent" onclick="openReceiptM('${proj.id}')">＋ 記錄收款</button>
-          </div>
-          <div>
-            ${receipts.length?receipts.slice().reverse().map((r,ri)=>{
-              const realIdx=receipts.length-1-ri;
-              return`<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:flex-start;gap:10px;">
-                <div style="flex:1;">
-                  <div style="font-size:13px;color:var(--ink);">${r.label||'收款'}</div>
-                  <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${r.date||''} · ${r.method||''}</div>
-                  ${r.invoice?`<div style="font-size:11px;color:var(--sage-dk);margin-top:2px;">🧾 發票：${r.invoice}</div>`:''}
-                  ${r.invoiceDone?`<span style="font-size:10px;background:var(--green-pa);color:var(--green);padding:1px 6px;border-radius:10px;">發票已開</span>`:''}
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:14px;color:var(--green);font-weight:500;">+$ ${Math.round(r.amount||0).toLocaleString('zh-TW')}</div>
-                  <button class="btn btn-sm btn-danger" onclick="deleteReceipt('${proj.id}',${realIdx})" style="padding:2px 6px;font-size:11px;margin-top:4px;">✕</button>
-                </div>
-              </div>`;
-            }).join(''):`<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無收款記錄</div>`}
-            <div style="padding:10px 14px;font-size:12px;color:var(--ink-l);border-top:1px solid var(--border-l);display:flex;justify-content:space-between;">
-              <span>已收總計</span>
-              <strong style="color:var(--green);">$ ${Math.round(paidSum).toLocaleString('zh-TW')} ／ 合約 $ ${Math.round(totalBudget).toLocaleString('zh-TW')}</strong>
+        <!-- 表列模式 -->
+        <div id="fin-view-table" style="display:none;">
+          <div class="card">
+            <div class="card-hd"><h3>財務總表</h3></div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                  <tr style="background:var(--paper-w);border-bottom:2px solid var(--border);">
+                    <th style="padding:10px 14px;text-align:left;color:var(--ink-l);font-weight:400;letter-spacing:1px;">工種／項目</th>
+                    <th style="padding:10px 14px;text-align:left;color:var(--ink-l);font-weight:400;">廠商</th>
+                    <th style="padding:10px 8px;text-align:right;color:var(--ink-l);font-weight:400;">報價</th>
+                    <th style="padding:10px 8px;text-align:right;color:var(--green);font-weight:400;">已付</th>
+                    <th style="padding:10px 8px;text-align:right;color:var(--red);font-weight:400;">未付</th>
+                    <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">狀態</th>
+                    <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">發票</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(proj.vendors||[]).map(v=>{
+                    const paid=(v.payments||[]).reduce((s,p)=>s+(p.amount||0),0);
+                    const unpaid=(v.quote||0)-paid;
+                    const statusColor=paid===0?'var(--stone)':unpaid<=0?'var(--green)':'var(--gold)';
+                    const statusLabel=paid===0?'未付':unpaid<=0?'已付清':'部分';
+                    return`<tr style="border-bottom:1px solid var(--border-l);">
+                      <td style="padding:10px 14px;color:var(--ink);">${v.cat||'—'}</td>
+                      <td style="padding:10px 14px;color:var(--ink-m);">${v.vendor||'—'}</td>
+                      <td style="padding:10px 8px;text-align:right;color:var(--ink);">$ ${Math.round(v.quote||0).toLocaleString('zh-TW')}</td>
+                      <td style="padding:10px 8px;text-align:right;color:var(--green);">$ ${Math.round(paid).toLocaleString('zh-TW')}</td>
+                      <td style="padding:10px 8px;text-align:right;color:${unpaid>0?'var(--red)':'var(--ink-f)'};">${unpaid>0?'$ '+Math.round(unpaid).toLocaleString('zh-TW'):'—'}</td>
+                      <td style="padding:10px 8px;text-align:center;"><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${statusColor}22;color:${statusColor};">${statusLabel}</span></td>
+                      <td style="padding:10px 8px;text-align:center;">${v.invoiceReceived?'🧾':'—'}</td>
+                    </tr>`;
+                  }).join('')}
+                  ${(proj.vendors||[]).length?`
+                  <tr style="background:var(--paper-w);border-top:2px solid var(--border);font-weight:500;">
+                    <td colspan="2" style="padding:10px 14px;color:var(--ink-l);">合計</td>
+                    <td style="padding:10px 8px;text-align:right;color:var(--ink);">$ ${(proj.vendors||[]).reduce((s,v)=>s+(v.quote||0),0).toLocaleString('zh-TW')}</td>
+                    <td style="padding:10px 8px;text-align:right;color:var(--green);">$ ${(proj.vendors||[]).reduce((s,v)=>(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),s),0).toLocaleString('zh-TW')}</td>
+                    <td style="padding:10px 8px;text-align:right;color:var(--red);">$ ${(proj.vendors||[]).reduce((s,v)=>{const paid=(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),0);return s+Math.max(0,(v.quote||0)-paid);},0).toLocaleString('zh-TW')}</td>
+                    <td colspan="2"></td>
+                  </tr>`:''}
+                </tbody>
+              </table>
+              ${!(proj.vendors||[]).length?`<div style="padding:20px;text-align:center;font-size:12px;color:var(--ink-l);">尚無廠商報價</div>`:''}
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- 案場資金 -->
-        <div class="card">
-          <div class="card-hd">
-            <h3>案場資金</h3>
-          </div>
-          <div id="finance-summary-${proj.id}">
-            ${buildFinanceSummary(proj)}
-          </div>
-        </div>
-
-        <!-- 廠商報價管理 -->
-        <div class="card">
-          <div class="card-hd">
-            <h3>廠商報價</h3>
-            <button class="btn btn-sm btn-accent" onclick="openVendorM('${proj.id}')">＋ 新增報價</button>
-          </div>
-          <div id="vendor-list-${proj.id}">
-            ${buildVendorList(proj)}
-          </div>
-        </div>
-
-        ${proj.note?`<div class="card"><div class="card-hd"><h3>備註</h3></div><div style="padding:12px 14px;font-size:13px;color:var(--ink-m);line-height:1.8;">${proj.note}</div></div>`:''}
+      <!-- SIDEBAR -->
+      <div class="detail-sidebar" style="display:none;">
+      </div>
+    </div>`;
       </div>
     </div>`;
 }
@@ -1399,7 +1445,8 @@ function buildVendorList(proj){
         ${v.note?`<div style="font-size:11px;color:var(--ink-l);margin-top:4px;">${v.note}</div>`:''}
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
           <button class="btn btn-sm btn-accent" onclick="openVendorPayM('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">＋ 記錄付款</button>
-          <button class="btn btn-sm btn-secondary" onclick="toggleVendorInvoice('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">${invoiceDone?'取消發票':'標記發票已收'}</button>
+          ${!invoiceDone?`<button class="btn btn-sm btn-secondary" onclick="toggleVendorInvoice('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">標記發票已收</button>`:`<span style="font-size:11px;padding:3px 8px;color:var(--sage-dk);">🧾 發票已收</span>`}
+          <button class="btn btn-sm btn-secondary" onclick="openEditVendorM('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">編輯</button>
           <button class="btn btn-sm btn-danger" onclick="deleteVendor('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">刪除</button>
         </div>
         ${payments.length?`<div style="margin-top:8px;background:var(--paper-w);border-radius:var(--r);padding:6px 10px;">
@@ -1458,6 +1505,45 @@ function buildFinanceSummary(proj){
 }
 
 // ── 廠商報價管理 ──
+let EDITING_VENDOR_IDX=null;
+function openEditVendorM(projId,vi){
+  const proj=gP().find(p=>p.id===projId);if(!proj)return;
+  const v=proj.vendors[vi];if(!v)return;
+  EDITING_VENDOR_IDX=vi;
+  document.getElementById('vendor-proj-id').value=projId;
+  document.getElementById('vendor-vendor').value=v.vendor||'';
+  document.getElementById('vendor-quote').value=v.quote||'';
+  document.getElementById('vendor-note').value=v.note||'';
+  document.getElementById('vendor-taxed').value=v.taxed?'1':'0';
+  document.getElementById('vendor-invoice').checked=v.invoiceReceived||false;
+  const sel=document.getElementById('vendor-cat');
+  sel.innerHTML=WORK_ORDER.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
+  sel.value=v.cat||'';
+  document.getElementById('vendor-modal').classList.add('on');
+}
+function saveVendor(){
+  const projId=document.getElementById('vendor-proj-id').value;
+  const quote=parseFloat(document.getElementById('vendor-quote').value)||0;
+  if(!quote){notify('請填寫報價金額','err');return}
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  if(!proj.vendors)proj.vendors=[];
+  const data={
+    id:uid(),cat:document.getElementById('vendor-cat').value,
+    vendor:document.getElementById('vendor-vendor').value,
+    quote:quote,taxed:document.getElementById('vendor-taxed').value==='1',
+    invoiceReceived:document.getElementById('vendor-invoice').checked,
+    note:document.getElementById('vendor-note').value,payments:[]
+  };
+  if(EDITING_VENDOR_IDX!==null){
+    data.id=proj.vendors[EDITING_VENDOR_IDX].id||uid();
+    data.payments=proj.vendors[EDITING_VENDOR_IDX].payments||[];
+    proj.vendors[EDITING_VENDOR_IDX]=data;
+    EDITING_VENDOR_IDX=null;
+  }else{
+    proj.vendors.push(data);
+  }
+  sP(projs);closeVendorM();renderDetail(proj);notify('廠商報價已儲存','ok');
+}
 function openVendorM(projId){
   document.getElementById('vendor-proj-id').value=projId;
   document.getElementById('vendor-vendor').value='';
@@ -1531,8 +1617,77 @@ function deleteVendorPay(projId,vi,pi){
   sP(projs);renderDetail(proj);notify('已刪除','ok');
 }
 
-// ── 收款記錄 ──
+function switchFinTab(tab){
+  document.getElementById('fin-view-card').style.display=tab==='card'?'block':'none';
+  document.getElementById('fin-view-table').style.display=tab==='table'?'block':'none';
+  document.getElementById('fin-tab-card').style.background=tab==='card'?'var(--sage-dk)':'var(--paper-w)';
+  document.getElementById('fin-tab-card').style.color=tab==='card'?'#fff':'var(--ink-l)';
+  document.getElementById('fin-tab-table').style.background=tab==='table'?'var(--sage-dk)':'var(--paper-w)';
+  document.getElementById('fin-tab-table').style.color=tab==='table'?'#fff':'var(--ink-l)';
+}
+
+function buildVendorSummary(proj){
+  const vendors=proj.vendors||[];
+  if(!vendors.length)return'';
+  const totalQuote=vendors.reduce((s,v)=>s+(v.quote||0),0);
+  const totalPaid=vendors.reduce((s,v)=>(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),s),0);
+  const totalUnpaid=vendors.reduce((s,v)=>{const paid=(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),0);return s+Math.max(0,(v.quote||0)-paid);},0);
+  return`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--border-l);">
+    <div style="padding:10px 14px;border-right:1px solid var(--border-l);">
+      <div style="font-size:10px;color:var(--ink-l);letter-spacing:1px;margin-bottom:2px;">報價總計</div>
+      <div style="font-size:15px;font-family:var(--serif);color:var(--ink);">$ ${Math.round(totalQuote).toLocaleString('zh-TW')}</div>
+    </div>
+    <div style="padding:10px 14px;border-right:1px solid var(--border-l);">
+      <div style="font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:2px;">已付總計</div>
+      <div style="font-size:15px;font-family:var(--serif);color:var(--green);">$ ${Math.round(totalPaid).toLocaleString('zh-TW')}</div>
+    </div>
+    <div style="padding:10px 14px;">
+      <div style="font-size:10px;color:var(--red);letter-spacing:1px;margin-bottom:2px;">未付總計</div>
+      <div style="font-size:15px;font-family:var(--serif);color:var(--red);">$ ${Math.round(totalUnpaid).toLocaleString('zh-TW')}</div>
+    </div>
+  </div>`;
+}
+
+// 編輯收款
+let EDITING_RECEIPT_IDX=null;
+function openEditReceiptM(projId,idx){
+  const proj=gP().find(p=>p.id===projId);if(!proj)return;
+  const r=proj.receipts[idx];if(!r)return;
+  EDITING_RECEIPT_IDX=idx;
+  document.getElementById('receipt-proj-id').value=projId;
+  document.getElementById('receipt-date').value=r.date||todayStr();
+  document.getElementById('receipt-amount').value=r.amount||'';
+  document.getElementById('receipt-label').value=r.label||'';
+  document.getElementById('receipt-method').value=r.method||'電匯';
+  document.getElementById('receipt-invoice').value=r.invoice||'';
+  document.getElementById('receipt-invoice-done').checked=r.invoiceDone||false;
+  document.getElementById('receipt-modal').classList.add('on');
+}
+function saveReceipt(){
+  const projId=document.getElementById('receipt-proj-id').value;
+  const amount=parseFloat(document.getElementById('receipt-amount').value)||0;
+  if(!amount){notify('請填寫收款金額','err');return}
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  if(!proj.receipts)proj.receipts=[];
+  const data={
+    id:uid(),date:document.getElementById('receipt-date').value,
+    label:document.getElementById('receipt-label').value||'收款',
+    amount:amount,method:document.getElementById('receipt-method').value,
+    invoice:document.getElementById('receipt-invoice').value,
+    invoiceDone:document.getElementById('receipt-invoice-done').checked
+  };
+  if(EDITING_RECEIPT_IDX!==null){
+    data.id=proj.receipts[EDITING_RECEIPT_IDX].id||uid();
+    proj.receipts[EDITING_RECEIPT_IDX]=data;
+    EDITING_RECEIPT_IDX=null;
+  }else{
+    proj.receipts.push(data);
+  }
+  sP(projs);closeReceiptM();renderDetail(proj);notify('收款記錄已儲存','ok');
+}
+function closeReceiptM(){document.getElementById('receipt-modal').classList.remove('on');EDITING_RECEIPT_IDX=null;}
 function openReceiptM(projId){
+  EDITING_RECEIPT_IDX=null;
   document.getElementById('receipt-proj-id').value=projId;
   document.getElementById('receipt-date').value=todayStr();
   document.getElementById('receipt-amount').value='';
@@ -1541,24 +1696,6 @@ function openReceiptM(projId){
   document.getElementById('receipt-invoice').value='';
   document.getElementById('receipt-invoice-done').checked=false;
   document.getElementById('receipt-modal').classList.add('on');
-}
-function closeReceiptM(){document.getElementById('receipt-modal').classList.remove('on')}
-function saveReceipt(){
-  const projId=document.getElementById('receipt-proj-id').value;
-  const amount=parseFloat(document.getElementById('receipt-amount').value)||0;
-  if(!amount){notify('請填寫收款金額','err');return}
-  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
-  if(!proj.receipts)proj.receipts=[];
-  proj.receipts.push({
-    id:uid(),
-    date:document.getElementById('receipt-date').value,
-    label:document.getElementById('receipt-label').value||'收款',
-    amount:amount,
-    method:document.getElementById('receipt-method').value,
-    invoice:document.getElementById('receipt-invoice').value,
-    invoiceDone:document.getElementById('receipt-invoice-done').checked
-  });
-  sP(projs);closeReceiptM();renderDetail(proj);notify('收款記錄已新增','ok');
 }
 function deleteReceipt(projId,idx){
   if(!confirm('確定刪除此收款記錄？'))return;
@@ -1765,6 +1902,9 @@ function saveProject(){
     note:document.getElementById('pm-note').value,
     color:selColorVal,quoteId:document.getElementById('pm-quote').value,
     tasks, logs:existingProj?.logs||[],
+    vendors:existingProj?.vendors||[],
+    receipts:existingProj?.receipts||[],
+    payouts:existingProj?.payouts||[],
     createdAt:existingProj?.createdAt||todayStr()
   };
   if(editId){const i=projs.findIndex(p=>p.id===editId);projs.splice(i,1,proj)}else projs.push(proj);
