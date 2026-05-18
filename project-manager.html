@@ -604,6 +604,86 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
   </div>
 </div>
 
+<!-- Receipt Modal 收款記錄 -->
+<div class="mbg" id="receipt-modal">
+  <div class="modal">
+    <div class="mhd"><h3>記錄收款</h3><button class="mcl" onclick="closeReceiptM()">✕</button></div>
+    <div class="mbod">
+      <input type="hidden" id="receipt-proj-id">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>收款日期</label><input class="fc" id="receipt-date" type="date"></div>
+        <div class="fg"><label>收款金額（元）</label><input class="fc" id="receipt-amount" type="number" placeholder="0" min="0"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>款項名稱</label>
+          <input class="fc" id="receipt-label" placeholder="簽約款、第一期款、第二期款…" list="receipt-label-list">
+          <datalist id="receipt-label-list">
+            <option value="簽約款">
+            <option value="第一期款">
+            <option value="第二期款">
+            <option value="第三期款">
+            <option value="完工款">
+            <option value="尾款">
+          </datalist>
+        </div>
+        <div class="fg"><label>付款方式</label>
+          <select class="fc" id="receipt-method">
+            <option value="電匯">電匯</option>
+            <option value="現金">現金</option>
+            <option value="支票">支票</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;align-items:center;">
+        <div class="fg"><label>發票號碼（選填）</label><input class="fc" id="receipt-invoice" placeholder="AB12345678"></div>
+        <div class="fg" style="padding-top:20px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="receipt-invoice-done" style="width:16px;height:16px;accent-color:var(--sage-dk);">
+            <span style="font-size:13px;">發票已開</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeReceiptM()">取消</button>
+      <button class="btn btn-primary" onclick="saveReceipt()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payout Modal 工班付款 -->
+<div class="mbg" id="payout-modal">
+  <div class="modal">
+    <div class="mhd"><h3>記錄工班付款</h3><button class="mcl" onclick="closePayoutM()">✕</button></div>
+    <div class="mbod">
+      <input type="hidden" id="payout-proj-id">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>付款日期</label><input class="fc" id="payout-date" type="date"></div>
+        <div class="fg"><label>付款金額（元）</label><input class="fc" id="payout-amount" type="number" placeholder="0" min="0"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>工種</label><select class="fc" id="payout-cat"></select></div>
+        <div class="fg"><label>收款對象</label><input class="fc" id="payout-payee" placeholder="師傅姓名或公司名稱"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>付款方式</label>
+          <select class="fc" id="payout-method">
+            <option value="電匯">電匯</option>
+            <option value="現金">現金</option>
+          </select>
+        </div>
+        <div class="fg"><label>轉入帳號（選填）</label><input class="fc" id="payout-account" placeholder="後五碼或帳號"></div>
+      </div>
+      <div class="fg"><label>發票資訊（選填）</label><input class="fc" id="payout-invoice" placeholder="發票號碼或統編"></div>
+      <div class="fg"><label>備註</label><input class="fc" id="payout-note" placeholder="例：第一期款、材料費…"></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closePayoutM()">取消</button>
+      <button class="btn btn-primary" onclick="savePayout()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -972,9 +1052,9 @@ function renderDetail(proj){
   const pct=projProgress(proj);
   const tasks=proj.tasks||[];
   const logs=proj.logs||[];
-  // Payment
-  const pays=parsePay(proj.payStr||'');
-  const paidSum=pays.filter(p=>p.paid).reduce((s,p)=>s+p.amount,0);
+  // Payment - 用收款記錄計算已收金額
+  const receipts=proj.receipts||[];
+  const paidSum=receipts.reduce((s,r)=>s+(r.amount||0),0);
   const totalBudget=proj.budget||0;
 
   document.getElementById('detail-content').innerHTML=`
@@ -1058,22 +1138,64 @@ function renderDetail(proj){
           </div>
         </div>
 
-        <!-- Payment -->
-        ${totalBudget>0?`<div class="card">
-          <div class="card-hd"><h3>付款進度</h3></div>
+        <!-- 收款進度 -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>收款進度</h3>
+            <button class="btn btn-sm btn-accent" onclick="openReceiptM('${proj.id}')">＋ 記錄收款</button>
+          </div>
           <div>
-            ${pays.map((p,i)=>`<div class="pay-row">
-              <div>
-                <div style="font-size:13px;color:var(--ink);">${p.label}</div>
-                <div style="font-size:12px;color:var(--ink-l);">$ ${Math.round(totalBudget*p.pct/100).toLocaleString('zh-TW')} （${p.pct}%）</div>
-              </div>
-              <div class="pay-check ${p.paid?'done':''}" onclick="togglePay('${proj.id}',${i})">${p.paid?'✓':''}</div>
-            </div>`).join('')}
-            <div style="padding:10px 14px;font-size:12px;color:var(--ink-l);border-top:1px solid var(--border-l);">
-              已收：<strong style="color:var(--green);">$ ${Math.round(paidSum).toLocaleString('zh-TW')}</strong> ／ 合約：$ ${Math.round(totalBudget).toLocaleString('zh-TW')}
+            ${receipts.length?receipts.slice().reverse().map((r,ri)=>{
+              const realIdx=receipts.length-1-ri;
+              return`<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:flex-start;gap:10px;">
+                <div style="flex:1;">
+                  <div style="font-size:13px;color:var(--ink);">${r.label||'收款'}</div>
+                  <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${r.date||''} · ${r.method||''}</div>
+                  ${r.invoice?`<div style="font-size:11px;color:var(--sage-dk);margin-top:2px;">🧾 發票：${r.invoice}</div>`:''}
+                  ${r.invoiceDone?`<span style="font-size:10px;background:var(--green-pa);color:var(--green);padding:1px 6px;border-radius:10px;">發票已開</span>`:''}
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:14px;color:var(--green);font-weight:500;">+$ ${Math.round(r.amount||0).toLocaleString('zh-TW')}</div>
+                  <button class="btn btn-sm btn-danger" onclick="deleteReceipt('${proj.id}',${realIdx})" style="padding:2px 6px;font-size:11px;margin-top:4px;">✕</button>
+                </div>
+              </div>`;
+            }).join(''):`<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無收款記錄</div>`}
+            <div style="padding:10px 14px;font-size:12px;color:var(--ink-l);border-top:1px solid var(--border-l);display:flex;justify-content:space-between;">
+              <span>已收總計</span>
+              <strong style="color:var(--green);">$ ${Math.round(paidSum).toLocaleString('zh-TW')} ／ 合約 $ ${Math.round(totalBudget).toLocaleString('zh-TW')}</strong>
             </div>
           </div>
-        </div>`:''}
+        </div>
+
+        <!-- 案場資金 -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>案場資金</h3>
+            <button class="btn btn-sm btn-accent" onclick="openPayoutM('${proj.id}')">＋ 記錄付款</button>
+          </div>
+          <div id="finance-summary-${proj.id}">
+            ${buildFinanceSummary(proj)}
+          </div>
+          <div style="border-top:1px solid var(--border-l);">
+            <div style="padding:8px 14px;font-size:10px;color:var(--ink-l);letter-spacing:2px;background:var(--paper-w);">工班付款明細</div>
+            ${(proj.payouts||[]).length?
+              (proj.payouts||[]).slice().reverse().map((p,ri)=>{
+                const realIdx=(proj.payouts||[]).length-1-ri;
+                return`<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:10px;">
+                  <div style="flex:1;">
+                    <div style="font-size:13px;color:var(--ink);">${p.cat||'其他'} <span style="font-size:11px;color:var(--ink-l);">· ${p.payee||p.worker||''}</span></div>
+                    <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${p.date||''} · ${p.method||''} ${p.account?'· '+p.account:''}</div>
+                    ${p.invoice?`<div style="font-size:11px;color:var(--sage-dk);">🧾 ${p.invoice}</div>`:''}
+                    ${p.note?`<div style="font-size:11px;color:var(--ink-l);">${p.note}</div>`:''}
+                  </div>
+                  <div style="font-size:14px;color:var(--red);font-weight:500;">−$ ${Math.round(p.amount||0).toLocaleString('zh-TW')}</div>
+                  <button class="btn btn-sm btn-danger" onclick="deletePayout('${proj.id}',${realIdx})" style="padding:2px 6px;font-size:11px;">✕</button>
+                </div>`;
+              }).join('')
+              :`<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無付款記錄</div>`
+            }
+          </div>
+        </div>
 
         ${proj.note?`<div class="card"><div class="card-hd"><h3>備註</h3></div><div style="padding:12px 14px;font-size:13px;color:var(--ink-m);line-height:1.8;">${proj.note}</div></div>`:''}
       </div>
@@ -1193,6 +1315,116 @@ function buildGanttExportHTML(proj){
 
 
 // ── PAYMENT ──
+// ── FINANCE ──
+function buildFinanceSummary(proj){
+  const budget=proj.budget||0;
+  const receipts=proj.receipts||[];
+  const received=receipts.reduce((s,r)=>s+(r.amount||0),0);
+  const paid=(proj.payouts||[]).reduce((s,p)=>s+(p.amount||0),0);
+  const remain=received-paid;
+  const remainColor=remain<0?'var(--red)':remain<budget*0.1?'var(--gold)':'var(--green)';
+  return`<div style="padding:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="background:var(--green-pa);border-radius:var(--r);padding:10px 14px;">
+        <div style="font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:4px;">已收業主款</div>
+        <div style="font-size:18px;font-family:var(--serif);color:var(--green);">$ ${Math.round(received).toLocaleString('zh-TW')}</div>
+      </div>
+      <div style="background:#ffeaea;border-radius:var(--r);padding:10px 14px;">
+        <div style="font-size:10px;color:var(--red);letter-spacing:1px;margin-bottom:4px;">已付工班費</div>
+        <div style="font-size:18px;font-family:var(--serif);color:var(--red);">$ ${Math.round(paid).toLocaleString('zh-TW')}</div>
+      </div>
+    </div>
+    <div style="background:var(--paper-w);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;">${remain>=0?'剩餘可動用':'超支金額'}</div>
+        <div style="font-size:22px;font-family:var(--serif);color:${remainColor};margin-top:2px;">${remain<0?'−':''}$ ${Math.abs(Math.round(remain)).toLocaleString('zh-TW')}</div>
+      </div>
+      ${budget>0?`<div style="text-align:right;">
+        <div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">合約金額</div>
+        <div style="font-size:13px;color:var(--ink-m);">$ ${Math.round(budget).toLocaleString('zh-TW')}</div>
+        <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">工班支出佔比 ${budget>0?Math.round(paid/budget*100):0}%</div>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+// ── 收款記錄 ──
+function openReceiptM(projId){
+  document.getElementById('receipt-proj-id').value=projId;
+  document.getElementById('receipt-date').value=todayStr();
+  document.getElementById('receipt-amount').value='';
+  document.getElementById('receipt-label').value='';
+  document.getElementById('receipt-method').value='電匯';
+  document.getElementById('receipt-invoice').value='';
+  document.getElementById('receipt-invoice-done').checked=false;
+  document.getElementById('receipt-modal').classList.add('on');
+}
+function closeReceiptM(){document.getElementById('receipt-modal').classList.remove('on')}
+function saveReceipt(){
+  const projId=document.getElementById('receipt-proj-id').value;
+  const amount=parseFloat(document.getElementById('receipt-amount').value)||0;
+  if(!amount){notify('請填寫收款金額','err');return}
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  if(!proj.receipts)proj.receipts=[];
+  proj.receipts.push({
+    id:uid(),
+    date:document.getElementById('receipt-date').value,
+    label:document.getElementById('receipt-label').value||'收款',
+    amount:amount,
+    method:document.getElementById('receipt-method').value,
+    invoice:document.getElementById('receipt-invoice').value,
+    invoiceDone:document.getElementById('receipt-invoice-done').checked
+  });
+  sP(projs);closeReceiptM();renderDetail(proj);notify('收款記錄已新增','ok');
+}
+function deleteReceipt(projId,idx){
+  if(!confirm('確定刪除此收款記錄？'))return;
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  proj.receipts.splice(idx,1);
+  sP(projs);renderDetail(proj);notify('已刪除','ok');
+}
+
+function openPayoutM(projId){
+  const proj=gP().find(p=>p.id===projId);if(!proj)return;
+  document.getElementById('payout-proj-id').value=projId;
+  document.getElementById('payout-date').value=todayStr();
+  document.getElementById('payout-amount').value='';
+  document.getElementById('payout-payee').value='';
+  document.getElementById('payout-method').value='電匯';
+  document.getElementById('payout-account').value='';
+  document.getElementById('payout-invoice').value='';
+  document.getElementById('payout-note').value='';
+  const sel=document.getElementById('payout-cat');
+  sel.innerHTML=WORK_ORDER.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
+  document.getElementById('payout-modal').classList.add('on');
+}
+function closePayoutM(){document.getElementById('payout-modal').classList.remove('on')}
+function savePayout(){
+  const projId=document.getElementById('payout-proj-id').value;
+  const amount=parseFloat(document.getElementById('payout-amount').value)||0;
+  if(!amount){notify('請填寫付款金額','err');return}
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  if(!proj.payouts)proj.payouts=[];
+  proj.payouts.push({
+    id:uid(),
+    date:document.getElementById('payout-date').value,
+    cat:document.getElementById('payout-cat').value,
+    payee:document.getElementById('payout-payee').value,
+    method:document.getElementById('payout-method').value,
+    account:document.getElementById('payout-account').value,
+    invoice:document.getElementById('payout-invoice').value,
+    amount:amount,
+    note:document.getElementById('payout-note').value
+  });
+  sP(projs);closePayoutM();renderDetail(proj);notify('付款記錄已新增','ok');
+}
+function deletePayout(projId,idx){
+  if(!confirm('確定刪除此付款記錄？'))return;
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  proj.payouts.splice(idx,1);
+  sP(projs);renderDetail(proj);notify('已刪除','ok');
+}
+
 function parsePay(str){
   if(!str)return[{label:'簽約款',pct:30,paid:false,amount:0},{label:'開工款',pct:30,paid:false,amount:0},{label:'完工款',pct:40,paid:false,amount:0}];
   return str.split(',').map(s=>{const[label,pct]=s.split(':');return{label:label?.trim()||'款項',pct:parseFloat(pct)||33,paid:false,amount:0}});
