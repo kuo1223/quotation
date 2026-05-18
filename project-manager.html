@@ -362,7 +362,7 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
   <nav style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:var(--paper-c);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← 返回總覽</button>
-      <span id="detail-nav-title" style="font-family:var(--serif);font-size:14px;letter-spacing:2px;color:var(--ink-m);"></span>
+      <select id="detail-nav-select" onchange="switchProject(this.value)" style="font-family:var(--serif);font-size:13px;letter-spacing:1px;color:var(--ink-m);border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;background:var(--paper-w);cursor:pointer;max-width:220px;"></select>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-secondary btn-sm" onclick="exportGanttJPG()">匯出甘特圖 JPG</button>
@@ -634,7 +634,7 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
     </div>
     <div class="mft">
       <button class="btn btn-secondary" onclick="closeVendorM()">取消</button>
-      <button class="btn btn-primary" onclick="saveVendor()">新增</button>
+      <button class="btn btn-primary" id="vendor-submit-btn" onclick="saveVendor()">新增</button>
     </div>
   </div>
 </div>
@@ -1099,8 +1099,18 @@ function rProjects(){
 function openDetail(id){
   CUR_PROJECT=id;
   const proj=gP().find(p=>p.id===id);if(!proj)return;
-  document.getElementById('detail-nav-title').textContent=proj.name;
+  // Populate project dropdown
+  const sel=document.getElementById('detail-nav-select');
+  const allProjs=gP().filter(p=>p.status!=='done');
+  sel.innerHTML=allProjs.map(p=>`<option value="${p.id}" ${p.id===id?'selected':''}>${p.name}</option>`).join('');
+  if(!allProjs.find(p=>p.id===id)){
+    sel.innerHTML=`<option value="${proj.id}" selected>${proj.name}</option>`+sel.innerHTML;
+  }
   renderDetail(proj);
+}
+function switchProject(id){
+  if(!id)return;
+  openDetail(id);
   document.getElementById('detail-panel').style.display='block';
   document.body.style.overflow='hidden';
 }
@@ -1123,6 +1133,11 @@ function renderDetail(proj){
   document.getElementById('detail-content').innerHTML=`
     <div style="max-width:900px;margin:0 auto;">
       <div>
+        <!-- 專案名稱 -->
+        <div style="padding:20px 0 8px;">
+          <h2 style="font-family:var(--serif);font-size:24px;font-weight:500;color:var(--ink);letter-spacing:3px;">${proj.name}</h2>
+          <div style="font-size:12px;color:var(--ink-l);margin-top:4px;letter-spacing:1px;">${proj.ownerName||''} ${proj.address?'· '+proj.address:''}</div>
+        </div>
         <!-- GANTT -->
         <div class="card">
           <div class="card-hd">
@@ -1275,11 +1290,11 @@ function renderDetail(proj){
                     <th style="padding:10px 8px;text-align:right;color:var(--red);font-weight:400;">未付</th>
                     <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">狀態</th>
                     <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">發票</th>
-                    <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">文件</th>
+                    <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${(proj.vendors||[]).map(v=>{
+                  ${(proj.vendors||[]).map((v,vi)=>{
                     const paid=(v.payments||[]).reduce((s,p)=>s+(p.amount||0),0);
                     const unpaid=(v.quote||0)-paid;
                     const statusColor=paid===0?'var(--stone)':unpaid<=0?'var(--green)':'var(--gold)';
@@ -1292,7 +1307,11 @@ function renderDetail(proj){
                       <td style="padding:10px 8px;text-align:right;color:${unpaid>0?'var(--red)':'var(--ink-f)'};">${unpaid>0?'$ '+Math.round(unpaid).toLocaleString('zh-TW'):'—'}</td>
                       <td style="padding:10px 8px;text-align:center;"><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${statusColor}22;color:${statusColor};">${statusLabel}</span></td>
                       <td style="padding:10px 8px;text-align:center;">${v.invoiceReceived?'🧾':'—'}</td>
-                      <td style="padding:10px 8px;text-align:center;">${v.docUrl?`<a href="${v.docUrl}" target="_blank" style="color:var(--sage-dk);font-size:11px;">📄 開啟</a>`:'—'}</td>
+                      <td style="padding:10px 8px;text-align:center;">${v.docUrl?`<a href="${v.docUrl}" target="_blank" style="color:var(--sage-dk);font-size:11px;">📄</a>`:'—'}</td>
+                      <td style="padding:6px 8px;text-align:center;white-space:nowrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="openEditVendorM('${proj.id}',${vi})" style="font-size:11px;padding:2px 7px;margin-right:4px;">編輯</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteVendor('${proj.id}',${vi})" style="font-size:11px;padding:2px 7px;">刪除</button>
+                      </td>
                     </tr>`;
                   }).join('')}
                   ${(proj.vendors||[]).length?`
@@ -1533,6 +1552,7 @@ function openEditVendorM(projId,vi){
   const sel=document.getElementById('vendor-cat');
   sel.innerHTML=WORK_ORDER.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
   sel.value=v.cat||'';
+  document.getElementById('vendor-submit-btn').textContent='更新';
   document.getElementById('vendor-modal').classList.add('on');
 }
 function saveVendor(){
@@ -1561,35 +1581,21 @@ function saveVendor(){
   sP(projs);closeVendorM();renderDetail(proj);notify('廠商報價已儲存','ok');
 }
 function openVendorM(projId){
+  EDITING_VENDOR_IDX=null;
   document.getElementById('vendor-proj-id').value=projId;
   document.getElementById('vendor-vendor').value='';
   document.getElementById('vendor-quote').value='';
   document.getElementById('vendor-note').value='';
+  document.getElementById('vendor-doc').value='';
   document.getElementById('vendor-taxed').value='0';
   document.getElementById('vendor-invoice').checked=false;
   const sel=document.getElementById('vendor-cat');
   sel.innerHTML=WORK_ORDER.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
+  document.getElementById('vendor-submit-btn').textContent='新增';
   document.getElementById('vendor-modal').classList.add('on');
 }
-function closeVendorM(){document.getElementById('vendor-modal').classList.remove('on')}
-function saveVendor(){
-  const projId=document.getElementById('vendor-proj-id').value;
-  const quote=parseFloat(document.getElementById('vendor-quote').value)||0;
-  if(!quote){notify('請填寫報價金額','err');return}
-  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
-  if(!proj.vendors)proj.vendors=[];
-  proj.vendors.push({
-    id:uid(),
-    cat:document.getElementById('vendor-cat').value,
-    vendor:document.getElementById('vendor-vendor').value,
-    quote:quote,
-    taxed:document.getElementById('vendor-taxed').value==='1',
-    invoiceReceived:document.getElementById('vendor-invoice').checked,
-    note:document.getElementById('vendor-note').value,
-    payments:[]
-  });
-  sP(projs);closeVendorM();renderDetail(proj);notify('廠商報價已新增','ok');
-}
+function closeVendorM(){document.getElementById('vendor-modal').classList.remove('on');EDITING_VENDOR_IDX=null;}
+
 function deleteVendor(projId,vi){
   if(!confirm('確定刪除此廠商報價？'))return;
   const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
