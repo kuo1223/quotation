@@ -604,6 +604,68 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
   </div>
 </div>
 
+<!-- Vendor Modal 廠商報價 -->
+<div class="mbg" id="vendor-modal">
+  <div class="modal">
+    <div class="mhd"><h3>新增廠商報價</h3><button class="mcl" onclick="closeVendorM()">✕</button></div>
+    <div class="mbod">
+      <input type="hidden" id="vendor-proj-id">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>工種</label><select class="fc" id="vendor-cat"></select></div>
+        <div class="fg"><label>廠商名稱</label><input class="fc" id="vendor-vendor" placeholder="師傅或公司名稱"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>報價金額（元）</label><input class="fc" id="vendor-quote" type="number" placeholder="0" min="0"></div>
+        <div class="fg"><label>稅別</label>
+          <select class="fc" id="vendor-taxed">
+            <option value="0">未稅</option>
+            <option value="1">含稅</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:4px;">
+          <input type="checkbox" id="vendor-invoice" style="width:16px;height:16px;accent-color:var(--sage-dk);">
+          <span style="font-size:13px;">發票已收</span>
+        </label>
+      </div>
+      <div class="fg"><label>備註</label><input class="fc" id="vendor-note" placeholder="報價日期、備注…"></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeVendorM()">取消</button>
+      <button class="btn btn-primary" onclick="saveVendor()">新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vendor Pay Modal 廠商付款 -->
+<div class="mbg" id="vendor-pay-modal">
+  <div class="modal">
+    <div class="mhd"><h3>記錄付款</h3><button class="mcl" onclick="closeVendorPayM()">✕</button></div>
+    <div class="mbod">
+      <input type="hidden" id="vpay-proj-id">
+      <input type="hidden" id="vpay-vi">
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>付款日期</label><input class="fc" id="vpay-date" type="date"></div>
+        <div class="fg"><label>付款金額（元）</label><input class="fc" id="vpay-amount" type="number" placeholder="0" min="0"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;">
+        <div class="fg"><label>付款方式</label>
+          <select class="fc" id="vpay-method">
+            <option value="電匯">電匯</option>
+            <option value="現金">現金</option>
+          </select>
+        </div>
+        <div class="fg"><label>轉入帳號（選填）</label><input class="fc" id="vpay-account" placeholder="後五碼"></div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeVendorPayM()">取消</button>
+      <button class="btn btn-primary" onclick="saveVendorPay()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- Receipt Modal 收款記錄 -->
 <div class="mbg" id="receipt-modal">
   <div class="modal">
@@ -1171,29 +1233,20 @@ function renderDetail(proj){
         <div class="card">
           <div class="card-hd">
             <h3>案場資金</h3>
-            <button class="btn btn-sm btn-accent" onclick="openPayoutM('${proj.id}')">＋ 記錄付款</button>
           </div>
           <div id="finance-summary-${proj.id}">
             ${buildFinanceSummary(proj)}
           </div>
-          <div style="border-top:1px solid var(--border-l);">
-            <div style="padding:8px 14px;font-size:10px;color:var(--ink-l);letter-spacing:2px;background:var(--paper-w);">工班付款明細</div>
-            ${(proj.payouts||[]).length?
-              (proj.payouts||[]).slice().reverse().map((p,ri)=>{
-                const realIdx=(proj.payouts||[]).length-1-ri;
-                return`<div style="padding:10px 14px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;gap:10px;">
-                  <div style="flex:1;">
-                    <div style="font-size:13px;color:var(--ink);">${p.cat||'其他'} <span style="font-size:11px;color:var(--ink-l);">· ${p.payee||p.worker||''}</span></div>
-                    <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">${p.date||''} · ${p.method||''} ${p.account?'· '+p.account:''}</div>
-                    ${p.invoice?`<div style="font-size:11px;color:var(--sage-dk);">🧾 ${p.invoice}</div>`:''}
-                    ${p.note?`<div style="font-size:11px;color:var(--ink-l);">${p.note}</div>`:''}
-                  </div>
-                  <div style="font-size:14px;color:var(--red);font-weight:500;">−$ ${Math.round(p.amount||0).toLocaleString('zh-TW')}</div>
-                  <button class="btn btn-sm btn-danger" onclick="deletePayout('${proj.id}',${realIdx})" style="padding:2px 6px;font-size:11px;">✕</button>
-                </div>`;
-              }).join('')
-              :`<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無付款記錄</div>`
-            }
+        </div>
+
+        <!-- 廠商報價管理 -->
+        <div class="card">
+          <div class="card-hd">
+            <h3>廠商報價</h3>
+            <button class="btn btn-sm btn-accent" onclick="openVendorM('${proj.id}')">＋ 新增報價</button>
+          </div>
+          <div id="vendor-list-${proj.id}">
+            ${buildVendorList(proj)}
           </div>
         </div>
 
@@ -1316,12 +1369,68 @@ function buildGanttExportHTML(proj){
 
 // ── PAYMENT ──
 // ── FINANCE ──
+function buildVendorList(proj){
+  const vendors=proj.vendors||[];
+  if(!vendors.length) return`<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-l);">尚無廠商報價</div>`;
+  return vendors.map((v,vi)=>{
+    const payments=v.payments||[];
+    const paid=payments.reduce((s,p)=>s+(p.amount||0),0);
+    const unpaid=(v.quote||0)-paid;
+    const statusColor=paid===0?'var(--stone)':unpaid<=0?'var(--green)':'var(--gold)';
+    const statusLabel=paid===0?'未付款':unpaid<=0?'已付清':'部分付款';
+    const invoiceDone=v.invoiceReceived;
+    return`<div style="border-bottom:1px solid var(--border-l);">
+      <div style="padding:12px 14px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--ink);font-weight:500;">${v.cat||'其他'} · ${v.vendor||''}</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap;">
+              <span style="font-size:10px;padding:1px 7px;border-radius:10px;background:${statusColor}22;color:${statusColor};">${statusLabel}</span>
+              ${invoiceDone?`<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:var(--sage-pa);color:var(--sage-dk);">發票已收</span>`:`<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:#f5f5f5;color:var(--stone);">發票待收</span>`}
+              ${v.taxed?`<span style="font-size:10px;color:var(--ink-l);">含稅</span>`:`<span style="font-size:10px;color:var(--ink-l);">未稅</span>`}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:14px;color:var(--ink);font-family:var(--serif);">$ ${Math.round(v.quote||0).toLocaleString('zh-TW')}</div>
+            <div style="font-size:11px;color:var(--green);margin-top:2px;">已付 $ ${Math.round(paid).toLocaleString('zh-TW')}</div>
+            ${unpaid>0?`<div style="font-size:11px;color:var(--red);">未付 $ ${Math.round(unpaid).toLocaleString('zh-TW')}</div>`:''}
+          </div>
+        </div>
+        ${v.note?`<div style="font-size:11px;color:var(--ink-l);margin-top:4px;">${v.note}</div>`:''}
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-accent" onclick="openVendorPayM('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">＋ 記錄付款</button>
+          <button class="btn btn-sm btn-secondary" onclick="toggleVendorInvoice('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">${invoiceDone?'取消發票':'標記發票已收'}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteVendor('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">刪除</button>
+        </div>
+        ${payments.length?`<div style="margin-top:8px;background:var(--paper-w);border-radius:var(--r);padding:6px 10px;">
+          ${payments.map((p,pi)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:${pi<payments.length-1?'1px solid var(--border-l)':'none'};">
+            <div>
+              <span style="font-size:12px;color:var(--ink);">${p.method||''}</span>
+              <span style="font-size:11px;color:var(--ink-l);margin-left:6px;">${p.date||''}</span>
+              ${p.account?`<span style="font-size:11px;color:var(--ink-l);"> · ${p.account}</span>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;color:var(--red);">−$ ${Math.round(p.amount||0).toLocaleString('zh-TW')}</span>
+              <button onclick="deleteVendorPay('${proj.id}',${vi},${pi})" style="font-size:10px;color:var(--ink-f);background:none;border:none;cursor:pointer;">✕</button>
+            </div>
+          </div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function buildFinanceSummary(proj){
   const budget=proj.budget||0;
   const receipts=proj.receipts||[];
   const received=receipts.reduce((s,r)=>s+(r.amount||0),0);
-  const paid=(proj.payouts||[]).reduce((s,p)=>s+(p.amount||0),0);
-  const remain=received-paid;
+  // 已付工班 = 所有廠商的已付加總
+  const vendors=proj.vendors||[];
+  const paid=vendors.reduce((s,v)=>(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),s),0);
+  // 舊的 payouts 也計入
+  const oldPaid=(proj.payouts||[]).reduce((s,p)=>s+(p.amount||0),0);
+  const totalPaid=paid+oldPaid;
+  const remain=received-totalPaid;
   const remainColor=remain<0?'var(--red)':remain<budget*0.1?'var(--gold)':'var(--green)';
   return`<div style="padding:14px;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
@@ -1331,7 +1440,7 @@ function buildFinanceSummary(proj){
       </div>
       <div style="background:#ffeaea;border-radius:var(--r);padding:10px 14px;">
         <div style="font-size:10px;color:var(--red);letter-spacing:1px;margin-bottom:4px;">已付工班費</div>
-        <div style="font-size:18px;font-family:var(--serif);color:var(--red);">$ ${Math.round(paid).toLocaleString('zh-TW')}</div>
+        <div style="font-size:18px;font-family:var(--serif);color:var(--red);">$ ${Math.round(totalPaid).toLocaleString('zh-TW')}</div>
       </div>
     </div>
     <div style="background:var(--paper-w);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
@@ -1342,10 +1451,84 @@ function buildFinanceSummary(proj){
       ${budget>0?`<div style="text-align:right;">
         <div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">合約金額</div>
         <div style="font-size:13px;color:var(--ink-m);">$ ${Math.round(budget).toLocaleString('zh-TW')}</div>
-        <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">工班支出佔比 ${budget>0?Math.round(paid/budget*100):0}%</div>
+        <div style="font-size:11px;color:var(--ink-l);margin-top:2px;">工班支出佔比 ${budget>0?Math.round(totalPaid/budget*100):0}%</div>
       </div>`:''}
     </div>
   </div>`;
+}
+
+// ── 廠商報價管理 ──
+function openVendorM(projId){
+  document.getElementById('vendor-proj-id').value=projId;
+  document.getElementById('vendor-vendor').value='';
+  document.getElementById('vendor-quote').value='';
+  document.getElementById('vendor-note').value='';
+  document.getElementById('vendor-taxed').value='0';
+  document.getElementById('vendor-invoice').checked=false;
+  const sel=document.getElementById('vendor-cat');
+  sel.innerHTML=WORK_ORDER.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
+  document.getElementById('vendor-modal').classList.add('on');
+}
+function closeVendorM(){document.getElementById('vendor-modal').classList.remove('on')}
+function saveVendor(){
+  const projId=document.getElementById('vendor-proj-id').value;
+  const quote=parseFloat(document.getElementById('vendor-quote').value)||0;
+  if(!quote){notify('請填寫報價金額','err');return}
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  if(!proj.vendors)proj.vendors=[];
+  proj.vendors.push({
+    id:uid(),
+    cat:document.getElementById('vendor-cat').value,
+    vendor:document.getElementById('vendor-vendor').value,
+    quote:quote,
+    taxed:document.getElementById('vendor-taxed').value==='1',
+    invoiceReceived:document.getElementById('vendor-invoice').checked,
+    note:document.getElementById('vendor-note').value,
+    payments:[]
+  });
+  sP(projs);closeVendorM();renderDetail(proj);notify('廠商報價已新增','ok');
+}
+function deleteVendor(projId,vi){
+  if(!confirm('確定刪除此廠商報價？'))return;
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  proj.vendors.splice(vi,1);
+  sP(projs);renderDetail(proj);notify('已刪除','ok');
+}
+function toggleVendorInvoice(projId,vi){
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  proj.vendors[vi].invoiceReceived=!proj.vendors[vi].invoiceReceived;
+  sP(projs);renderDetail(proj);notify(proj.vendors[vi].invoiceReceived?'已標記發票收到':'已取消','ok');
+}
+function openVendorPayM(projId,vi){
+  document.getElementById('vpay-proj-id').value=projId;
+  document.getElementById('vpay-vi').value=vi;
+  document.getElementById('vpay-date').value=todayStr();
+  document.getElementById('vpay-amount').value='';
+  document.getElementById('vpay-method').value='電匯';
+  document.getElementById('vpay-account').value='';
+  document.getElementById('vendor-pay-modal').classList.add('on');
+}
+function closeVendorPayM(){document.getElementById('vendor-pay-modal').classList.remove('on')}
+function saveVendorPay(){
+  const projId=document.getElementById('vpay-proj-id').value;
+  const vi=parseInt(document.getElementById('vpay-vi').value);
+  const amount=parseFloat(document.getElementById('vpay-amount').value)||0;
+  if(!amount){notify('請填寫付款金額','err');return}
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  if(!proj.vendors[vi].payments)proj.vendors[vi].payments=[];
+  proj.vendors[vi].payments.push({
+    id:uid(),
+    date:document.getElementById('vpay-date').value,
+    amount:amount,
+    method:document.getElementById('vpay-method').value,
+    account:document.getElementById('vpay-account').value
+  });
+  sP(projs);closeVendorPayM();renderDetail(proj);notify('付款記錄已新增','ok');
+}
+function deleteVendorPay(projId,vi,pi){
+  const projs=gP();const proj=projs.find(p=>p.id===projId);if(!proj)return;
+  proj.vendors[vi].payments.splice(pi,1);
+  sP(projs);renderDetail(proj);notify('已刪除','ok');
 }
 
 // ── 收款記錄 ──
