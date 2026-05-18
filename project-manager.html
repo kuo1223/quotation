@@ -630,6 +630,7 @@ textarea.fc{resize:vertical;min-height:52px;line-height:1.6}
         </label>
       </div>
       <div class="fg"><label>備註</label><input class="fc" id="vendor-note" placeholder="報價日期、備注…"></div>
+      <div class="fg"><label>報價文件連結（Google 文件分享連結）</label><input class="fc" id="vendor-doc" placeholder="https://docs.google.com/..."></div>
     </div>
     <div class="mft">
       <button class="btn btn-secondary" onclick="closeVendorM()">取消</button>
@@ -1120,7 +1121,7 @@ function renderDetail(proj){
   const totalBudget=proj.budget||0;
 
   document.getElementById('detail-content').innerHTML=`
-    <div class="detail-layout">
+    <div style="max-width:900px;margin:0 auto;">
       <div>
         <!-- GANTT -->
         <div class="card">
@@ -1184,8 +1185,23 @@ function renderDetail(proj){
         </div>
       </div>
 
-      <!-- 財務分頁區塊（獨立於主區域下方） -->
-      <div style="margin-top:20px;">
+      <!-- 專案資訊 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-hd"><h3>專案資訊</h3><button class="btn btn-sm btn-secondary" onclick="openEditProject('${proj.id}')">編輯</button></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;padding:4px 14px;">
+          <div class="info-row"><span class="lbl">業主</span><span class="val">${proj.ownerName||'—'} ${proj.ownerPhone?'<br><a href="tel:'+proj.ownerPhone+'" style="color:var(--sage-dk);font-size:12px;">'+proj.ownerPhone+'</a>':''}</span></div>
+          <div class="info-row"><span class="lbl">地址</span><span class="val" style="font-size:12px;">${proj.address?`<a href="https://maps.google.com/?q=${encodeURIComponent(proj.address)}" target="_blank" style="color:var(--sage-dk);text-decoration:none;">📍 ${proj.address}</a>`:'—'}</span></div>
+          <div class="info-row"><span class="lbl">坪數</span><span class="val">${proj.size||'—'} 坪</span></div>
+          <div class="info-row"><span class="lbl">開工</span><span class="val">${fmtDateFull(proj.startDate)}</span></div>
+          <div class="info-row"><span class="lbl">預計完工</span><span class="val">${fmtDateFull(proj.endDate)}</span></div>
+          <div class="info-row"><span class="lbl">整體進度</span><span class="val" style="color:var(--sage-dk);font-family:var(--serif);">${pct}%</span></div>
+          <div class="info-row"><span class="lbl">狀態</span><span class="val">${projStatusBadge(proj.status)}</span></div>
+          ${proj.note?`<div class="info-row"><span class="lbl">備註</span><span class="val" style="font-size:12px;">${proj.note}</span></div>`:''}
+        </div>
+      </div>
+
+      <!-- 財務分頁區塊 -->
+      <div style="margin-bottom:20px;">
         <!-- 財務頁籤 -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;">
@@ -1252,13 +1268,14 @@ function renderDetail(proj){
               <table style="width:100%;border-collapse:collapse;font-size:12px;">
                 <thead>
                   <tr style="background:var(--paper-w);border-bottom:2px solid var(--border);">
-                    <th style="padding:10px 14px;text-align:left;color:var(--ink-l);font-weight:400;letter-spacing:1px;">工種／項目</th>
+                    <th style="padding:10px 14px;text-align:left;color:var(--ink-l);font-weight:400;letter-spacing:1px;">工種</th>
                     <th style="padding:10px 14px;text-align:left;color:var(--ink-l);font-weight:400;">廠商</th>
                     <th style="padding:10px 8px;text-align:right;color:var(--ink-l);font-weight:400;">報價</th>
                     <th style="padding:10px 8px;text-align:right;color:var(--green);font-weight:400;">已付</th>
                     <th style="padding:10px 8px;text-align:right;color:var(--red);font-weight:400;">未付</th>
                     <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">狀態</th>
                     <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">發票</th>
+                    <th style="padding:10px 8px;text-align:center;color:var(--ink-l);font-weight:400;">文件</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1270,20 +1287,21 @@ function renderDetail(proj){
                     return`<tr style="border-bottom:1px solid var(--border-l);">
                       <td style="padding:10px 14px;color:var(--ink);">${v.cat||'—'}</td>
                       <td style="padding:10px 14px;color:var(--ink-m);">${v.vendor||'—'}</td>
-                      <td style="padding:10px 8px;text-align:right;color:var(--ink);">$ ${Math.round(v.quote||0).toLocaleString('zh-TW')}</td>
+                      <td style="padding:10px 8px;text-align:right;">$ ${Math.round(v.quote||0).toLocaleString('zh-TW')}</td>
                       <td style="padding:10px 8px;text-align:right;color:var(--green);">$ ${Math.round(paid).toLocaleString('zh-TW')}</td>
                       <td style="padding:10px 8px;text-align:right;color:${unpaid>0?'var(--red)':'var(--ink-f)'};">${unpaid>0?'$ '+Math.round(unpaid).toLocaleString('zh-TW'):'—'}</td>
                       <td style="padding:10px 8px;text-align:center;"><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${statusColor}22;color:${statusColor};">${statusLabel}</span></td>
                       <td style="padding:10px 8px;text-align:center;">${v.invoiceReceived?'🧾':'—'}</td>
+                      <td style="padding:10px 8px;text-align:center;">${v.docUrl?`<a href="${v.docUrl}" target="_blank" style="color:var(--sage-dk);font-size:11px;">📄 開啟</a>`:'—'}</td>
                     </tr>`;
                   }).join('')}
                   ${(proj.vendors||[]).length?`
                   <tr style="background:var(--paper-w);border-top:2px solid var(--border);font-weight:500;">
                     <td colspan="2" style="padding:10px 14px;color:var(--ink-l);">合計</td>
-                    <td style="padding:10px 8px;text-align:right;color:var(--ink);">$ ${(proj.vendors||[]).reduce((s,v)=>s+(v.quote||0),0).toLocaleString('zh-TW')}</td>
+                    <td style="padding:10px 8px;text-align:right;">$ ${(proj.vendors||[]).reduce((s,v)=>s+(v.quote||0),0).toLocaleString('zh-TW')}</td>
                     <td style="padding:10px 8px;text-align:right;color:var(--green);">$ ${(proj.vendors||[]).reduce((s,v)=>(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),s),0).toLocaleString('zh-TW')}</td>
                     <td style="padding:10px 8px;text-align:right;color:var(--red);">$ ${(proj.vendors||[]).reduce((s,v)=>{const paid=(v.payments||[]).reduce((ss,p)=>ss+(p.amount||0),0);return s+Math.max(0,(v.quote||0)-paid);},0).toLocaleString('zh-TW')}</td>
-                    <td colspan="2"></td>
+                    <td colspan="3"></td>
                   </tr>`:''}
                 </tbody>
               </table>
@@ -1291,10 +1309,6 @@ function renderDetail(proj){
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- SIDEBAR -->
-      <div class="detail-sidebar" style="display:none;">
       </div>
     </div>`;
 }
@@ -1441,6 +1455,7 @@ function buildVendorList(proj){
           </div>
         </div>
         ${v.note?`<div style="font-size:11px;color:var(--ink-l);margin-top:4px;">${v.note}</div>`:''}
+        ${v.docUrl?`<div style="margin-top:6px;"><a href="${v.docUrl}" target="_blank" style="font-size:12px;color:var(--sage-dk);text-decoration:none;">📄 查看報價文件</a></div>`:''}
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
           <button class="btn btn-sm btn-accent" onclick="openVendorPayM('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">＋ 記錄付款</button>
           ${!invoiceDone?`<button class="btn btn-sm btn-secondary" onclick="toggleVendorInvoice('${proj.id}',${vi})" style="font-size:11px;padding:3px 8px;">標記發票已收</button>`:`<span style="font-size:11px;padding:3px 8px;color:var(--sage-dk);">🧾 發票已收</span>`}
@@ -1514,6 +1529,7 @@ function openEditVendorM(projId,vi){
   document.getElementById('vendor-note').value=v.note||'';
   document.getElementById('vendor-taxed').value=v.taxed?'1':'0';
   document.getElementById('vendor-invoice').checked=v.invoiceReceived||false;
+  document.getElementById('vendor-doc').value=v.docUrl||'';
   const sel=document.getElementById('vendor-cat');
   sel.innerHTML=WORK_ORDER.map(w=>`<option value="${w.cat}">${w.icon} ${w.cat}</option>`).join('');
   sel.value=v.cat||'';
@@ -1530,7 +1546,9 @@ function saveVendor(){
     vendor:document.getElementById('vendor-vendor').value,
     quote:quote,taxed:document.getElementById('vendor-taxed').value==='1',
     invoiceReceived:document.getElementById('vendor-invoice').checked,
-    note:document.getElementById('vendor-note').value,payments:[]
+    note:document.getElementById('vendor-note').value,
+    docUrl:document.getElementById('vendor-doc').value.trim(),
+    payments:[]
   };
   if(EDITING_VENDOR_IDX!==null){
     data.id=proj.vendors[EDITING_VENDOR_IDX].id||uid();
