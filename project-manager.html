@@ -1101,11 +1101,13 @@ function openDetail(id){
   const proj=gP().find(p=>p.id===id);if(!proj)return;
   // Populate project dropdown
   const sel=document.getElementById('detail-nav-select');
-  const allProjs=gP().filter(p=>p.status!=='done');
-  sel.innerHTML=allProjs.map(p=>`<option value="${p.id}" ${p.id===id?'selected':''}>${p.name}</option>`).join('');
+  const allProjs=gP();
+  sel.innerHTML=allProjs.map(p=>`<option value="${p.id}" ${p.id===id?'selected':''}>${p.name}${p.status==='done'?' (完工)':''}</option>`).join('');
   if(!allProjs.find(p=>p.id===id)){
     sel.innerHTML=`<option value="${proj.id}" selected>${proj.name}</option>`+sel.innerHTML;
   }
+  document.getElementById('detail-panel').style.display='block';
+  document.body.style.overflow='hidden';
   renderDetail(proj);
 }
 function switchProject(id){
