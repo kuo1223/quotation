@@ -105,9 +105,13 @@ textarea.fc{resize:vertical;min-height:80px;}
 
 /* PRINT */
 @media print{
-  nav,.detail-nav,.no-print{display:none!important;}
+  nav,.detail-nav,.no-print,#preview-outer>*:not(#preview-a4){display:none!important;}
+  .detail-panel,#preview-panel{position:static!important;}
+  #preview-outer{background:white!important;padding:0!important;}
+  #preview-a4{width:100%!important;box-shadow:none!important;}
   .detail-body{padding:0;max-width:100%;}
   body{background:white;}
+  @page{size:A4;margin:0;}
 }
 
 @media(max-width:600px){
@@ -176,6 +180,7 @@ textarea.fc{resize:vertical;min-height:80px;}
       <span id="detail-nav-title" style="font-family:var(--serif);font-size:14px;color:var(--ink-m);letter-spacing:2px;"></span>
     </div>
     <div style="display:flex;gap:8px;" class="no-print">
+      <button class="btn btn-accent btn-sm" onclick="openPreview()">👁 預覽</button>
       <button class="btn btn-secondary btn-sm" onclick="printContract()">🖨️ 列印</button>
       <button class="btn btn-secondary btn-sm" onclick="exportPDF()">⬇ PDF</button>
       <button class="btn btn-accent btn-sm" onclick="openEditContract()">編輯</button>
@@ -280,9 +285,19 @@ textarea.fc{resize:vertical;min-height:80px;}
         <div class="fg"><label>完工日期</label><input class="fc" id="c-end" type="date"></div>
         <div class="fg"><label>坪數</label><input class="fc" id="c-size" type="number" placeholder="0"></div>
       </div>
-      <div class="frow" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
-        <div class="fg"><label>合約金額（元）</label><input class="fc" id="c-amount" type="number" placeholder="0"></div>
-        <div class="fg"><label>付款條件</label><input class="fc" id="c-payment" placeholder="簽約30%、開工30%、完工40%"></div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>合約金額（元）</label>
+        <input class="fc" id="c-amount" type="number" placeholder="0" oninput="recalcPayments()">
+      </div>
+
+      <!-- 付款方式（結構化） -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="font-size:11px;color:var(--ink-l);letter-spacing:1px;">付款方式</label>
+          <button class="btn btn-accent btn-sm" onclick="addPaymentRow()">＋ 新增期數</button>
+        </div>
+        <div id="payment-rows"></div>
+        <div id="payment-ratio-hint" style="font-size:11px;color:var(--ink-l);margin-top:6px;text-align:right;"></div>
       </div>
 
       <!-- 工程範圍 -->
@@ -302,6 +317,19 @@ textarea.fc{resize:vertical;min-height:80px;}
       </div>
       <div id="special-clauses"></div>
 
+      <!-- 密件設定 -->
+      <div class="doc-section-title" style="margin-bottom:14px;">密件設定</div>
+      <div class="fg" style="margin-bottom:8px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="c-confidential" onchange="toggleConfidential()" style="width:14px;height:14px;accent-color:var(--sage-dk);">
+          <span style="font-size:13px;color:var(--ink);">設為密件（需輸入密碼才能開啟合約）</span>
+        </label>
+      </div>
+      <div id="confidential-pwd-row" class="fg" style="display:none;margin-bottom:14px;">
+        <label>合約密碼</label>
+        <input class="fc" id="c-pwd" type="password" placeholder="設定合約密碼（至少4碼）">
+      </div>
+
       <!-- 備註 -->
       <div class="fg">
         <label>備註</label>
@@ -315,9 +343,357 @@ textarea.fc{resize:vertical;min-height:80px;}
   </div>
 </div>
 
+<!-- 密件解鎖 Modal -->
+<div class="mbg" id="unlock-modal">
+  <div class="modal" style="max-width:380px;">
+    <div class="mhd">
+      <h3>🔒 密件合約</h3>
+      <button class="mcl" onclick="closeUnlock()">✕</button>
+    </div>
+    <div class="mbod" style="text-align:center;padding:32px 24px;">
+      <div style="font-size:36px;margin-bottom:12px;">🔐</div>
+      <div id="unlock-contract-name" style="font-size:14px;color:var(--ink-m);margin-bottom:20px;"></div>
+      <div class="fg">
+        <label>請輸入合約密碼</label>
+        <input class="fc" id="unlock-pwd" type="password" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doUnlock()">
+      </div>
+      <div id="unlock-error" style="color:var(--red);font-size:12px;margin-top:6px;display:none;">密碼錯誤，請再試一次</div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeUnlock()">取消</button>
+      <button class="btn btn-primary" onclick="doUnlock()">解鎖</button>
+    </div>
+  </div>
+</div>
+
+<!-- 預覽 Panel (A4排版) -->
+<div class="detail-panel" id="preview-panel">
+  <div class="detail-nav no-print">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-secondary btn-sm" onclick="closePreview()">← 返回</button>
+      <span style="font-family:var(--serif);font-size:14px;color:var(--ink-m);letter-spacing:2px;">合約預覽</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <!-- 附件上傳 -->
+      <label class="btn btn-accent btn-sm" style="cursor:pointer;">
+        📎 報價單JPG
+        <input type="file" id="attach-quote" accept="image/*" style="display:none;" onchange="loadAttachment('quote',this)">
+      </label>
+      <label class="btn btn-accent btn-sm" style="cursor:pointer;">
+        📎 進度表JPG
+        <input type="file" id="attach-schedule" accept="image/*" style="display:none;" onchange="loadAttachment('schedule',this)">
+      </label>
+      <span id="attach-quote-name" style="font-size:11px;color:var(--sage-dk);"></span>
+      <span id="attach-schedule-name" style="font-size:11px;color:var(--sage-dk);"></span>
+      <button class="btn btn-secondary btn-sm" onclick="printPreview()">🖨️ 列印</button>
+      <button class="btn btn-primary btn-sm" onclick="showPdfModal()">📄 PDF</button>
+    </div>
+  </div>
+  <!-- A4 預覽區 -->
+  <div style="background:#888;min-height:100vh;padding:32px;overflow-y:auto;" id="preview-outer">
+    <div id="preview-a4" style="width:794px;margin:0 auto;background:white;box-shadow:0 4px 32px rgba(0,0,0,.4);font-family:'Noto Serif TC',serif;color:#1a1a1a;"></div>
+  </div>
+</div>
+
+<!-- PDF 確認 Modal -->
+<div class="mbg" id="pdf-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="mhd">
+      <h3>📄 PDF 輸出確認</h3>
+      <button class="mcl" onclick="closePdfModal()">✕</button>
+    </div>
+    <div class="mbod">
+      <div id="pdf-preview-summary" style="background:var(--paper-w);border-radius:var(--r);padding:16px;font-size:13px;line-height:2;margin-bottom:8px;"></div>
+      <div style="font-size:12px;color:var(--ink-l);">確認後系統將開啟列印對話框，請選擇「另存為PDF」。</div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closePdfModal()">取消</button>
+      <button class="btn btn-primary" onclick="doPdfDownload()">⬇ 下載 PDF</button>
+    </div>
+  </div>
+</div>
+
 <div id="notif" style="position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--r);color:#fff;font-size:13px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;"></div>
 
 <script>
+// ── PAYMENT ROWS ──
+let PAYMENT_ROWS=[];
+
+function initPaymentRows(payments){
+  PAYMENT_ROWS=payments&&payments.length?payments:[
+    {name:'簽約款',ratio:30},
+    {name:'開工款',ratio:30},
+    {name:'完工款',ratio:40}
+  ];
+  renderPaymentRows();
+}
+
+function addPaymentRow(){
+  PAYMENT_ROWS.push({name:'期款',ratio:0});
+  renderPaymentRows();
+}
+
+function removePaymentRow(i){
+  PAYMENT_ROWS.splice(i,1);
+  renderPaymentRows();
+}
+
+function renderPaymentRows(){
+  const amount=parseFloat(document.getElementById('c-amount').value)||0;
+  const totalRatio=PAYMENT_ROWS.reduce((s,r)=>s+(parseFloat(r.ratio)||0),0);
+  const hint=document.getElementById('payment-ratio-hint');
+  hint.textContent='比例合計：'+totalRatio+'%'+(totalRatio===100?' ✓':'（需合計100%）');
+  hint.style.color=totalRatio===100?'var(--green)':'var(--red)';
+  document.getElementById('payment-rows').innerHTML=PAYMENT_ROWS.map((r,i)=>{
+    const rowAmt=amount?(amount*r.ratio/100):0;
+    return`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+      <input class="fc" style="flex:2;font-size:12px;" value="${r.name}" oninput="PAYMENT_ROWS[${i}].name=this.value" placeholder="期款名稱">
+      <input class="fc" style="width:70px;text-align:center;font-size:12px;" type="number" min="0" max="100" value="${r.ratio}" oninput="PAYMENT_ROWS[${i}].ratio=parseFloat(this.value)||0;recalcPayments();" placeholder="%">
+      <span style="font-size:11px;color:var(--ink-l);">%</span>
+      <span style="font-size:12px;color:var(--sage-dk);min-width:90px;text-align:right;">${rowAmt?fmt(rowAmt):''}</span>
+      <button class="btn btn-danger btn-sm" onclick="removePaymentRow(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function recalcPayments(){renderPaymentRows();}
+
+function getPaymentString(){
+  return PAYMENT_ROWS.map(r=>r.name+''+r.ratio+'%').join('、');
+}
+
+// ── CONFIDENTIAL ──
+function toggleConfidential(){
+  const on=document.getElementById('c-confidential').checked;
+  document.getElementById('confidential-pwd-row').style.display=on?'block':'none';
+}
+
+// ── UNLOCK MODAL ──
+let UNLOCK_TARGET_ID=null;
+const UNLOCKED_IDS={};
+
+function tryOpenDetail(id){
+  const c=getContracts().find(x=>x.id===id);if(!c)return;
+  if(c.confidential&&c.pwd&&!UNLOCKED_IDS[id]){
+    UNLOCK_TARGET_ID=id;
+    document.getElementById('unlock-contract-name').textContent=c.ownerName?' 合約：'+c.ownerName:'';
+    document.getElementById('unlock-pwd').value='';
+    document.getElementById('unlock-error').style.display='none';
+    document.getElementById('unlock-modal').classList.add('on');
+  } else {
+    openDetail(id);
+  }
+}
+
+function doUnlock(){
+  const c=getContracts().find(x=>x.id===UNLOCK_TARGET_ID);if(!c)return;
+  const input=document.getElementById('unlock-pwd').value;
+  if(input===c.pwd){
+    UNLOCKED_IDS[UNLOCK_TARGET_ID]=true;
+    closeUnlock();
+    openDetail(UNLOCK_TARGET_ID);
+  } else {
+    document.getElementById('unlock-error').style.display='block';
+  }
+}
+
+function closeUnlock(){
+  document.getElementById('unlock-modal').classList.remove('on');
+  UNLOCK_TARGET_ID=null;
+}
+
+// ── PREVIEW ──
+let ATTACHMENTS={quote:null,schedule:null};
+
+function openPreview(){
+  if(!CURRENT_CONTRACT)return;
+  ATTACHMENTS={quote:null,schedule:null};
+  document.getElementById('attach-quote-name').textContent='';
+  document.getElementById('attach-schedule-name').textContent='';
+  renderPreviewA4(CURRENT_CONTRACT);
+  document.getElementById('preview-panel').style.display='block';
+  document.body.style.overflow='hidden';
+}
+
+function closePreview(){
+  document.getElementById('preview-panel').style.display='none';
+  document.body.style.overflow='hidden'; // detail panel still open
+}
+
+function loadAttachment(type,input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    ATTACHMENTS[type]={name:file.name,dataUrl:e.target.result};
+    document.getElementById('attach-'+type+'-name').textContent='✓ '+file.name;
+    renderPreviewA4(CURRENT_CONTRACT);
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPreviewA4(c){
+  const type=TYPE_CONFIG[c.type]||TYPE_CONFIG.design;
+  const today=new Date();
+  const dateStr=today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日';
+  const payments=c.payments||[];
+
+  let html=`
+  <div style="page-break-after:always;min-height:1122px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:60px 80px;box-sizing:border-box;border-bottom:2px solid #1a1a1a;">
+    <div style="position:absolute;top:40px;left:80px;right:80px;border-bottom:1px solid #ccc;padding-bottom:10px;font-size:10px;color:#888;letter-spacing:4px;">得森室內裝修設計有限公司 · DESIN INTERIOR DESIGN</div>
+    <div style="text-align:center;">
+      <div style="font-size:13px;color:#888;letter-spacing:6px;margin-bottom:20px;">室內裝修設計合約書</div>
+      <div style="font-size:28px;font-weight:700;letter-spacing:4px;margin-bottom:8px;">${c.ownerName||'（委託人）'}　案</div>
+      <div style="font-size:16px;color:#555;letter-spacing:3px;margin-bottom:48px;">${type.label}</div>
+      <div style="width:60px;height:1px;background:#ccc;margin:0 auto 48px;"></div>
+      <div style="font-size:13px;color:#555;line-height:2.6;">
+        <div>合約編號：${c.no||'—'}</div>
+        <div>工程地址：${c.addr||'—'}</div>
+        <div>合約金額：${fmt(c.amount)}</div>
+        <div>合約日期：${c.date?fmtDate(c.date):dateStr}</div>
+      </div>
+    </div>
+    <div style="position:absolute;bottom:60px;left:80px;right:80px;border-top:1px solid #ccc;padding-top:16px;display:flex;justify-content:space-between;font-size:11px;color:#888;">
+      <div>得森室內裝修設計有限公司<br>高雄市苓雅區中正一路121巷5弄6-1號</div>
+      <div style="text-align:right;">Tel: 07-7220069　0939-977966<br>統一編號：40EB020646</div>
+    </div>
+  </div>
+
+  <div style="padding:60px 80px;box-sizing:border-box;">
+    <div style="text-align:center;margin-bottom:40px;border-bottom:2px solid #1a1a1a;padding-bottom:20px;">
+      <h1 style="font-size:20px;font-weight:700;letter-spacing:4px;margin:0 0 8px;">${type.label}</h1>
+      <div style="font-size:12px;color:#555;">立合約書人</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;border:1px solid #ddd;border-radius:4px;padding:20px;">
+      <div>
+        <div style="font-size:10px;color:#888;letter-spacing:2px;margin-bottom:6px;">甲方（委託人）</div>
+        <div style="font-size:15px;font-weight:600;">${c.ownerName||'—'}</div>
+        ${c.ownerPhone?`<div style="font-size:12px;color:#555;margin-top:4px;">${c.ownerPhone}</div>`:''}
+        ${c.ownerAddr?`<div style="font-size:12px;color:#555;">${c.ownerAddr}</div>`:''}
+      </div>
+      <div>
+        <div style="font-size:10px;color:#888;letter-spacing:2px;margin-bottom:6px;">乙方（承攬人）</div>
+        <div style="font-size:15px;font-weight:600;">得森室內裝修設計有限公司</div>
+        <div style="font-size:12px;color:#555;margin-top:4px;">代表人：郭明彰</div>
+        <div style="font-size:12px;color:#555;">高雄市苓雅區中正一路121巷5弄6-1號</div>
+        <div style="font-size:12px;color:#555;">統一編號：40EB020646</div>
+      </div>
+    </div>
+
+    <div style="border:1px solid #ddd;border-radius:4px;padding:16px;margin-bottom:28px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div><div style="font-size:10px;color:#888;margin-bottom:4px;">合約日期</div><div style="font-size:13px;">${fmtDate(c.date)}</div></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:4px;">開工日期</div><div style="font-size:13px;">${fmtDate(c.startDate)}</div></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:4px;">完工日期</div><div style="font-size:13px;">${fmtDate(c.endDate)}</div></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:4px;">工程地址</div><div style="font-size:13px;">${c.addr||'—'}</div></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:4px;">坪數</div><div style="font-size:13px;">${c.size||'—'} 坪</div></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:4px;">合約金額</div><div style="font-size:16px;color:#5a7a5a;font-weight:600;">${fmt(c.amount)}</div></div>
+      </div>
+    </div>
+
+    ${payments.length?`
+    <div style="margin-bottom:28px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:10px;">付款條件</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f5f5f5;">
+          <th style="padding:7px 10px;text-align:left;border:1px solid #ddd;">期次</th>
+          <th style="padding:7px 10px;text-align:left;border:1px solid #ddd;">名稱</th>
+          <th style="padding:7px 10px;text-align:center;border:1px solid #ddd;">比例</th>
+          <th style="padding:7px 10px;text-align:right;border:1px solid #ddd;">金額</th>
+        </tr></thead>
+        <tbody>
+          ${payments.map((p,i)=>`<tr>
+            <td style="padding:7px 10px;border:1px solid #ddd;">第${i+1}期</td>
+            <td style="padding:7px 10px;border:1px solid #ddd;">${p.name}</td>
+            <td style="padding:7px 10px;text-align:center;border:1px solid #ddd;">${p.ratio}%</td>
+            <td style="padding:7px 10px;text-align:right;border:1px solid #ddd;font-weight:600;">${fmt(c.amount*p.ratio/100)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`:''}
+
+    ${c.scope?`<div style="margin-bottom:24px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:10px;">工程範圍</div>
+      <div style="font-size:13px;color:#333;line-height:1.9;padding:12px;background:#f9f9f7;border-radius:4px;">${c.scope}</div>
+    </div>`:''}
+
+    <div style="margin-bottom:28px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:2px;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:10px;">契約條款</div>
+      ${(c.stdClauses||[]).map((cl,i)=>`
+        <div style="margin-bottom:14px;page-break-inside:avoid;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">第${i+1}條　${cl.title}</div>
+          <div style="font-size:12px;color:#444;line-height:2;text-indent:2em;padding-left:8px;border-left:3px solid #e0ddd5;">${cl.text}</div>
+        </div>`).join('')}
+      ${(c.specialClauses||[]).map((cl,i)=>`
+        <div style="margin-bottom:14px;page-break-inside:avoid;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">特殊條款${i+1}　${cl.title}</div>
+          <div style="font-size:12px;color:#444;line-height:2;text-indent:2em;padding-left:8px;border-left:3px solid #e0ddd5;">${cl.text}</div>
+        </div>`).join('')}
+    </div>
+
+    <div style="margin-top:56px;display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+      <div style="border-top:1px solid #1a1a1a;padding-top:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:20px;">甲方（委託人）簽署</div>
+        <div style="font-size:12px;color:#555;line-height:3;">
+          <div>姓名：${c.ownerName||'＿＿＿＿＿＿＿'}</div>
+          <div>簽章：＿＿＿＿＿＿＿</div>
+          <div>日期：＿＿年＿＿月＿＿日</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1a1a1a;padding-top:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:20px;">乙方（承攬人）簽署</div>
+        <div style="font-size:12px;color:#555;line-height:3;">
+          <div>得森室內裝修設計有限公司</div>
+          <div>代表人：郭明彰</div>
+          <div>簽章：＿＿＿＿＿＿＿</div>
+          <div>日期：＿＿年＿＿月＿＿日</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // 附件
+  if(ATTACHMENTS.quote){
+    html+=`<div style="page-break-before:always;padding:48px 80px;box-sizing:border-box;">
+      <div style="font-size:13px;font-weight:700;border-bottom:1px solid #ddd;padding-bottom:8px;margin-bottom:20px;">附件一：報價單</div>
+      <img src="${ATTACHMENTS.quote.dataUrl}" style="width:100%;max-height:900px;object-fit:contain;">
+    </div>`;
+  }
+  if(ATTACHMENTS.schedule){
+    html+=`<div style="page-break-before:always;padding:48px 80px;box-sizing:border-box;">
+      <div style="font-size:13px;font-weight:700;border-bottom:1px solid #ddd;padding-bottom:8px;margin-bottom:20px;">附件二：施工進度表</div>
+      <img src="${ATTACHMENTS.schedule.dataUrl}" style="width:100%;max-height:900px;object-fit:contain;">
+    </div>`;
+  }
+
+  document.getElementById('preview-a4').innerHTML=html;
+}
+
+function printPreview(){window.print();}
+
+function showPdfModal(){
+  if(!CURRENT_CONTRACT)return;
+  const c=CURRENT_CONTRACT;
+  const payments=c.payments||[];
+  document.getElementById('pdf-preview-summary').innerHTML=
+    `<div>📋 <strong>${c.ownerName||'—'}</strong>　${c.no||'—'}</div>`+
+    `<div>📍 工程地址：${c.addr||'—'}</div>`+
+    `<div>💰 合約金額：${fmt(c.amount)}</div>`+
+    `<div>📝 條款數：${(c.stdClauses||[]).length+(c.specialClauses||[]).length} 條</div>`+
+    `<div>💳 付款期數：${payments.length} 期</div>`+
+    (ATTACHMENTS.quote?`<div>📎 報價單：${ATTACHMENTS.quote.name}</div>`:'')+
+    (ATTACHMENTS.schedule?`<div>📎 進度表：${ATTACHMENTS.schedule.name}</div>`:'');
+  document.getElementById('pdf-modal').classList.add('on');
+}
+
+function closePdfModal(){document.getElementById('pdf-modal').classList.remove('on');}
+
+function doPdfDownload(){
+  closePdfModal();
+  // 隱藏非列印元素後印
+  window.print();
+}
+
 const KC='ds_clients',KQ='ds_quotes',KPR='ds_projects',KCT='ds_contracts';
 
 function getClients(){return JSON.parse(localStorage.getItem(KC)||'[]');}
@@ -422,10 +798,11 @@ function renderList(){
   grid.innerHTML=filtered.map(c=>{
     const type=tc[c.type]||tc.design;
     const status=sc[c.status]||sc.draft;
-    return`<div class="contract-card" onclick="openDetail('${c.id}')">
+    const confidentialBadge=c.confidential?`<span style="font-size:10px;background:#fff0f0;color:var(--red);border:1px solid #fcc;padding:1px 6px;border-radius:8px;margin-left:4px;">🔒密件</span>`:'';
+    return`<div class="contract-card" onclick="tryOpenDetail('${c.id}')">
       <div class="contract-type-stripe" style="background:${type.color};"></div>
       <div class="contract-body">
-        <div class="contract-no">${c.no||'—'} · ${type.label}</div>
+        <div class="contract-no">${c.no||'—'} · ${type.label}${confidentialBadge}</div>
         <div class="contract-name">${c.ownerName||'未填寫業主'}</div>
         <div class="contract-client">${c.addr||''}</div>
         <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
@@ -461,8 +838,12 @@ function openNewContract(){
   document.getElementById('c-amount').value='';
   document.getElementById('c-date').value=todayStr();
   document.getElementById('c-status').value='draft';
+  document.getElementById('c-confidential').checked=false;
+  document.getElementById('confidential-pwd-row').style.display='none';
+  document.getElementById('c-pwd').value='';
   // Fill selects
   fillSelects();
+  initPaymentRows([]);
   onTypeChange();
   document.getElementById('contract-modal').classList.add('on');
 }
@@ -490,9 +871,12 @@ function fillClientData(){
 
 function fillQuoteData(){
   const id=document.getElementById('c-quote').value;
-  if(!id)return;
+  if(!id){return;}
   const quote=getQuotes().find(q=>q.id===id);if(!quote)return;
-  if(quote.total)document.getElementById('c-amount').value=quote.total;
+  if(quote.total){
+    document.getElementById('c-amount').value=quote.total;
+    notify('已從報價單帶入合約金額：'+fmt(quote.total),'ok');
+  }
   if(quote.project)document.getElementById('c-addr').value=quote.project;
   if(quote.clientName&&!document.getElementById('c-owner-name').value)document.getElementById('c-owner-name').value=quote.clientName;
   const payEl=document.getElementById('c-payment');
@@ -526,6 +910,7 @@ function applyTemplate(){
 }
 
 function onTypeChange(){
+  STD_CLAUSE_TEXTS={};  // 清空快取，確保切換類型時條款完全更新
   const type=document.getElementById('c-type').value;
   const clauses=STD_CLAUSES[type]||STD_CLAUSES.work;
   const container=document.getElementById('clauses-container');
@@ -593,7 +978,10 @@ function saveContract(){
     endDate:document.getElementById('c-end').value,
     size:document.getElementById('c-size').value,
     amount:parseFloat(document.getElementById('c-amount').value)||0,
-    payment:document.getElementById('c-payment').value,
+    payment:getPaymentString(),
+    payments:PAYMENT_ROWS.map(r=>({name:r.name,ratio:parseFloat(r.ratio)||0})),
+    confidential:document.getElementById('c-confidential').checked,
+    pwd:document.getElementById('c-confidential').checked?document.getElementById('c-pwd').value:'',
     scope:document.getElementById('c-scope').value,
     stdClauses,specialClauses:SPECIAL_CLAUSES,
     note:document.getElementById('c-note').value,
@@ -631,20 +1019,23 @@ function openEditContractById(id){
   document.getElementById('c-start').value=c.startDate||'';
   document.getElementById('c-end').value=c.endDate||'';
   document.getElementById('c-size').value=c.size||'';
-  document.getElementById('c-amount').value=c.amount||'';
-  document.getElementById('c-payment').value=c.payment||'';
   document.getElementById('c-scope').value=c.scope||'';
+  document.getElementById('c-amount').value=c.amount||'';
   document.getElementById('c-note').value=c.note||'';
+  document.getElementById('c-confidential').checked=!!c.confidential;
+  document.getElementById('confidential-pwd-row').style.display=c.confidential?'block':'none';
+  document.getElementById('c-pwd').value=c.pwd||'';
   // Load std clause texts
   (c.stdClauses||[]).forEach((cl,i)=>{STD_CLAUSE_TEXTS[i]=cl.text;});
   onTypeChange();
+  initPaymentRows(c.payments&&c.payments.length?c.payments:null);
   renderSpecialClauses();
   document.getElementById('contract-modal').classList.add('on');
 }
 
 function openEditContract(){
   if(!CURRENT_CONTRACT)return;
-  closeDetail();
+  // 不關閉詳細頁，直接在 modal 中編輯
   openEditContractById(CURRENT_CONTRACT.id);
 }
 
@@ -754,7 +1145,7 @@ function buildContractDoc(c){
     <div style="border-top:1px solid var(--ink);padding-top:8px;">
       <div style="font-size:12px;color:var(--ink-l);margin-bottom:20px;">乙方簽署</div>
       <div style="font-size:12px;color:var(--ink-l);">得森室內裝修設計有限公司</div>
-      <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">代表人：郭明璋</div>
+      <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">代表人：郭明彰</div>
       <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">日期：________________</div>
     </div>
   </div>`;
