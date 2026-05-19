@@ -105,11 +105,11 @@ textarea.fc{resize:vertical;min-height:80px;}
 
 /* PRINT */
 @media print{
-  nav,.detail-nav,.no-print,#preview-outer>*:not(#preview-a4){display:none!important;}
-  .detail-panel,#preview-panel{position:static!important;}
-  #preview-outer{background:white!important;padding:0!important;}
-  #preview-a4{width:100%!important;box-shadow:none!important;}
-  .detail-body{padding:0;max-width:100%;}
+  body > *{display:none!important;}
+  #preview-panel{display:block!important;position:static!important;overflow:visible!important;}
+  #preview-panel .detail-nav{display:none!important;}
+  #preview-outer{display:block!important;background:white!important;padding:0!important;}
+  #preview-a4{display:block!important;width:100%!important;box-shadow:none!important;margin:0!important;}
   body{background:white;}
   @page{size:A4;margin:0;}
 }
@@ -1151,8 +1151,8 @@ function buildContractDoc(c){
   </div>`;
 }
 
-function printContract(){window.print();}
-function exportPDF(){window.print();}
+function printContract(){openPreview();setTimeout(()=>window.print(),600);}
+function exportPDF(){openPreview();setTimeout(()=>showPdfModal(),600);}
 
 // Init
 renderList();
