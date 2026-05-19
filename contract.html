@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>得森設計 · 合約管理</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+:root{
+  --sage:#C0C4B6;--sage-dk:#8a9082;--sage-pa:#eef0ea;
+  --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#c8c4be;
+  --paper:#faf9f6;--paper-w:#f5f2ee;--paper-c:#ffffff;
+  --border:#dddad4;--border-l:#eae8e2;--stone:#AEAFB1;
+  --red:#c0392b;--red-pa:#fdf0ee;--green:#2e7d32;--green-pa:#e8f5e9;
+  --gold:#8a6914;--gold-pa:#fef9e7;--blue:#1565c0;
+  --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
+  --r:6px;--rl:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height:100vh;}
+
+/* NAV */
+nav{background:var(--paper-c);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{height:36px;width:auto;}
+.nav-links{display:flex;gap:12px;align-items:center;}
+.nav-link{font-size:12px;color:var(--ink-l);text-decoration:none;letter-spacing:1px;padding:4px 8px;border-radius:var(--r);}
+.nav-link.active{color:var(--sage-dk);font-weight:500;}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:24px;}
+
+/* PANELS */
+.panel{display:none;} .panel.on{display:block;}
+
+/* CARDS */
+.card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;margin-bottom:16px;}
+.card-hd{padding:12px 18px;border-bottom:1px solid var(--border-l);background:var(--paper-w);display:flex;align-items:center;justify-content:space-between;}
+.card-hd h3{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--ink-m);letter-spacing:2px;}
+
+/* CONTRACT LIST */
+.contract-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.contract-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .2s;}
+.contract-card:hover{border-color:var(--sage-dk);box-shadow:0 4px 16px rgba(0,0,0,.08);}
+.contract-type-stripe{height:4px;}
+.contract-body{padding:16px;}
+.contract-no{font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:4px;}
+.contract-name{font-family:var(--serif);font-size:15px;color:var(--ink);margin-bottom:6px;}
+.contract-client{font-size:12px;color:var(--ink-l);}
+.contract-footer{padding:10px 16px;border-top:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w);}
+
+/* STATUS BADGES */
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;}
+.badge-draft{background:#f5f5f5;color:var(--stone);}
+.badge-pending{background:var(--gold-pa);color:var(--gold);}
+.badge-signed{background:var(--green-pa);color:var(--green);}
+.badge-terminated{background:var(--red-pa);color:var(--red);}
+
+/* TYPE COLORS */
+.type-design{background:var(--blue);}
+.type-work{background:var(--sage-dk);}
+.type-combined{background:#5c4a8a;}
+.type-sub{background:var(--gold);}
+
+/* FORM */
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:5px;}
+.fc{width:100%;border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;font-size:13px;font-family:var(--sans);outline:none;background:var(--paper-c);color:var(--ink);}
+.fc:focus{border-color:var(--sage-dk);}
+.frow{display:grid;gap:12px;}
+textarea.fc{resize:vertical;min-height:80px;}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;letter-spacing:1px;font-family:var(--sans);transition:all .15s;}
+.btn-primary{background:var(--sage-dk);color:#fff;}
+.btn-primary:hover{background:#7a8072;}
+.btn-secondary{background:var(--paper-w);color:var(--ink-m);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--border-l);}
+.btn-danger{background:var(--red-pa);color:var(--red);border:1px solid #f5c0b0;}
+.btn-accent{background:#eef0ea;color:var(--sage-dk);border:1px solid var(--sage);}
+.btn-sm{padding:4px 10px;font-size:11px;}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;}
+.mbg.on{display:flex;}
+.modal{background:var(--paper-c);border-radius:var(--rl);width:min(700px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.mhd{padding:16px 20px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w);position:sticky;top:0;}
+.mhd h3{font-family:var(--serif);font-size:15px;font-weight:400;letter-spacing:2px;}
+.mcl{background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink-l);line-height:1;}
+.mbod{padding:20px;}
+.mft{padding:14px 20px;border-top:1px solid var(--border-l);display:flex;justify-content:flex-end;gap:8px;background:var(--paper-w);}
+
+/* CONTRACT DETAIL */
+.detail-panel{display:none;position:fixed;inset:0;background:var(--paper);z-index:300;overflow-y:auto;}
+.detail-nav{background:var(--paper-c);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.detail-body{max-width:800px;margin:0 auto;padding:32px 24px;}
+
+/* CONTRACT DOCUMENT */
+.doc-section{margin-bottom:24px;}
+.doc-section-title{font-family:var(--serif);font-size:13px;font-weight:500;color:var(--ink-m);letter-spacing:2px;border-bottom:1px solid var(--border-l);padding-bottom:8px;margin-bottom:14px;}
+.clause-row{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.clause-no{font-size:12px;color:var(--ink-l);min-width:40px;padding-top:8px;}
+.clause-content{flex:1;}
+.clause-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:4px;}
+.clause-text{font-size:12px;color:var(--ink-m);line-height:1.8;}
+
+/* PRINT */
+@media print{
+  nav,.detail-nav,.no-print{display:none!important;}
+  .detail-body{padding:0;max-width:100%;}
+  body{background:white;}
+}
+
+@media(max-width:600px){
+  .contract-grid{grid-template-columns:1fr;}
+  .main{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <img class="nav-logo" src="data:image/jpeg;base64,/9j/4QE4RXhpZgAATU0AKgAAAAgACAESAAMAAAABAAEAAAEaAAUAAAABAAAAbgEbAAUAAAABAAAAdgEoAAMAAAABAAIAAAExAAIAAAAhAAAAfgEyAAIAAAAUAAAAoAITAAMAAAABAAEAAIdpAAQAAAABAAAAtAAAAAAAAAEsAAAAAQAAASwAAAABQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkAADIwMTk6MTA6MjkgMTQ6MjE6NTAAAAiQAAAHAAAABDAyMjGQBAACAAAAFAAAARqRAQAHAAAABAECAwCgAAAHAAAABDAxMDCgAQADAAAAAQABAACgAgAEAAAAAQAAA4egAwAEAAAAAQAAAIWkBgADAAAAAQAAAAAAAAAAMjAxOToxMDoyOSAyMjoyMTo0NwAAAP/hNBRodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcEdJbWc9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9nL2ltZy8iIHhtbG5zOnBkZj0iaHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczppbGx1c3RyYXRvcj0iaHR0cDovL25zLmFkb2JlLmNvbS9pbGx1c3RyYXRvci8xLjAvIiBkYzpmb3JtYXQ9ImltYWdlL2pwZWciIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkiIHhtcDpNZXRhZGF0YURhdGU9IjIwMTktMTAtMjlUMjI6MjE6NDcrMDg6MDAiIHhtcDpDcmVhdGVEYXRlPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAxOS0xMC0yOVQxNDoyMTo1MFoiIHBkZjpQcm9kdWNlcj0iQWRvYmUgUERGIGxpYnJhcnkgMTAuMDEiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0idXVpZDo1RDIwODkyNDkzQkZEQjExOTE0QTg1OTBEMzE1MDhDOCIgeG1wTU06UmVuZGl0aW9uQ2xhc3M9InByb29mOnBkZiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1Zjk3MjFjOS1hM2JmLTRiZjEtYjVjMC02MTQ5ZThkMTE5ZmEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NWY5NzIxYzktYTNiZi00YmYxLWI1YzAtNjE0OWU4ZDExOWZhIiBpbGx1c3RyYXRvcjpTdGFydHVwUHJvZmlsZT0iUHJpbnQiPiA8ZGM6dGl0bGU+IDxyZGY6QWx0PiA8cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPuW+l+ajru+8v+WQjeeJh0HvvL/osaHniZnljaHvvL/nh5nph5HvvL/pm5npnaI155uSdzwvcmRmOmxpPiA8L3JkZjpBbHQ+IDwvZGM6dGl0bGU+IDx4bXA6VGh1bWJuYWlscz4gPHJkZjpBbHQ+IDxyZGY6bGkgeG1wR0ltZzpmb3JtYXQ9IkpQRUciIHhtcEdJbWc6aW1hZ2U9Ii85ai80QUFRU2taSlJnQUJBZ0VCTEFFc0FBRC83UUFzVUdodmRHOXphRzl3SURNdU1BQTRRa2xOQSswQUFBQUFBQkFCTEFBQUFBRUEmI3hBO0FRRXNBQUFBQVFBQi8rNEFEa0ZrYjJKbEFHVEFBQUFBQWYvYkFJUUFCZ1FFQkFVRUJnVUZCZ2tHQlFZSkN3Z0dCZ2dMREFvS0N3b0smI3hBO0RCQU1EQXdNREF3UURBNFBFQThPREJNVEZCUVRFeHdiR3hzY0h4OGZIeDhmSHg4Zkh3RUhCd2NOREEwWUVCQVlHaFVSRlJvZkh4OGYmI3hBO0h4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zi84QUFFUWdBbUFFQUF3RVImI3hBO0FBSVJBUU1SQWYvRUFhSUFBQUFIQVFFQkFRRUFBQUFBQUFBQUFBUUZBd0lHQVFBSENBa0tDd0VBQWdJREFRRUJBUUVBQUFBQUFBQUEmI3hBO0FRQUNBd1FGQmdjSUNRb0xFQUFDQVFNREFnUUNCZ2NEQkFJR0FuTUJBZ01SQkFBRklSSXhRVkVHRTJFaWNZRVVNcEdoQnhXeFFpUEImI3hBO1V0SGhNeFppOENSeWd2RWxRelJUa3FLeVkzUENOVVFuazZPek5oZFVaSFREMHVJSUpvTUpDaGdaaEpSRlJxUzBWdE5WS0JyeTQvUEUmI3hBOzFPVDBaWFdGbGFXMXhkWGw5V1oyaHBhbXRzYlc1dlkzUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8rQ2s1U1ZscGVZbVomI3hBO3FibkoyZW41S2pwS1dtcDZpcHFxdXNyYTZ2b1JBQUlDQVFJREJRVUVCUVlFQ0FNRGJRRUFBaEVEQkNFU01VRUZVUk5oSWdaeGdaRXkmI3hBO29iSHdGTUhSNFNOQ0ZWSmljdkV6SkRSRGdoYVNVeVdpWTdMQ0IzUFNOZUpFZ3hkVWt3Z0pDaGdaSmpaRkdpZGtkRlUzOHFPend5Z3AmI3hBOzArUHpoSlNrdE1UVTVQUmxkWVdWcGJYRjFlWDFSbFptZG9hV3ByYkcxdWIyUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8mI3hBOytEbEpXV2w1aVptcHVjblo2ZmtxT2twYWFucUttcXE2eXRycSt2L2FBQXdEQVFBQ0VRTVJBRDhBOVAyOXJiT2pNOFNNeGtrcXhVRS8mI3hBOzNqZU9WeGlEMDcyNmM1QTdFOGg5eXA5U3MvOEFmRWYvQUFDLzB5WEJIdVllTEx2THZxVm4vdmlQL2dGL3Bqd1I3bDhXWGVYZlVyUC8mI3hBO0FIeEgvd0FBdjlNZUNQY3ZpeTd5NzZsWi93QytJLzhBZ0YvcGp3UjdsOFdYZVhmVXJQOEEzeEgvQU1BdjlNZUNQY3ZpeTd5NzZsWi8mI3hBOzc0ai9BT0FYK21QQkh1WHhaZDVkOVNzLzk4Ui84QXY5TWVDUGN2aXk3eTc2bFovNzRqLzRCZjZZOEVlNWZGbDNsMzFLei8zeEgvd0MmI3hBOy93Qk1lQ1Bjdml5N3kxWnFxd2xWQUNpU1FBRFlBQ1JzRU9YelRsTy93SDNLK1RhM1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlZHMC91bS80eVMvOG5HeU1PWHorOW5rNS9BZmNyWkpnN0ZYWXE3RlhZcTdGWFlxN0ZYWXFvMm4mI3hBOzkwMy9BQmtsL3dDVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWVWJUKzZiL0FJeVMvd0RKeHNqRGw4L3ZaNU9md0gzSWE0MVJsbGxndGJkN2lXQTBtWS91NGtKVU9PVWpkZmhZZllESEpNRVomI3hBO0RJSllZNUJRaDFEQWlwRzRydFVERlYrS3V4VjJLdXhWMkt1eFYyS3FOcC9kTi94a2wvNU9Oa1ljdm45N1BKeitBKzVXeVRCMkt1eFYmI3hBOzJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VlJ0UDdwditNa3YvQUNjYkl3NWZQNzJlVG44Qjl5V1gmI3hBO0ZocW91cnA0SWJXV09XWDFvSG1kMWRHTUN3SFlSc09pbnYwT1NZSmpZMmkyOXZHcktvbkVjYVRPdjdSUmFkZGlmYkZVUmlyc1ZkaXImI3hBO3NWZGlyc1ZkaXFqYWYzVGY4WkpmK1RqWkdITDUvZXp5Yy9nUHVWc2t3ZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZkaXJzVlViVCs2Yi9qSkwveWNiSXc1ZlA3MmVUbjhCOXl0a21Ec1ZkaXJzVmRpcnNWZGlyc1ZkaXFqYWYzVGY4WkomI3hBO2YrVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVlE2TGMmI3hBO3hCbFJFZFN6TUdMbFQ4VEZ1bkZ2SHh5QUJEWVRFODcvQUI4VjNPOC8zMUgvQU1qRy93Q2FNTnk3dng4a1ZIdlB5L2E3bmVmNzZqLzUmI3hBO0dOL3pSamN1NzhmSmFqM241ZnRkenZQOTlSLzhqRy81b3h1WGQrUGt0Ujd6OHYydTUzbisrby8rUmpmODBZM0x1L0h5V285NStYN1gmI3hBO2M3ei9BSDFIL3dBakcvNW94dVhkK1BrdFI3ejh2MnU1M24rK28vOEFrWTMvQURSamN1NzhmSmFqM241ZnRkenZQOTlSL3dESXh2OEEmI3hBO21qRzVkMzQrUzFIdlB5L2E3bmVmNzZqL0FPUmpmODBZM0x1L0h5V285NStYN1hjN3ovZlVmL0l4dithTWJsM2ZqNUxVZTgvTDlxNkMmI3hBO05vNDZOVGtXWmpUb09URnFmampFVUVUTmxVeVRGMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3UmI3hBO3hWMkt1eFZLN0ZOU3ViU0tiNjh5OGh1REhHVFViRTFBWHJUd3lBSkxZUkVjNy9Id1YvcW1wZjhBTGVmK1JTWWFsMy9qNW91UGNmbismI3hBO3gzMVRVdjhBbHZQL0FDS1RHcGQvNCthM0h1UHovWTc2cHFYL0FDM24va1VtTlM3L0FNZk5iajNINS9zZDlVMUwvbHZQL0lwTWFsMy8mI3hBO0FJK2EzSHVQei9ZNzZwcVgvTGVmK1JTWTFMdi9BQjgxdVBjZm4reDMxVFV2K1c4Lzhpa3hxWGYrUG10eDdqOC8yTytxYWwveTNuL2smI3hBO1VtTlM3L3g4MXVQY2ZuK3gzMVRVditXOC93RElwTWFsMy9qNXJjZTQvUDhBWTc2cHFYL0xlZjhBa1VtTlM3L3g4MXVQY2ZuK3hKTmYmI3hBOzFmVTdEUmJtZUc1SW5qdWhDc2pMR2R1SUZLY2FidHY0NE9MMDJ5RUJ4QWQ5ZmF4ZTU4eitjdUpNV29CQ3BITC9BRWVJMUZkd0FRTzMmI3hBO2ZHcGQvd0NQbWk0ZHgrZjdFUEw1MDgyaU5ndW9xamtFSTVoaElEYml0S2I0K3J2L0FCODF1SGNmbit4UVBucnplMjZhaFVIcFNDSHcmI3hBOzkweDlYZjhBajVyY080L1A5aUFuL01uempFd1VYNVoyK3lub1ExQTdsdmdydGo2dS93REh6VzRkeCtmN0hTZm1GNTNWdVExUGtwR3kmI3hBO3JCQit2aGo2dTliaDNINS9zV2Y4ckc4N01DVjFQWUE5YmVEL0FKbzdlR1BxNzF1SGNmbit4MHY1a2VjVFFRNnB5cUtsaEJBYWY4azkmI3hBOzhmVjMvajVyY080L1A5amNINWgrZTNERWFoelZCdXdoZzY5YVU0WStydlc0ZHgrZjdFeGc4NytjVysxcVlKSUhTQ0dsVDJCNGl1R3AmI3hBO2QvNCthM0R1UHovWXJyNXg4M282TytwQ1NJMERLSUlRYXNSdlVMMndHd2tDSjVBL1A5ajFhSmkwU01keVZCUDNaTnFYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZVRm92L0hNZytUZjhTT1JoeStmM3M4blA0RDdrYmttRHNWZGlxVGVidGV2OUQwVjlRc05JdU5idVZkRVcmI3hBO3d0UDcxZzVvVzZIWmVwMnhWSjlUODk2elpSNmt5ZVZkU3Vtc0pMZU9KWVVMZldST3dWbmhvcEpFVmF0dDB4VmtGdnJjY3VwZm84MmwmI3hBOzNIS0VEbVo3ZVFXLzJGZmlKNmVtVDhkT3ZVRWRzVlRIRlhZcTdGV0grYVFEb1Y3VVZBdmlmK0Z5by9TZmkzais4SCtiK2hpYzlUdjAmI3hBO0hqMXkxb1MyZEZyOWl2VWdmUlVZRlFGemNOSEdSQ3ZxU0hjS093TzFUVEZVdlcwa2U1QUJEdExTUVQrKzNnZGdOdW5YRlhKcWVsUlcmI3hBOzZTSnpsZ2trOUFYS1J5TW5ObTQxNUJhY0NmMi9zKzlNVXRwZFdWNURKTll1c2tTczBieUlOZ3lIaWFkaWNVTGhGYlNKNmNSQlZSOGYmI3hBO0hxZDl3RGlxL1RxVFJ2d05Ja2NnOWlRUGhvRFhDcWFJdEZGRXAzQXIzNllxdmIrNURBY1R5VTllL0tudGtaOHZsOTdaajUvQS9jOXQmI3hBO2cvdUkvd0RWSDZzazFyOFZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcUMwWC9qbVFmSnYrSkhJdzVmUDcyZVRuOEI5eU55VEJ3SUlxT20mI3hBO0t1eFYyS3V4VjJLdXhWMkt1eFZodm0yditINzdhdjhBcDM4TXFQMG40dDQvdkIvbS9vWXBLZ0I1QVZyU29yMjJIVExXaExiMmVqQkkmI3hBO1J5bU80clhpQUsvYU5Odm93S2xaaWxqa1pxY3BmMnBUMFlEZXJmS3VLdFNXYlBheUloY0pNcFNTbXpLU0tjaDFwOUdLc2Rpc1BNUysmI3hBO1dyRFJvb0h0cnV5K3EyNzMwRTZDSjQ0V1ZaR1VncTlHaURmQ3lWREgvWllwVXZMY0VqUXVzVU53aXdYZDRwbjlXa1VpUVhMeFJ4Y08mI3hBO1JyKzdGS2xCOW5ydmlwWksxdWdVeklBQWFWWG9DUGw0NG9YV0laWXpKRjlwcER6V3UxSys0NjRWVENKbEtDUnFMeEJOU2FVN2Q4VmEmI3hBOzRTVGNYZXF4aGw5TkNhTjlvVVp2Znd5TStYeSs5c3g4L2dmdWU1UWYzRWYrcVAxWkpyWDRxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlUmI3hBO0Zvdi9BQnpJUGszL0FCSTVHSEw1L2V6eWMvZ1B1UzY1aWl1cnUrK3RNczBVRXZwaTNsa0t4ckg5V1NTb2lBNFNFeU4rMzIrN0pNRnUmI3hBO3JSMzEzNWZpVkdSQzMxVjFjTng1RGtyT0NCeFZSMzc3ZHNWU0NLejF1Mjh2M2tNTWxMaWFlRllvMGxSSkJHaUtrakYxa1hadVBhaDcmI3hBOzk5bFV1MU9mek5wUGxJK2hZeWF0ZkpxQ20zc1Z2bmlZUUtySUc5YUl1NVg0QWVMZkR2dDJYRlc5WDF6ekphMjBrMWg1Y252YmtUQkkmI3hBO1lScWpvR2dQcUQxR3FRcXNYaEJDOWxkYWtiNHFnYjdYUE9hdmYrajVabWtqaHYxdDdTVWFySVBXdG1Fckc1NGdoeHg0UmluK1YxMk8mI3hBO0tzaGJ6VjV1c3RNbmEzMEtLWVd0MUxEYncvWGZWbm10WXpMd25IcUttNzhFK0V0V2plSW9WVnllZVBOUmt2bzVkQ0VKdDV3bG8vcWUmI3hBO3FzOFhHWnVRNGZaTGVuR056dHovQU1rakZVODBUWE5TdWIvVTROVGhpdFlMYVFMWXlobC9mUmt2OGRSSkl2UlYyMkk3Z1lxbEhtNjQmI3hBO2pYeTVleUJnVU44YU1OeDltdVZINlQ4VytQMWovTi9RdzlwMUZ1MDY3by94R1Rmb05xOVBBWlkwSUxrb1pwSTNMaVNqRVZydFNtMkYmI3hBO1VEUGRjWXhNZzV4cU5vUVBqTk45dCt1M1RBcVYzT3MzRnpwaXMyanp6ck9XaXViRStpeGFJMURCdVVpSVZZZHVYZmNkY1VvQmRKMHEmI3hBOzIxK0F3NlRQR3RzbjdyVS9WcWxDcCtCZ1plYmtWNC9FcEF4VlVzTlMrbzZQUzIwaTdSNVo1R2UyWjRtbFV5bHBIbDVOSzY4UzdkT1YmI3hBO2FucFRGVXgrdXpHNEFTM2NLRVZ1YkZTckZ3MVYyWW1xY1FEdDMyNzRVTzA2NjRRenlWQVVPVElwNjdiZmZ0aXFLaGxrbGYxSk5vNjgmI3hBO2tqSklKcDBaaC9ERlVXMHpzYTdVcXA3ZnpaR2ZMNWZlMlkrZndQM0Y3dGIvQU54SC9xcitySk5hL0ZYWXE3RlhZcTdGWFlxN0ZYWXEmI3hBOzdGWFlxZ3RGL3dDT1pCOG0vd0NKSEl3NWZQNzJlVG44Qjl5dEpZV01yczhsdkU3dDlwbVJTVFFVM0pIaGttQ3I2Y2ZBSnhIQmRsV2cmI3hBO29BUEFZcTcwWXY1Ris0WXF4VDh4OVJmUzlEZ250N2krczNlNmpReWFYWUxxTTdEaTdtTXhGSDRxL0duT214cHZ2aXJBdE44OVhFWVQmI3hBO25jK2E5UWYwVEZ3T2d4Z2wvd0IzU1drY2EvNzdJcC9sNzlzVTBnb2Z6QWx0NyszTW1wZWFyaUdFeEM0Z2JRNEZFZ0VrY2JsbjRMNlkmI3hBO1BFbGo0TTFOK0l4V21UYS9lNnBiWCtyOE5aMXBFMGowZWNOdnBVRXlQeWhqbC9jdHdCbXI2TFZvZGpJUjJIRlFvUmVZcm1mVEFWMUgmI3hBO3pLajJNVHl5WGFhTkNEZGd3TGMwQWUza2pxaXhNbTNFRm5JcWRpRldZK1NkSjFXR3krdmFsckZ6cTBlb1FXOHR2QmUyc0Z0SmIvQVcmI3hBO2VxeEtwNVB6SEpXcnhJMnhWS3ZQand4ZVdMdm5zcDFFS1BtVnBsUitrL0Z2SDF4L3pmME1JZDlMa2g5TndDcG9XV2dvU054c2ZEcmwmI3hBO2pRc0V1amlvTUtGZUpCQlVIcnRpcVhUeWFYRTMraWowZHhYZ3EwOTZiZGZuaXFsUGYyTDdSc09KQjNCQXhWRHZjYVVLT3dCZWxBV0MmI3hBO3Nmb0pHS3JJYnV3RHNRS0wxb0tmUGZZZDhWVkpiL1RCRTFRUFRJK0k5cUg2TVZTNnh1Yk5uZVNST01TeU1ZSWUzMmpRa2VJd3FuQ2EmI3hBO2xaTUtFRGlPMWVveFZTbjFEVDBibXFJWktCUXhwMHJYSXo1ZkpzeDgvZ2Z1ZlJscWEyc0pIZEZQNERKTmFyaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZTM1NMcTJUVG9WZVZGWUExVXNBZnRIeHl1TWdPdmUzVGhJbllIa1B1U0xXOVUxR1B6Rkd1blRKS2ZRWXcyOHM3UlcmI3hBO3p5OFg0aVJsRW5FRnFWUEUvTE5UbXp5R3NpQkwwMTM3ZFdneGx4VTErbS96RE5yY3NkTzBPTzZVeC9WSXhxYzhrYmd0Kzg5UnphUmwmI3hBO2FMOW1pbXB6YjhZN3cyK0ZMdVB5UTdhMSthUDFhQmtzUEwvMWdqL1NJbTFHNENnODJGRVlXemZzY1R1T3BQaHU4WTd3dmhTN2o4bXQmI3hBO2FnOHc2NXBUV2VxNmZwTTFMY1NvaWFsY3hLYnhrWkdqTFJSSS9wY1dJNVYzcjluYkhqajNyNFV1NC9KaVY5K1hWeEZLWTdIUWRHdWImI3hBO2FUN1puMXJVMFllb3JpV245NVRlVjZVOXZBVWVPUGV2aHk3ajhtUXdhSHFrSzZmSEhwV2xLaE1ZMUJqckY2UkduR01TZWloaVBxSDQmI3hBO1dDaGl2UWVKeDR4M2hmQ2wzSDVLZjZHMTJEVTExTzAwalNFdnJKM05oY1ByRjdLR1YrY2Y3eUV4SWkxaWtQZC9pN2RHRHh4N3d2aFMmI3hBOzdqOGsxdGRlL01oL3F5ejZYb2tkVC9wa28xT1dpL3ZHQjlKQmJOei9BSFFVamt5N21tUEdPOEw0VXU0L0pPdEMxWFdaa25PdXcyRmsmI3hBOzZ2UzJGbmVOZEJrOFhNa052eFBzSzRlT1BldmhTN2o4bUMvbkZkbUh5WEpKR2FoOVlqQUk3Z294d1IzaWZpbWRpY2Y4MzduaXlhNWQmI3hBO3NwcUdJOXdjdjlQZTRaRSs0dHZyVjF4T3pFSHJVZFJqNmU5SHI3aWo5TDFUUlpMU2R0V2x2WTdsU1JBbHVpTWhIQTBMRnpVZkhTdnQmI3hBO1hJbXU4Tmc0dTQvSlkxMTVXVzZRSmMzeTIvQmpKKzRRc0pQajRoZmlXbyt4VSs1MndiZDRaZXJ1UHlRK29YdmwxclZQcTF4ZXlUVWImI3hBO2tIZ1JWRERseG9ROWZEOGNkdTlhbDNINUl4YnZ5S2xEOWUxUVJrc1c1VzBXd3ExTnhKMXB4cnQ0NDdkNFR2M0g1SVN5dXZLYzBVVW0mI3hBO29YT3BKSjFlT0tDTmtCNWdjdmlkYW5oVS9QSGJ2V3BkeCtTVzMxL2F4WGtxYVcwOHRsVUZKSjBDU0VrQXZ5VmFqWjZnYjlNUlhlZ2kmI3hBO1hjVmk2dGRiVVZ0dlk1TDA5NlBYM0g1T2ZWYmsvYURBQUd2VWRzakt1OW5qTWdkd2VSKzU5aWFjYTZmYW54aGovd0NJakFVQkVZcGQmI3hBO2lyc1ZkaXJzVmRpcnNWZGlyc1ZkaXFIVFQ3ZEVWRk1vVlFBbzlhWFlEYitiRlZOdEgwOXAxdUdqTFRxS0xNWGN1QjdOeXIzeUJ4Uk0mI3hBO3VJZ2NYZjFXbFg2bEQvTkwvd0FqcGY4QW1ySnE3NmxEL05ML0FNanBmK2FzVmQ5U2gvbWwvd0NSMHY4QXpWaXJ2cVVQODB2L0FDT2wmI3hBOy93Q2FzVmQ5U2gvbWwvNUhTLzhBTldLdStwUS96Uy84anBmK2FzVmQ5U2gvbWwvNUhTLzgxWXE3NmxEL0FEUy84anBmK2FzVlFHcysmI3hBO1ZOQjFxeE5ocWxyOWJ0VEt0d1k1SkpQN3hGNHEzSU1HMkhhdE1JTklJQjVwSVB5Zy9MZ2RORlQvQUpHei93RFZURHhsaDRVZTV2OEEmI3hBOzVWRCtYUDhBMVprLzVHei9BUFZUSGpLK0ZIdWEvd0NWUWZseC93QldWUDhBa2JQL0FOVk1lTXI0VVd2K1ZPL2x0LzFaRS81R3ovOEEmI3hBO1ZUSGlLZkRpMS95cHY4dFArckpIL3dBalovOEFxcGp4RmZERGgrVG41YWovQUtVa2YvSTJmL3FwanhGZkRpNy9BSlU1K1d2L0FGWkkmI3hBOy93RGtiUDhBOVZNZUlyNGNXaCtUUDVaaXRORVRjMS92cmp2L0FNOU1lSXJ3QnY4QTVVMytXbi9Wa1Qva2JjZjlWTWVJcjRZYWI4bXYmI3hBO3kwTks2S20zU2sxd1AxU1k4Ulh3d3pLT05JNDFqUVVSQUZVZUFBb01pelhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1hZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlgmI3hBO1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcWdOY251SU5OZDdlUXhTbVNHTVMmI3hBO0FLeFVTU29oSURCbHJSdTR4VkRSUnlXbW9JRWplYWVXRzRaakxKemQvU2tpVk9MRThVREI2OFZBR0twRnJObjVvZlc1cHJTUzQ5SXomI3hBO3hSUVJCcEJEUW1CaTc4UnNvQWF2YllqN1IzVlU5V2Z6V2ZNSmt0clc2TnJIT3FJeXlFUW1MNFdZOEsxLzNYVHJUNzZGVkJ5ZWF2TWMmI3hBO3V0NnZhdzZEcS9HeXVoRkJLWGVLQ2VQNGkwa1RTVzRRcUZRa0JHWWswSFVpcXFYYWg1OTgwV2R2Y3l4ZVZ0ZXVmcTl6RGJRUm96RnAmI3hBO3d3WW1VRDZ1ZmhIQlExSzd0MnBYRlZlMzgrZVk0YjY1L3dDZFkxMmI2cGZteFJaVCs1bWk0VEg2MnBNSzFqQmlIUS90TDhzVlRIV2YmI3hBO3pLOHc2YzE4c1hrelU3MDJ0MkxhSDZ1Q3duaWIxZjMwWkNGZjkwaXExMjVMVTRxbTE1NXgxU0piazJ2bDIrdW10cGxpSzhXajVJV2wmI3hBO1V5cnpYNHdQU0IrRGw5b2ZTcXlqRlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1ZPNHRyZTVoYUc0aVNhRnFjbzVGREthR29xRFViRVZ4VlN0dE0wMjFrTXR0YVF3U0VGUzhjYW8zRWtFaXFnYmJERlZ6NmZZTzVkN2EmI3hBO0puWTFaaWlrays1SXhWYitqTk4vNVpJZitSYS8weFY1ejVoMGJ6WmIrY0k3ZXdpMUM3MGU5WlpIdWJlUFRWdHJSWlpBcFFpUlBYZjAmI3hBO2hIeTI3T2Q5dGxXUHlYSDVudEZadC9oclVva3M0ZjhBVFpHazBaUFZLaU9zamwxNyttK3lnZmFPdytFaFN0MERXZk9Wd0VzcjdTNzYmI3hBO3pNOTNGYnlhbE0yalA5WFFNbnFPWTBUa1J4aWZuOEpweU5DS2JLcTl2TjUxMDJhU2Q3Ty8xbTNzN2lhMkVaL1F5cGNoQ3NRbTVLRWsmI3hBO1VmQ1pBb1d0VFR4NHFFTlBiL21GSHBOeGN2RnFrTXl5S3NNY3I2QVN5TTBxQitTeDBRcUdVbGFIb3UvMnNVdmM4VU94VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMktvRFdvTmNtc3VHaTNkdlpYbklIMXImI3hBO3FCN21QalExSHBwTGJtdlRmbGlyRnRmMGY4ekpkRGhoZzFtd3ViZ3JKSHFVWDZMRHBjTE5JRkFXT1c3VlZXT05pR3F4NWZoaWxnUysmI3hBO1ZmUHYxQ1hVSlBMZHFkU2t1SmtFSTByVHZVQ01QVVdhbjZUSzA1U3pwdktTZWRhVXJ5Q3BscU5oNXdpdjViU1B5aGF5YWVkUm52UHImI3hBO0VlbTJVd2UybzA2d01rbDRoOWVTVFl6YkRsdlR1U3FCbDBMOHhyeUhoY2VXN2N4UzNFWWlpbDBuU1hhSll5cGFXWGpxQVVnbjdQRTgmI3hBO2hUNVZDdjhBLzlrPSIgeG1wR0ltZzp3aWR0aD0iMjU2IiB4bXBHSW1nOmhlaWdodD0iMTUyIi8+IDwvcmRmOkFsdD4gPC94bXA6VGh1bWJuYWlscz4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENTNiAoTWFjaW50b3NoKSIgc3RFdnQ6Y2hhbmdlZD0iLyIgc3RFdnQ6d2hlbj0iMjAxNi0wOS0xM1QxMToyNjo1OSswODowMCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowNzgwMTE3NDA3MjA2ODExODIyQUJFRjE0ODg5RUJGRiIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENDIChNYWNpbnRvc2gpIiBzdEV2dDpjaGFuZ2VkPSIvIiBzdEV2dDp3aGVuPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjVmOTcyMWM5LWEzYmYtNGJmMS1iNWMwLTYxNDllOGQxMTlmYSIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOnJlbmRpdGlvbkNsYXNzPSJwcm9vZjpwZGYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Mjk2Yzg5MzMtYjZmYy00M2U5LThiZDctZWMyODA1N2NiMWRmIiBzdFJlZjppbnN0YW5jZUlEPSJ1dWlkOjgzOTg0Y2U3LTZiNjQtOTk0NS05ZWZlLWE3Y2ZkNmUwMjNlZSIgc3RSZWY6b3JpZ2luYWxEb2N1bWVudElEPSJ1dWlkOjVEMjA4OTI0OTNCRkRCMTE5MTRBODU5MEQzMTUwOEM4Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg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" alt="得森設計">
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">⌂ 首頁</a>
+    <a class="nav-link" href="quotation.html">報價系統</a>
+    <a class="nav-link" href="project-manager.html">工程管理</a>
+    <a class="nav-link" href="finance.html">財務報表</a>
+    <span class="nav-link active">合約管理</span>
+  </div>
+</nav>
+
+<!-- 主頁面 -->
+<div class="main">
+  <!-- 工具列 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div>
+      <h2 style="font-family:var(--serif);font-size:22px;font-weight:300;letter-spacing:3px;color:var(--ink);">合 約 管 理</h2>
+      <p style="font-size:12px;color:var(--ink-l);margin-top:4px;letter-spacing:1px;">設計委託、工程承攬、分包合約</p>
+    </div>
+    <button class="btn btn-primary" onclick="openNewContract()">＋ 新建合約</button>
+  </div>
+
+  <!-- 篩選 -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <select class="fc" id="filter-type" onchange="renderList()" style="width:auto;padding:6px 12px;">
+      <option value="">所有類型</option>
+      <option value="design">設計委託約</option>
+      <option value="work">工程承攬約</option>
+      <option value="combined">設計＋工程合併約</option>
+      <option value="sub">分包商協力約</option>
+    </select>
+    <select class="fc" id="filter-status" onchange="renderList()" style="width:auto;padding:6px 12px;">
+      <option value="">所有狀態</option>
+      <option value="draft">草稿</option>
+      <option value="pending">待簽署</option>
+      <option value="signed">已簽署</option>
+      <option value="terminated">已終止</option>
+    </select>
+    <input class="fc" id="filter-search" placeholder="搜尋合約…" oninput="renderList()" style="width:200px;padding:6px 12px;">
+  </div>
+
+  <!-- 合約列表 -->
+  <div class="contract-grid" id="contract-grid"></div>
+  <div id="contract-empty" style="display:none;padding:60px;text-align:center;color:var(--ink-l);">
+    <div style="font-size:32px;margin-bottom:12px;">📄</div>
+    <div style="font-size:14px;margin-bottom:8px;">尚無合約</div>
+    <div style="font-size:12px;">點「新建合約」開始建立第一份合約</div>
+  </div>
+</div>
+
+<!-- 合約詳細頁 -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-nav">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← 返回列表</button>
+      <span id="detail-nav-title" style="font-family:var(--serif);font-size:14px;color:var(--ink-m);letter-spacing:2px;"></span>
+    </div>
+    <div style="display:flex;gap:8px;" class="no-print">
+      <button class="btn btn-secondary btn-sm" onclick="printContract()">🖨️ 列印</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportPDF()">⬇ PDF</button>
+      <button class="btn btn-accent btn-sm" onclick="openEditContract()">編輯</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrentContract()">刪除</button>
+    </div>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<!-- 新建/編輯合約 Modal -->
+<div class="mbg" id="contract-modal">
+  <div class="modal">
+    <div class="mhd">
+      <h3 id="modal-title">新建合約</h3>
+      <button class="mcl" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbod">
+      <input type="hidden" id="edit-id">
+
+      <!-- 基本資訊 -->
+      <div class="doc-section-title" style="margin-bottom:14px;">基本資訊</div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="fg">
+          <label>合約類型</label>
+          <select class="fc" id="c-type" onchange="onTypeChange()">
+            <option value="design">設計委託約</option>
+            <option value="work">工程承攬約</option>
+            <option value="combined">設計＋工程合併約</option>
+            <option value="sub">分包商協力約</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>空間性質（範本）</label>
+          <select class="fc" id="c-space" onchange="applyTemplate()">
+            <option value="">選擇套用範本</option>
+            <option value="residential">住宅（一般）</option>
+            <option value="old-house">老屋改造</option>
+            <option value="commercial">商業空間</option>
+            <option value="office">辦公室</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="fg">
+          <label>合約狀態</label>
+          <select class="fc" id="c-status">
+            <option value="draft">草稿</option>
+            <option value="pending">待簽署</option>
+            <option value="signed">已簽署</option>
+            <option value="terminated">已終止</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>合約日期</label>
+          <input class="fc" id="c-date" type="date">
+        </div>
+      </div>
+
+      <!-- 帶入既有資料 -->
+      <div class="doc-section-title" style="margin-bottom:14px;">連結既有資料</div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="fg">
+          <label>連結客戶</label>
+          <select class="fc" id="c-client" onchange="fillClientData()">
+            <option value="">選擇客戶（自動帶入）</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>連結報價單</label>
+          <select class="fc" id="c-quote" onchange="fillQuoteData()">
+            <option value="">選擇報價單（自動帶入）</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>連結工程專案</label>
+        <select class="fc" id="c-project" onchange="fillProjectData()">
+          <option value="">選擇專案（自動帶入工期）</option>
+        </select>
+      </div>
+
+      <!-- 甲方資訊（業主）-->
+      <div class="doc-section-title" style="margin-bottom:14px;">甲方（委託人）</div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="fg"><label>姓名</label><input class="fc" id="c-owner-name" placeholder="業主姓名"></div>
+        <div class="fg"><label>電話</label><input class="fc" id="c-owner-phone" placeholder="聯絡電話"></div>
+      </div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>地址</label><input class="fc" id="c-owner-addr" placeholder="業主地址">
+      </div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>身分證字號／統編</label><input class="fc" id="c-owner-id" placeholder="身分證字號或統一編號">
+      </div>
+
+      <!-- 工程資訊 -->
+      <div class="doc-section-title" id="work-section-title" style="margin-bottom:14px;">工程資訊</div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>工程地址</label><input class="fc" id="c-addr" placeholder="施工地址">
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px;">
+        <div class="fg"><label>開工日期</label><input class="fc" id="c-start" type="date"></div>
+        <div class="fg"><label>完工日期</label><input class="fc" id="c-end" type="date"></div>
+        <div class="fg"><label>坪數</label><input class="fc" id="c-size" type="number" placeholder="0"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="fg"><label>合約金額（元）</label><input class="fc" id="c-amount" type="number" placeholder="0"></div>
+        <div class="fg"><label>付款條件</label><input class="fc" id="c-payment" placeholder="簽約30%、開工30%、完工40%"></div>
+      </div>
+
+      <!-- 工程範圍 -->
+      <div class="fg" style="margin-bottom:14px;">
+        <label>工程範圍說明</label>
+        <textarea class="fc" id="c-scope" rows="3" placeholder="說明工程內容、工種及施作範圍…"></textarea>
+      </div>
+
+      <!-- 標準條款 -->
+      <div class="doc-section-title" style="margin-bottom:14px;">標準條款（依內政部範本）</div>
+      <div id="clauses-container"></div>
+
+      <!-- 特殊條款 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="doc-section-title" style="margin-bottom:0;">特殊條款</div>
+        <button class="btn btn-accent btn-sm" onclick="addClause()">＋ 新增條款</button>
+      </div>
+      <div id="special-clauses"></div>
+
+      <!-- 備註 -->
+      <div class="fg">
+        <label>備註</label>
+        <textarea class="fc" id="c-note" rows="2" placeholder="其他說明事項…"></textarea>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" id="modal-submit" onclick="saveContract()">建立合約</button>
+    </div>
+  </div>
+</div>
+
+<div id="notif" style="position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--r);color:#fff;font-size:13px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;"></div>
+
+<script>
+const KC='ds_clients',KQ='ds_quotes',KPR='ds_projects',KCT='ds_contracts';
+
+function getClients(){return JSON.parse(localStorage.getItem(KC)||'[]');}
+function getQuotes(){return JSON.parse(localStorage.getItem(KQ)||'[]');}
+function getProjects(){return JSON.parse(localStorage.getItem(KPR)||'[]');}
+function getContracts(){return JSON.parse(localStorage.getItem(KCT)||'[]');}
+function saveContracts(d){localStorage.setItem(KCT,JSON.stringify(d));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function fmtDate(s){if(!s)return'—';const d=new Date(s);return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();}
+function fmt(n){return'$ '+Math.round(n||0).toLocaleString('zh-TW');}
+
+function notify(m,t){
+  const el=document.getElementById('notif');
+  el.textContent=m;
+  el.style.background=t==='err'?'#c0392b':t==='ok'?'#2e7d32':'#2b2926';
+  el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0',2500);
+}
+
+// ── TYPE CONFIG ──
+const TYPE_CONFIG={
+  design:{label:'設計委託約',color:'#1565c0',stripe:'type-design'},
+  work:{label:'工程承攬約',color:'#8a9082',stripe:'type-work'},
+  combined:{label:'設計＋工程合併約',color:'#5c4a8a',stripe:'type-combined'},
+  sub:{label:'分包商協力約',color:'#8a6914',stripe:'type-sub'}
+};
+const STATUS_CONFIG={
+  draft:{label:'草稿',cls:'badge-draft'},
+  pending:{label:'待簽署',cls:'badge-pending'},
+  signed:{label:'已簽署',cls:'badge-signed'},
+  terminated:{label:'已終止',cls:'badge-terminated'}
+};
+
+// ── STANDARD CLAUSES ──
+const STD_CLAUSES={
+  design:[
+    {title:'設計服務範圍',text:'乙方依甲方需求，提供室內設計服務，包括：平面規劃、立面設計、材料建議及施工圖說明。'},
+    {title:'設計費用及付款',text:'設計費用依雙方協議，分期支付：簽約時支付30%、完成平面確認後支付30%、施工圖完成後支付40%。'},
+    {title:'設計修改',text:'設計確認後，每次重大修改須額外收取修改費，細微修改不另計費。'},
+    {title:'著作權',text:'本案設計著作權歸乙方所有，甲方僅取得使用權。未經乙方同意，不得用於商業用途。'},
+    {title:'完工驗收',text:'設計圖說完成後，雙方共同確認，確認後方視為完成。'},
+    {title:'保密義務',text:'雙方對本合約相關資訊負保密義務，未經對方同意不得向第三方揭露。'},
+  ],
+  work:[
+    {title:'工程範圍',text:'乙方依甲方確認之設計圖說，執行本契約所列工程項目，工程範圍以報價單所列為準。'},
+    {title:'材料規格',text:'所有施工材料應符合合約規定規格，如需更換，須取得甲方書面同意。'},
+    {title:'工程期限',text:'乙方應於開工日起算，於約定完工日期前完成工程。如有遲延，每日扣除工程款千分之一。'},
+    {title:'付款方式',text:'工程款按約定比例分期支付，各期款項應於驗收完成後支付。'},
+    {title:'驗收',text:'工程完成後，雙方共同驗收，驗收合格後正式點交，保固期自點交日起算。'},
+    {title:'保固責任',text:'保固期為完工後一年，乙方負責因施工瑕疵產生之修繕，材料問題依廠商保固處理。'},
+    {title:'變更工程',text:'工程範圍如需變更，須雙方書面同意，追加或減少金額依實際工程量計算。'},
+    {title:'不得全部轉包',text:'乙方不得將本工程全部轉包，如有違反，甲方得終止合約。'},
+  ],
+  combined:[
+    {title:'服務內容',text:'乙方提供設計與工程統包服務，包括室內設計規劃及施工執行。'},
+    {title:'費用結構',text:'費用分為設計費與工程費兩部分，分別依設計進度及工程進度分期收取。'},
+    {title:'設計確認',text:'施工前須完成設計確認，確認後方可開工，如需修改設計，依變更工程處理。'},
+    {title:'工程期限',text:'乙方應於約定期限內完成設計及施工，如有遲延，每日扣除總價款千分之一。'},
+    {title:'付款方式',text:'按約定比例分期支付，各期款項應於完成相應工作並驗收後支付。'},
+    {title:'保固責任',text:'工程完工後保固一年，設計服務不另行保固。'},
+    {title:'不得全部轉包',text:'乙方不得將本工程全部轉包，可分包特定工種，但乙方仍負總責任。'},
+  ],
+  sub:[
+    {title:'分包範圍',text:'分包商依本合約，負責執行甲方指定之工程項目，施工規格依施工圖說。'},
+    {title:'施工期限',text:'分包商應於指定期間內完成工程，如有遲延，每日扣除分包款千分之一。'},
+    {title:'品質要求',text:'施工品質須符合甲方要求，驗收不合格須自費修繕。'},
+    {title:'付款條件',text:'依完工驗收進度分期付款，各期驗收後七日內付款。'},
+    {title:'工地安全',text:'分包商施工期間，須遵守工地安全規定，工安事故由分包商自行負責。'},
+  ]
+};
+
+const SPACE_TEMPLATES={
+  residential:{scope:'住宅室內裝修工程，包含隔間、水電、泥作、木作、油漆等基礎工程，及後期軟裝規劃。'},
+  'old-house':{scope:'老屋改造工程，包含結構補強評估、拆除清運、全室管線更新、防水處理及室內翻新。'},
+  commercial:{scope:'商業空間設計施工，包含空間規劃、形象設計、展示陳列、照明規劃及相關裝修工程。'},
+  office:{scope:'辦公空間規劃施工，包含隔間配置、工作區規劃、會議室設計及相關電氣、網路工程。'}
+};
+
+// ── STATE ──
+let CURRENT_CONTRACT=null;
+let EDITING_ID=null;
+let SPECIAL_CLAUSES=[];
+let STD_CLAUSE_TEXTS={};
+
+// ── LIST ──
+function renderList(){
+  const contracts=getContracts();
+  const typeFilter=document.getElementById('filter-type').value;
+  const statusFilter=document.getElementById('filter-status').value;
+  const searchFilter=document.getElementById('filter-search').value.toLowerCase();
+  const filtered=contracts.filter(c=>
+    (!typeFilter||c.type===typeFilter)&&
+    (!statusFilter||c.status===statusFilter)&&
+    (!searchFilter||c.ownerName?.toLowerCase().includes(searchFilter)||c.no?.toLowerCase().includes(searchFilter)||c.addr?.toLowerCase().includes(searchFilter))
+  );
+  const grid=document.getElementById('contract-grid');
+  const empty=document.getElementById('contract-empty');
+  if(!filtered.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const tc=TYPE_CONFIG;const sc=STATUS_CONFIG;
+  grid.innerHTML=filtered.map(c=>{
+    const type=tc[c.type]||tc.design;
+    const status=sc[c.status]||sc.draft;
+    return`<div class="contract-card" onclick="openDetail('${c.id}')">
+      <div class="contract-type-stripe" style="background:${type.color};"></div>
+      <div class="contract-body">
+        <div class="contract-no">${c.no||'—'} · ${type.label}</div>
+        <div class="contract-name">${c.ownerName||'未填寫業主'}</div>
+        <div class="contract-client">${c.addr||''}</div>
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+          <span class="badge ${status.cls}">${status.label}</span>
+          ${c.amount?`<span style="font-size:11px;color:var(--ink-l);">${fmt(c.amount)}</span>`:''}
+        </div>
+      </div>
+      <div class="contract-footer">
+        <span style="font-size:11px;color:var(--ink-l);">${fmtDate(c.date)}</span>
+        <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
+          <button class="btn btn-accent btn-sm" onclick="openEditContractById('${c.id}')">編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteContract('${c.id}')">刪除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── NEW CONTRACT ──
+function openNewContract(){
+  EDITING_ID=null;SPECIAL_CLAUSES=[];STD_CLAUSE_TEXTS={};
+  document.getElementById('modal-title').textContent='新建合約';
+  document.getElementById('modal-submit').textContent='建立合約';
+  document.getElementById('edit-id').value='';
+  // Reset fields
+  ['c-type','c-space','c-status','c-client','c-quote','c-project'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value=el.tagName==='SELECT'?el.options[0]?.value||'':'';
+  });
+  ['c-date','c-owner-name','c-owner-phone','c-owner-addr','c-owner-id','c-addr','c-start','c-end','c-scope','c-payment','c-note'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('c-size').value='';
+  document.getElementById('c-amount').value='';
+  document.getElementById('c-date').value=todayStr();
+  document.getElementById('c-status').value='draft';
+  // Fill selects
+  fillSelects();
+  onTypeChange();
+  document.getElementById('contract-modal').classList.add('on');
+}
+
+function fillSelects(){
+  const clients=getClients();
+  const quotes=getQuotes();
+  const projects=getProjects();
+  const cSel=document.getElementById('c-client');
+  cSel.innerHTML='<option value="">選擇客戶（自動帶入）</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const qSel=document.getElementById('c-quote');
+  qSel.innerHTML='<option value="">選擇報價單（自動帶入）</option>'+quotes.map(q=>`<option value="${q.id}">${q.no||'—'} ${q.clientName||''} ${q.total?fmt(q.total):''}</option>`).join('');
+  const pSel=document.getElementById('c-project');
+  pSel.innerHTML='<option value="">選擇專案（自動帶入工期）</option>'+projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function fillClientData(){
+  const id=document.getElementById('c-client').value;
+  if(!id)return;
+  const client=getClients().find(c=>c.id===id);if(!client)return;
+  document.getElementById('c-owner-name').value=client.name||'';
+  document.getElementById('c-owner-phone').value=client.mob||'';
+  document.getElementById('c-owner-addr').value=client.addr||'';
+}
+
+function fillQuoteData(){
+  const id=document.getElementById('c-quote').value;
+  if(!id)return;
+  const quote=getQuotes().find(q=>q.id===id);if(!quote)return;
+  if(quote.total)document.getElementById('c-amount').value=quote.total;
+  if(quote.project)document.getElementById('c-addr').value=quote.project;
+  if(quote.clientName&&!document.getElementById('c-owner-name').value)document.getElementById('c-owner-name').value=quote.clientName;
+  const payEl=document.getElementById('c-payment');
+  if(!payEl.value)payEl.value='簽約30%、開工30%、完工40%';
+  // Build scope from quote lines
+  if(quote.lines&&quote.lines.length){
+    const cats=[...new Set(quote.lines.map(l=>l.cat))].filter(Boolean);
+    if(cats.length)document.getElementById('c-scope').value='工程範圍包含：'+cats.join('、')+'等工程項目。';
+  }
+}
+
+function fillProjectData(){
+  const id=document.getElementById('c-project').value;
+  if(!id)return;
+  const proj=getProjects().find(p=>p.id===id);if(!proj)return;
+  if(proj.startDate)document.getElementById('c-start').value=proj.startDate;
+  if(proj.endDate)document.getElementById('c-end').value=proj.endDate;
+  if(proj.address&&!document.getElementById('c-addr').value)document.getElementById('c-addr').value=proj.address;
+  if(proj.ownerName&&!document.getElementById('c-owner-name').value)document.getElementById('c-owner-name').value=proj.ownerName;
+  if(proj.ownerPhone&&!document.getElementById('c-owner-phone').value)document.getElementById('c-owner-phone').value=proj.ownerPhone;
+  if(proj.size)document.getElementById('c-size').value=proj.size;
+  if(proj.budget&&!document.getElementById('c-amount').value)document.getElementById('c-amount').value=proj.budget;
+}
+
+function applyTemplate(){
+  const space=document.getElementById('c-space').value;
+  if(!space)return;
+  const tmpl=SPACE_TEMPLATES[space];if(!tmpl)return;
+  if(tmpl.scope)document.getElementById('c-scope').value=tmpl.scope;
+  notify('已套用「'+document.getElementById('c-space').options[document.getElementById('c-space').selectedIndex].text+'」範本','ok');
+}
+
+function onTypeChange(){
+  const type=document.getElementById('c-type').value;
+  const clauses=STD_CLAUSES[type]||STD_CLAUSES.work;
+  const container=document.getElementById('clauses-container');
+  container.innerHTML=clauses.map((cl,i)=>`
+    <div style="border:1px solid var(--border-l);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;background:var(--paper-w);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:11px;color:var(--ink-l);">第${i+1}條</span>
+        <strong style="font-size:12px;color:var(--ink);">${cl.title}</strong>
+      </div>
+      <textarea class="fc std-clause" data-idx="${i}" rows="2" style="font-size:12px;">${STD_CLAUSE_TEXTS[i]!==undefined?STD_CLAUSE_TEXTS[i]:cl.text}</textarea>
+    </div>`).join('');
+  // Re-attach change listeners
+  container.querySelectorAll('.std-clause').forEach(ta=>{
+    ta.addEventListener('input',function(){STD_CLAUSE_TEXTS[this.dataset.idx]=this.value;});
+  });
+}
+
+function addClause(){
+  SPECIAL_CLAUSES.push({title:'特殊條款',text:''});
+  renderSpecialClauses();
+}
+
+function renderSpecialClauses(){
+  document.getElementById('special-clauses').innerHTML=SPECIAL_CLAUSES.map((cl,i)=>`
+    <div style="border:1px solid var(--border-l);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:6px;">
+        <input class="fc" value="${cl.title}" oninput="SPECIAL_CLAUSES[${i}].title=this.value" style="font-size:12px;font-weight:500;" placeholder="條款名稱">
+        <button class="btn btn-danger btn-sm" onclick="removeClause(${i})">✕</button>
+      </div>
+      <textarea class="fc" rows="2" style="font-size:12px;" oninput="SPECIAL_CLAUSES[${i}].text=this.value" placeholder="條款內容…">${cl.text}</textarea>
+    </div>`).join('');
+}
+
+function removeClause(i){SPECIAL_CLAUSES.splice(i,1);renderSpecialClauses();}
+
+// ── SAVE ──
+function saveContract(){
+  const type=document.getElementById('c-type').value;
+  const ownerName=document.getElementById('c-owner-name').value.trim();
+  if(!ownerName){notify('請填寫甲方姓名','err');return;}
+  // Collect std clauses
+  const stdClauses=(STD_CLAUSES[type]||STD_CLAUSES.work).map((cl,i)=>{
+    const ta=document.querySelector(`.std-clause[data-idx="${i}"]`);
+    return{title:cl.title,text:ta?ta.value:cl.text};
+  });
+  const contracts=getContracts();
+  const isEdit=!!EDITING_ID;
+  const existing=isEdit?contracts.find(c=>c.id===EDITING_ID):null;
+  const seq=contracts.length+1;
+  const typePrefix={design:'DC',work:'WC',combined:'CC',sub:'SC'};
+  const no=existing?.no||(typePrefix[type]||'CT')+String(seq).padStart(3,'0');
+  const contract={
+    id:EDITING_ID||uid(),no,
+    type:type,status:document.getElementById('c-status').value,
+    date:document.getElementById('c-date').value,
+    clientId:document.getElementById('c-client').value,
+    quoteId:document.getElementById('c-quote').value,
+    projectId:document.getElementById('c-project').value,
+    ownerName,
+    ownerPhone:document.getElementById('c-owner-phone').value,
+    ownerAddr:document.getElementById('c-owner-addr').value,
+    ownerId:document.getElementById('c-owner-id').value,
+    addr:document.getElementById('c-addr').value,
+    startDate:document.getElementById('c-start').value,
+    endDate:document.getElementById('c-end').value,
+    size:document.getElementById('c-size').value,
+    amount:parseFloat(document.getElementById('c-amount').value)||0,
+    payment:document.getElementById('c-payment').value,
+    scope:document.getElementById('c-scope').value,
+    stdClauses,specialClauses:SPECIAL_CLAUSES,
+    note:document.getElementById('c-note').value,
+    createdAt:existing?.createdAt||todayStr()
+  };
+  if(isEdit){const i=contracts.findIndex(c=>c.id===EDITING_ID);contracts.splice(i,1,contract);}
+  else contracts.unshift(contract);
+  saveContracts(contracts);
+  closeModal();renderList();
+  notify(isEdit?'合約已更新':'合約已建立','ok');
+}
+
+function closeModal(){document.getElementById('contract-modal').classList.remove('on');EDITING_ID=null;}
+
+// ── EDIT ──
+function openEditContractById(id){
+  const c=getContracts().find(x=>x.id===id);if(!c)return;
+  EDITING_ID=id;SPECIAL_CLAUSES=[...(c.specialClauses||[])];
+  STD_CLAUSE_TEXTS={};
+  document.getElementById('modal-title').textContent='編輯合約';
+  document.getElementById('modal-submit').textContent='更新合約';
+  document.getElementById('edit-id').value=id;
+  fillSelects();
+  document.getElementById('c-type').value=c.type||'design';
+  document.getElementById('c-status').value=c.status||'draft';
+  document.getElementById('c-date').value=c.date||'';
+  document.getElementById('c-client').value=c.clientId||'';
+  document.getElementById('c-quote').value=c.quoteId||'';
+  document.getElementById('c-project').value=c.projectId||'';
+  document.getElementById('c-owner-name').value=c.ownerName||'';
+  document.getElementById('c-owner-phone').value=c.ownerPhone||'';
+  document.getElementById('c-owner-addr').value=c.ownerAddr||'';
+  document.getElementById('c-owner-id').value=c.ownerId||'';
+  document.getElementById('c-addr').value=c.addr||'';
+  document.getElementById('c-start').value=c.startDate||'';
+  document.getElementById('c-end').value=c.endDate||'';
+  document.getElementById('c-size').value=c.size||'';
+  document.getElementById('c-amount').value=c.amount||'';
+  document.getElementById('c-payment').value=c.payment||'';
+  document.getElementById('c-scope').value=c.scope||'';
+  document.getElementById('c-note').value=c.note||'';
+  // Load std clause texts
+  (c.stdClauses||[]).forEach((cl,i)=>{STD_CLAUSE_TEXTS[i]=cl.text;});
+  onTypeChange();
+  renderSpecialClauses();
+  document.getElementById('contract-modal').classList.add('on');
+}
+
+function openEditContract(){
+  if(!CURRENT_CONTRACT)return;
+  closeDetail();
+  openEditContractById(CURRENT_CONTRACT.id);
+}
+
+// ── DELETE ──
+function deleteContract(id){
+  if(!confirm('確定刪除此合約？此動作無法復原。'))return;
+  const contracts=getContracts().filter(c=>c.id!==id);
+  saveContracts(contracts);renderList();notify('合約已刪除','ok');
+}
+
+function deleteCurrentContract(){
+  if(!CURRENT_CONTRACT)return;
+  if(!confirm('確定刪除此合約？'))return;
+  deleteContract(CURRENT_CONTRACT.id);
+  closeDetail();
+}
+
+// ── DETAIL VIEW ──
+function openDetail(id){
+  const c=getContracts().find(x=>x.id===id);if(!c)return;
+  CURRENT_CONTRACT=c;
+  const type=TYPE_CONFIG[c.type]||TYPE_CONFIG.design;
+  const status=STATUS_CONFIG[c.status]||STATUS_CONFIG.draft;
+  document.getElementById('detail-nav-title').textContent=c.no+' · '+type.label;
+  document.getElementById('detail-body').innerHTML=buildContractDoc(c);
+  document.getElementById('detail-panel').style.display='block';
+  document.body.style.overflow='hidden';
+}
+
+function closeDetail(){
+  document.getElementById('detail-panel').style.display='none';
+  document.body.style.overflow='';
+  CURRENT_CONTRACT=null;
+}
+
+function buildContractDoc(c){
+  const type=TYPE_CONFIG[c.type]||TYPE_CONFIG.design;
+  const status=STATUS_CONFIG[c.status]||STATUS_CONFIG.draft;
+  const companyInfo=`得森室內裝修設計有限公司<br>地址：高雄市苓雅區中正一路121巷5弄6-1號<br>電話：07-7220069　手機：0939-977966`;
+  return`
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-family:var(--serif);font-size:22px;font-weight:500;letter-spacing:4px;margin-bottom:8px;">${type.label}</div>
+    <div style="font-size:12px;color:var(--ink-l);letter-spacing:2px;">合約編號：${c.no||'—'}</div>
+    <div style="margin-top:8px;"><span class="badge ${status.cls}">${status.label}</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+    <div style="border:1px solid var(--border-l);border-radius:var(--r);padding:16px;">
+      <div style="font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:8px;">甲方（委託人）</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${c.ownerName||'—'}</div>
+      <div style="font-size:12px;color:var(--ink-l);">${c.ownerPhone||''}</div>
+      <div style="font-size:12px;color:var(--ink-l);">${c.ownerAddr||''}</div>
+      ${c.ownerId?`<div style="font-size:12px;color:var(--ink-l);">身分證：${c.ownerId}</div>`:''}
+    </div>
+    <div style="border:1px solid var(--border-l);border-radius:var(--r);padding:16px;">
+      <div style="font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:8px;">乙方（承攬人）</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">得森室內裝修設計有限公司</div>
+      <div style="font-size:12px;color:var(--ink-l);">高雄市苓雅區中正一路121巷5弄6-1號</div>
+      <div style="font-size:12px;color:var(--ink-l);">07-7220069　0939-977966</div>
+      <div style="font-size:12px;color:var(--ink-l);">統一編號：40EB020646</div>
+    </div>
+  </div>
+
+  <div style="border:1px solid var(--border-l);border-radius:var(--r);padding:16px;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div><div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">合約日期</div><div style="font-size:13px;">${fmtDate(c.date)}</div></div>
+      <div><div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">開工日期</div><div style="font-size:13px;">${fmtDate(c.startDate)}</div></div>
+      <div><div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">完工日期</div><div style="font-size:13px;">${fmtDate(c.endDate)}</div></div>
+      <div><div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">工程地址</div><div style="font-size:13px;">${c.addr||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">坪數</div><div style="font-size:13px;">${c.size||'—'} 坪</div></div>
+      <div><div style="font-size:10px;color:var(--ink-l);margin-bottom:4px;">合約金額</div><div style="font-size:16px;font-family:var(--serif);color:var(--sage-dk);">${fmt(c.amount)}</div></div>
+    </div>
+    ${c.payment?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-l);font-size:12px;color:var(--ink-l);">付款方式：${c.payment}</div>`:''}
+  </div>
+
+  ${c.scope?`<div style="margin-bottom:24px;">
+    <div class="doc-section-title">工程範圍</div>
+    <div style="font-size:13px;color:var(--ink-m);line-height:1.8;padding:12px;background:var(--paper-w);border-radius:var(--r);">${c.scope}</div>
+  </div>`:''}
+
+  <div style="margin-bottom:24px;">
+    <div class="doc-section-title">契約條款</div>
+    ${(c.stdClauses||[]).map((cl,i)=>`
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;">第${i+1}條　${cl.title}</div>
+        <div style="font-size:12px;color:var(--ink-m);line-height:1.9;padding:8px 12px;background:var(--paper-w);border-radius:var(--r);">${cl.text}</div>
+      </div>`).join('')}
+    ${(c.specialClauses||[]).map((cl,i)=>`
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;">特殊條款${i+1}　${cl.title}</div>
+        <div style="font-size:12px;color:var(--ink-m);line-height:1.9;padding:8px 12px;background:var(--paper-w);border-radius:var(--r);">${cl.text}</div>
+      </div>`).join('')}
+  </div>
+
+  ${c.note?`<div style="margin-bottom:24px;">
+    <div class="doc-section-title">備註</div>
+    <div style="font-size:12px;color:var(--ink-m);line-height:1.8;">${c.note}</div>
+  </div>`:''}
+
+  <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+    <div style="border-top:1px solid var(--ink);padding-top:8px;">
+      <div style="font-size:12px;color:var(--ink-l);margin-bottom:20px;">甲方簽署</div>
+      <div style="font-size:12px;color:var(--ink-l);">姓名：${c.ownerName||'________________'}</div>
+      <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">日期：________________</div>
+      <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">印章：</div>
+    </div>
+    <div style="border-top:1px solid var(--ink);padding-top:8px;">
+      <div style="font-size:12px;color:var(--ink-l);margin-bottom:20px;">乙方簽署</div>
+      <div style="font-size:12px;color:var(--ink-l);">得森室內裝修設計有限公司</div>
+      <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">代表人：郭明璋</div>
+      <div style="font-size:12px;color:var(--ink-l);margin-top:8px;">日期：________________</div>
+    </div>
+  </div>`;
+}
+
+function printContract(){window.print();}
+function exportPDF(){window.print();}
+
+// Init
+renderList();
+</script>
+</body>
+</html>
