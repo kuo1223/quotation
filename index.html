@@ -66,6 +66,15 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
 footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(--ink-f);letter-spacing:2px;border-top:1px solid var(--border-l);}
 @media(max-width:800px){.main-grid{grid-template-columns:1fr;}.modules{grid-template-columns:1fr 1fr;}header{padding:12px 16px;}.hero{padding:24px 16px 16px;}}
 @media(max-width:480px){.modules{grid-template-columns:1fr;}}
+
+.tools-row{margin-top:14px;}
+.tools-label{font-size:10px;color:var(--ink-f);letter-spacing:3px;margin-bottom:8px;padding-left:2px;}
+.tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.tool-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--r);padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;text-align:center;}
+.tool-card:hover{border-color:var(--sage-dk);box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px);}
+.tool-card-icon{font-size:22px;line-height:1;}
+.tool-card-name{font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:1px;line-height:1.4;}
+.tool-card-tag{font-size:9px;letter-spacing:1px;padding:1px 7px;border-radius:20px;background:var(--sage-pa);color:var(--sage-dk);}
 </style>
 </head>
 <body>
@@ -119,6 +128,31 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
+    <div class="tools-row">
+      <div class="tools-label">小 工 具</div>
+      <div class="tools-grid">
+        <a class="tool-card" href="notice.html">
+          <div class="tool-card-icon">📢</div>
+          <div class="tool-card-name">施工公告<br>產生器</div>
+          <span class="tool-card-tag">使用中</span>
+        </a>
+        <a class="tool-card" href="#" style="opacity:.45;pointer-events:none;">
+          <div class="tool-card-icon">🖌️</div>
+          <div class="tool-card-name">油漆面積<br>計算器</div>
+          <span class="tool-card-tag" style="background:#f5f5f5;color:var(--stone);">即將推出</span>
+        </a>
+        <a class="tool-card" href="#" style="opacity:.45;pointer-events:none;">
+          <div class="tool-card-icon">❄️</div>
+          <div class="tool-card-name">冷氣噸數<br>計算器</div>
+          <span class="tool-card-tag" style="background:#f5f5f5;color:var(--stone);">即將推出</span>
+        </a>
+        <a class="tool-card" href="#" style="opacity:.45;pointer-events:none;">
+          <div class="tool-card-icon">🏠</div>
+          <div class="tool-card-name">更多工具<br>敬請期待</div>
+          <span class="tool-card-tag" style="background:#f5f5f5;color:var(--stone);">規劃中</span>
+        </a>
+      </div>
+    </div>
   </div>
   <div class="sidebar">
     <!-- 今日/明日工程進度 -->
