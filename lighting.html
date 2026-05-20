@@ -597,6 +597,7 @@ function onSceneChange(){
 // MAIN CALC
 // ══════════════════════════════════════════════
 function calc(){
+  try{
   const L=parseFloat(document.getElementById('roomL').value)||0;
   const W=parseFloat(document.getElementById('roomW').value)||0;
   const H=parseFloat(document.getElementById('roomH').value)||0;
@@ -645,7 +646,7 @@ function calc(){
       // smart count
       const beamR=(H/100)*Math.tan((f.angle/2)*Math.PI/180)*100;
       const singleCov=Math.PI*(beamR/100)**2;
-      const countByCov=Math.ceil(area/(singleCov*0.70));
+      const countByCov=singleCov>0.001?Math.ceil(area/(singleCov*0.70)):999;
       const countByLm=Math.ceil(fxLm/f.lm);
       const maxPerPing=f.angle<=36?3:(f.angle<=60?2.5:(f.angle<=90?2:1.5));
       const expMax=Math.ceil(ping*maxPerPing);
@@ -684,7 +685,8 @@ function calc(){
 
   if(pointResults.length>0){
     const stateClass=perPing>2.5?'bad':(perPing>2?'warn':'ok');
-    document.getElementById('r-count').innerHTML='<span class="rc-val '+stateClass+'">'+totalPoints+'</span><span> 顆</span>';
+    document.getElementById('r-count').innerHTML=totalPoints+'<span> 顆</span>';
+    document.getElementById('r-count').className='rc-val '+stateClass;
     document.getElementById('r-count-sub').textContent='共 '+totalW+'W，約 '+perPing+' 顆/坪';
   } else {
     document.getElementById('r-count').innerHTML='— <span>（燈帶）</span>';
@@ -704,7 +706,7 @@ function calc(){
     const sy=rows>1?Math.round(W/rows):Math.round(W/2);
     document.getElementById('r-spacing').innerHTML=sx+'<span> × </span>'+sy+'<span> cm</span>';
     document.getElementById('r-spacing-sub').textContent='X '+sx+' cm　Y '+sy+' cm';
-    drawPlan(L,W,H,rows,cols,f,results);
+    drawPlan(L,W,H,rows,cols,primary.fx,results);
     document.getElementById('planCard').style.display='';
   } else {
     document.getElementById('r-array').textContent='—';
@@ -770,6 +772,7 @@ function calc(){
     document.getElementById('ct-desc').textContent=sc.ctDesc;
     document.getElementById('ct-cri').innerHTML='<b>CRI 建議：</b>'+sc.cri;
   }
+  } catch(err){ console.error('calc error:',err); }
 }
 
 // ══════════════════════════════════════════════
