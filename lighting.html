@@ -109,6 +109,29 @@ input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--
 /* DIVIDER */
 .section-div{font-size:10px;color:var(--ink-f);letter-spacing:3px;padding:4px 0 10px;text-transform:uppercase;}
 
+
+/* STRIP PANEL */
+.strip-panel{display:none;margin-top:12px;}
+.strip-panel.show{display:block;}
+.strip-mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.strip-mode-btn{border:2px solid var(--border2);border-radius:var(--r);padding:10px 6px;cursor:pointer;text-align:center;background:var(--surface);transition:all .18s;user-select:none;}
+.strip-mode-btn:hover{border-color:var(--sage);}
+.strip-mode-btn.active{border-color:var(--sage-dk);background:var(--sage-lt);}
+.strip-mode-icon{font-size:20px;margin-bottom:4px;}
+.strip-mode-label{font-size:11px;color:var(--ink-m);letter-spacing:.5px;font-weight:500;}
+.strip-mode-sub{font-size:10px;color:var(--ink-f);margin-top:2px;}
+.strip-sides{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.strip-side-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;user-select:none;font-size:12px;color:var(--ink-m);transition:all .15s;}
+.strip-side-chip:hover{border-color:var(--sage);}
+.strip-side-chip.active{background:var(--sage-lt);border-color:var(--sage-dk);color:var(--sage-dk);}
+.strip-side-chip input{display:none;}
+.strip-result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+.strip-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;text-align:center;}
+.strip-stat-val{font-family:var(--serif);font-size:18px;color:var(--sage-dk);}
+.strip-stat-label{font-size:10px;color:var(--ink-l);letter-spacing:1px;margin-top:2px;}
+/* SECTION CANVAS */
+#sectionCanvas{display:block;width:100%;height:auto;border-radius:var(--r);}
+
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -197,6 +220,52 @@ input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--
       <div class="card-hd"><span class="card-hd-icon">💡</span><span class="card-hd-title">燈 具 類 型</span></div>
       <div class="card-body">
         <div class="fixture-grid" id="fixtureGrid"></div>
+
+        <!-- STRIP PANEL -->
+        <div class="strip-panel" id="stripPanel">
+          <div style="height:1px;background:var(--border);margin:12px 0;"></div>
+          <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:8px;">燈帶鋪設模式</div>
+          <div class="strip-mode-grid">
+            <div class="strip-mode-btn active" data-mode="rect" onclick="setStripMode('rect')">
+              <div class="strip-mode-icon">⬜</div>
+              <div class="strip-mode-label">口字型</div>
+              <div class="strip-mode-sub">四面天花線槽</div>
+            </div>
+            <div class="strip-mode-btn" data-mode="line" onclick="setStripMode('line')">
+              <div class="strip-mode-icon">➖</div>
+              <div class="strip-mode-label">偏邊一字型</div>
+              <div class="strip-mode-sub">單邊或對邊</div>
+            </div>
+            <div class="strip-mode-btn" data-mode="free" onclick="setStripMode('free')">
+              <div class="strip-mode-icon">✏️</div>
+              <div class="strip-mode-label">自由型</div>
+              <div class="strip-mode-sub">自選哪幾面</div>
+            </div>
+          </div>
+          <!-- free mode side selector -->
+          <div id="stripSides" style="display:none;">
+            <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:6px;">選擇鋪設面</div>
+            <div class="strip-sides">
+              <div class="strip-side-chip active" data-side="top" onclick="toggleSide(this)"><input type="checkbox" checked>上牆（長邊）</div>
+              <div class="strip-side-chip active" data-side="bottom" onclick="toggleSide(this)"><input type="checkbox" checked>下牆（長邊）</div>
+              <div class="strip-side-chip active" data-side="left" onclick="toggleSide(this)"><input type="checkbox" checked>左牆（短邊）</div>
+              <div class="strip-side-chip active" data-side="right" onclick="toggleSide(this)"><input type="checkbox" checked>右牆（短邊）</div>
+            </div>
+          </div>
+          <!-- line mode side selector -->
+          <div id="stripLineSides" style="display:none;">
+            <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:6px;">選擇方向</div>
+            <div class="strip-sides">
+              <div class="strip-side-chip active" data-side="top" onclick="toggleLineSide(this)">上牆（長邊）</div>
+              <div class="strip-side-chip" data-side="bottom" onclick="toggleLineSide(this)">下牆（長邊）</div>
+              <div class="strip-side-chip" data-side="left" onclick="toggleLineSide(this)">左牆（短邊）</div>
+              <div class="strip-side-chip" data-side="right" onclick="toggleLineSide(this)">右牆（短邊）</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--ink-f);margin-top:8px;line-height:1.7;">
+            💡 凹槽建議內退牆面 15～30 cm，確保光源不直接外露
+          </div>
+        </div>
       </div>
     </div>
 
@@ -271,7 +340,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--
     </div>
 
     <!-- 2D 俯視配置圖 -->
-    <div class="card">
+    <div class="card" id="planCard">
       <div class="card-hd"><span class="card-hd-icon">🗺️</span><span class="card-hd-title">2D 天花燈具配置圖</span></div>
       <div class="card-body">
         <div class="canvas-wrap">
@@ -286,10 +355,318 @@ input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--
       </div>
     </div>
 
+    <!-- 燈帶剖面光暈模擬 -->
+    <div class="card" id="sectionCard" style="display:none;">
+      <div class="card-hd"><span class="card-hd-icon">✨</span><span class="card-hd-title">燈帶間接照明剖面模擬</span></div>
+      <div class="card-body">
+        <!-- strip stats -->
+        <div class="strip-result-grid" id="stripStats"></div>
+        <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+        <!-- section canvas -->
+        <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:8px;">空間剖面光暈模擬（正面視角）</div>
+        <div class="canvas-wrap" style="background:#1a1a2e;">
+          <canvas id="sectionCanvas" width="700" height="360"></canvas>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--ink-f);" id="section-note"></div>
+        <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+        <!-- top view strip -->
+        <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:8px;">天花俯視鋪設路徑</div>
+        <div class="canvas-wrap">
+          <canvas id="stripPlanCanvas" width="700" height="420"></canvas>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--ink-f);" id="strip-plan-note"></div>
+      </div>
+    </div>
+
   </div><!-- /panel-right -->
 </div><!-- /app-body -->
 
 <script>
+
+// ══════════════════════════════════════════════════
+// STRIP STATE & FUNCTIONS
+// ══════════════════════════════════════════════════
+let stripMode = 'rect';
+let freeSides = new Set(['top','bottom','left','right']);
+let lineSide = 'top';
+
+function setStripMode(mode){
+  stripMode = mode;
+  document.querySelectorAll('.strip-mode-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode===mode);
+  });
+  document.getElementById('stripSides').style.display = mode==='free'?'':'none';
+  document.getElementById('stripLineSides').style.display = mode==='line'?'':'none';
+  calc();
+}
+
+function toggleSide(el){
+  const side = el.dataset.side;
+  if(freeSides.has(side)) freeSides.delete(side); else freeSides.add(side);
+  el.classList.toggle('active', freeSides.has(side));
+  calc();
+}
+
+function toggleLineSide(el){
+  document.querySelectorAll('#stripLineSides .strip-side-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  lineSide = el.dataset.side;
+  calc();
+}
+
+function getStripMeters(L,W){
+  // L=long side(cm), W=short side(cm)
+  const lm = L/100, wm = W/100;
+  if(stripMode==='rect') return 2*(lm+wm);
+  if(stripMode==='line'){
+    return (lineSide==='top'||lineSide==='bottom') ? lm : wm;
+  }
+  // free
+  let total=0;
+  if(freeSides.has('top')||freeSides.has('bottom')) total += [...freeSides].filter(s=>s==='top'||s==='bottom').length * lm;
+  if(freeSides.has('left')||freeSides.has('right')) total += [...freeSides].filter(s=>s==='left'||s==='right').length * wm;
+  return total;
+}
+
+function calcStrip(L,W,H,f){
+  const meters = getStripMeters(L,W);
+  const totalW = meters * f.w;
+  const maxPerCircuit = 5; // metres per driver circuit
+  const drivers = Math.ceil(meters / maxPerCircuit);
+  const totalLmStrip = meters * f.lm;
+
+  // Update result cards
+  document.getElementById('r-count').innerHTML = meters.toFixed(1)+'<span> 公尺</span>';
+  document.getElementById('r-count-sub').textContent = '依'+{rect:'口字型',line:'偏邊一字型',free:'自由型'}[stripMode]+'鋪設，含內退裕量';
+  document.getElementById('r-array').textContent = drivers+' 迴路';
+  document.getElementById('r-array-sub').textContent = '每條迴路建議不超過 '+maxPerCircuit+' m';
+  document.getElementById('r-spacing').textContent = totalW.toFixed(0)+'<span> W</span>';
+  document.getElementById('r-spacing-sub').textContent = '總功率，建議每迴路獨立開關';
+
+  // Strip stats
+  document.getElementById('stripStats').innerHTML =
+    '<div class="strip-stat"><div class="strip-stat-val">'+meters.toFixed(1)+'</div><div class="strip-stat-label">總長度 (m)</div></div>'+
+    '<div class="strip-stat"><div class="strip-stat-val">'+drivers+'</div><div class="strip-stat-label">驅動器數量</div></div>'+
+    '<div class="strip-stat"><div class="strip-stat-val">'+totalLmStrip.toFixed(0)+'</div><div class="strip-stat-label">總光通量 (lm)</div></div>';
+
+  // Section note
+  document.getElementById('section-note').textContent =
+    '模擬空間 '+( L/100).toFixed(1)+' × 高 '+(H/100).toFixed(1)+' m，燈帶藏於天花凹槽，光向上漫射後均勻擴散';
+
+  // Draw
+  drawSectionCanvas(L,W,H,f);
+  drawStripPlan(L,W);
+}
+
+// ── SECTION CANVAS (剖面光暈) ──────────────────────────────────────────────
+function drawSectionCanvas(L,W,H,f){
+  const canvas = document.getElementById('sectionCanvas');
+  const ctx = canvas.getContext('2d');
+  const CW=canvas.width, CH=canvas.height;
+  ctx.clearRect(0,0,CW,CH);
+
+  // Background: room dark ambiance
+  ctx.fillStyle='#12121e';
+  ctx.fillRect(0,0,CW,CH);
+
+  const PAD={t:30,b:50,l:60,r:60};
+  const rw=CW-PAD.l-PAD.r;
+  const rh=CH-PAD.t-PAD.b;
+  const ox=PAD.l, oy=PAD.t;
+
+  // Ceiling
+  ctx.fillStyle='#2a2a3e';
+  ctx.fillRect(ox,oy,rw,18);
+  // Floor
+  ctx.fillStyle='#1e1e2e';
+  ctx.fillRect(ox,oy+rh-12,rw,12);
+  // Left wall
+  ctx.fillStyle='#1e1e2e';
+  ctx.fillRect(ox,oy,12,rh);
+  // Right wall
+  ctx.fillRect(ox+rw-12,oy,12,rh);
+
+  // Ceiling line
+  ctx.strokeStyle='rgba(180,175,165,.4)';
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(ox+12,oy+18);ctx.lineTo(ox+rw-12,oy+18);ctx.stroke();
+  // Floor line
+  ctx.beginPath();ctx.moveTo(ox+12,oy+rh-12);ctx.lineTo(ox+rw-12,oy+rh-12);ctx.stroke();
+
+  // Determine which sides have strips
+  let hasSides=[];
+  if(stripMode==='rect') hasSides=['left','right'];
+  else if(stripMode==='line') hasSides=[lineSide==='left'||lineSide==='right'?lineSide:'left'];
+  else hasSides=[...freeSides].filter(s=>s==='left'||s==='right');
+  // For section view: left/right = left-wall right-wall; top/bottom = treated as both walls for section
+  if(stripMode==='rect'||[...freeSides].has&&freeSides.has('top')) hasSides=['left','right'];
+
+  // Groove position: 30cm from ceiling in real space → proportional
+  const grooveY = oy + 18 + (30/(H))*rh;
+  const grooveDepth = 10;
+
+  const sides = stripMode==='rect' ? ['left','right'] :
+                stripMode==='line' ? (lineSide==='left'||lineSide==='right'?[lineSide]:['left']) :
+                [...freeSides].filter(s=>s==='left'||s==='right');
+
+  const activeSides = sides.length>0 ? sides : ['left','right'];
+
+  activeSides.forEach(side=>{
+    const gx = side==='left' ? ox+12 : ox+rw-12-grooveDepth;
+
+    // Groove recess
+    ctx.fillStyle='#0a0a18';
+    ctx.fillRect(gx, grooveY, grooveDepth, grooveDepth);
+
+    // LED strip glow point
+    const ledX = gx + grooveDepth/2;
+    const ledY = grooveY + grooveDepth/2;
+
+    // Upward glow to ceiling
+    const upGrad = ctx.createRadialGradient(ledX,ledY,0,ledX,ledY,rh*0.6);
+    upGrad.addColorStop(0,'rgba(255,220,120,.6)');
+    upGrad.addColorStop(0.15,'rgba(255,200,80,.25)');
+    upGrad.addColorStop(0.4,'rgba(255,180,60,.08)');
+    upGrad.addColorStop(1,'rgba(255,160,40,0)');
+    ctx.fillStyle=upGrad;
+    ctx.beginPath();
+    ctx.arc(ledX,ledY,rh*0.6,0,Math.PI*2);
+    ctx.fill();
+
+    // Ceiling wash (bounce light)
+    const ceilGrad = ctx.createLinearGradient(ox,oy+18,ox,oy+18+rh*0.4);
+    ceilGrad.addColorStop(0,'rgba(255,230,150,.18)');
+    ceilGrad.addColorStop(1,'rgba(255,200,100,0)');
+    const washW = rw * (side==='left'?0.6:0.6);
+    const washX = side==='left'?ox+12:ox+rw-12-washW;
+    ctx.fillStyle=ceilGrad;
+    ctx.fillRect(washX,oy+18,washW,rh*0.4);
+
+    // Downward ambient glow
+    const downGrad = ctx.createRadialGradient(ledX,oy+rh-12,0,ledX,oy+rh-12,rw*0.55);
+    downGrad.addColorStop(0,'rgba(255,200,100,.12)');
+    downGrad.addColorStop(1,'rgba(255,180,60,0)');
+    ctx.fillStyle=downGrad;
+    ctx.beginPath();ctx.arc(ledX,oy+rh-12,rw*0.55,0,Math.PI*2);ctx.fill();
+
+    // LED dot
+    const ledGrad2 = ctx.createRadialGradient(ledX,ledY,0,ledX,ledY,8);
+    ledGrad2.addColorStop(0,'#fffde7');
+    ledGrad2.addColorStop(0.4,'#ffe082');
+    ledGrad2.addColorStop(1,'rgba(255,200,80,0)');
+    ctx.fillStyle=ledGrad2;
+    ctx.beginPath();ctx.arc(ledX,ledY,8,0,Math.PI*2);ctx.fill();
+
+    // Wall glow along
+    const wallGrad = ctx.createLinearGradient(
+      side==='left'?ox+12:ox+rw-12, oy,
+      side==='left'?ox+60:ox+rw-60, oy
+    );
+    wallGrad.addColorStop(0,'rgba(255,210,100,.22)');
+    wallGrad.addColorStop(1,'rgba(255,200,80,0)');
+    ctx.fillStyle=wallGrad;
+    ctx.fillRect(side==='left'?ox+12:ox+rw-60, oy+18, 48, rh-30);
+  });
+
+  // Labels
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.font='11px Noto Sans TC,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('天 花 板',(ox+ox+rw)/2, oy+12);
+  ctx.fillText('地 板',(ox+ox+rw)/2, oy+rh+14);
+  ctx.textAlign='left';
+  ctx.fillText((H/100).toFixed(1)+' m', ox+rw+6, (oy+oy+rh)/2);
+
+  // Dim line for height
+  ctx.strokeStyle='rgba(255,255,255,.15)';
+  ctx.lineWidth=1;
+  ctx.setLineDash([3,5]);
+  ctx.beginPath();ctx.moveTo(ox+rw+4,oy+18);ctx.lineTo(ox+rw+4,oy+rh-12);ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ── STRIP PLAN CANVAS (俯視路徑) ──────────────────────────────────────────
+function drawStripPlan(L,W){
+  const canvas = document.getElementById('stripPlanCanvas');
+  const ctx = canvas.getContext('2d');
+  const CW=canvas.width, CH=canvas.height;
+  ctx.clearRect(0,0,CW,CH);
+
+  const PAD=50;
+  const scale = Math.min((CW-PAD*2)/L,(CH-PAD*2)/W);
+  const dw=L*scale, dh=W*scale;
+  const ox=(CW-dw)/2, oy=(CH-dh)/2;
+
+  // Room fill
+  ctx.fillStyle='#f0efe9';
+  ctx.fillRect(ox,oy,dw,dh);
+  ctx.strokeStyle='#c8c0b0';ctx.lineWidth=2;
+  ctx.strokeRect(ox,oy,dw,dh);
+
+  // Inset (30cm internal margin)
+  const inset = 30*scale;
+  const ix=ox+inset, iy=oy+inset, iw=dw-inset*2, ih=dh-inset*2;
+
+  // Draw strip lines based on mode
+  const stripColor='#f5c842';
+  const glowColor='rgba(245,200,66,.25)';
+  ctx.lineWidth=4;
+  ctx.lineCap='round';
+
+  function drawStripLine(x1,y1,x2,y2){
+    // glow
+    ctx.shadowColor='#f5c842';
+    ctx.shadowBlur=12;
+    ctx.strokeStyle=stripColor;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.shadowBlur=0;
+    // dots along line
+    const dist=Math.sqrt((x2-x1)**2+(y2-y1)**2);
+    const steps=Math.floor(dist/20);
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      const dx=x1+(x2-x1)*t, dy=y1+(y2-y1)*t;
+      ctx.fillStyle='#fff9e6';
+      ctx.beginPath();ctx.arc(dx,dy,2,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  if(stripMode==='rect'){
+    drawStripLine(ix,iy,ix+iw,iy);
+    drawStripLine(ix+iw,iy,ix+iw,iy+ih);
+    drawStripLine(ix+iw,iy+ih,ix,iy+ih);
+    drawStripLine(ix,iy+ih,ix,iy);
+  } else if(stripMode==='line'){
+    if(lineSide==='top') drawStripLine(ix,iy,ix+iw,iy);
+    else if(lineSide==='bottom') drawStripLine(ix,iy+ih,ix+iw,iy+ih);
+    else if(lineSide==='left') drawStripLine(ix,iy,ix,iy+ih);
+    else drawStripLine(ix+iw,iy,ix+iw,iy+ih);
+  } else {
+    if(freeSides.has('top')) drawStripLine(ix,iy,ix+iw,iy);
+    if(freeSides.has('bottom')) drawStripLine(ix,iy+ih,ix+iw,iy+ih);
+    if(freeSides.has('left')) drawStripLine(ix,iy,ix,iy+ih);
+    if(freeSides.has('right')) drawStripLine(ix+iw,iy,ix+iw,iy+ih);
+  }
+
+  // Legend
+  ctx.lineWidth=1;
+  ctx.fillStyle='#8a8780';
+  ctx.font='11px Noto Sans TC,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText((L/100).toFixed(1)+' m', CW/2, oy-14);
+  ctx.save();ctx.translate(ox-18,CH/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText((W/100).toFixed(1)+' m',0,0);ctx.restore();
+
+  // inset label
+  ctx.fillStyle='rgba(200,180,100,.7)';
+  ctx.font='10px sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('▸ 凹槽線槽（內退 30 cm）', ix+4, iy-6);
+
+  document.getElementById('strip-plan-note').textContent =
+    {rect:'口字型：四面天花線槽，均勻環繞',line:'偏邊一字型：單側重點打光，適合電視牆、床頭主牆',free:'自由型：依勾選面鋪設'}[stripMode];
+}
+
 // ══════════════════════════════════════════════════
 // FIXTURE DATABASE
 // ══════════════════════════════════════════════════
@@ -383,14 +760,13 @@ function calc(){
 
   // Count
   const f = selectedFixture;
+  // toggle cards
+  document.getElementById('planCard').style.display = f.type==='strip'?'none':'';
+  document.getElementById('sectionCard').style.display = f.type==='strip'?'':'none';
+  document.getElementById('stripPanel').classList.toggle('show', f.type==='strip');
+
   if(f.type==='strip'){
-    const meters = Math.ceil(totalLm / f.lm);
-    document.getElementById('r-count').innerHTML = meters+'<span id="r-count-unit"> 公尺</span>';
-    document.getElementById('r-count-sub').textContent = '燈帶 '+f.lm+' lm/m，建議沿天花線槽鋪設';
-    document.getElementById('r-array').textContent = '—';
-    document.getElementById('r-array-sub').textContent = '燈帶請依空間周長配置';
-    document.getElementById('r-spacing').textContent = '—';
-    document.getElementById('r-spacing-sub').textContent = '燈帶為連續光源';
+    calcStrip(L,W,H,f);
   } else {
     const count = Math.ceil(totalLm / f.lm);
     document.getElementById('r-count').innerHTML = count+'<span> 顆</span>';
