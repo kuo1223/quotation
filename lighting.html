@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>燈光情境與照度配置助理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f3f0;--surface:#ffffff;--surface2:#f9f8f6;--surface3:#f0efe9;
+  --border:#e2e0da;--border2:#d4d1c9;
+  --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#b8b5ae;
+  --sage:#8a9082;--sage-lt:#eef0ea;--sage-dk:#6e7a6a;
+  --amber:#c8960a;--amber-lt:#fef9e7;
+  --red:#c0392b;--red-lt:#fdecea;
+  --blue:#3a6ea8;--blue-lt:#eaf1fb;
+  --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
+  --r:8px;--rl:14px;--shadow:0 2px 12px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:14px;}
+body{display:flex;flex-direction:column;}
+
+/* HEADER */
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.app-title{font-family:var(--serif);font-size:17px;font-weight:400;letter-spacing:3px;color:var(--ink);}
+.app-sub{font-size:11px;color:var(--ink-l);letter-spacing:2px;}
+
+/* LAYOUT */
+.app-body{display:grid;grid-template-columns:380px 1fr;flex:1;overflow:hidden;}
+.panel-left{overflow-y:auto;padding:20px;background:var(--bg);border-right:1px solid var(--border);}
+.panel-right{overflow-y:auto;padding:20px;background:var(--bg);}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);}
+.card-hd{padding:12px 18px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-hd-icon{font-size:15px;}
+.card-hd-title{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--ink-m);letter-spacing:2px;}
+.card-body{padding:16px 18px;}
+
+/* FORM */
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.field-label{font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;}
+.field-hint{font-size:10px;color:var(--ink-f);}
+.field-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.field-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+input[type=number],input[type=text],select{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;font-size:13px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;transition:border-color .18s;}
+input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--sage);}
+.unit{font-size:11px;color:var(--ink-l);}
+
+/* COMPUTED DISPLAY */
+.computed-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface3);border-radius:var(--r);margin-top:6px;}
+.computed-label{font-size:11px;color:var(--ink-l);letter-spacing:.5px;}
+.computed-val{font-size:14px;font-weight:500;color:var(--sage-dk);font-family:var(--serif);}
+
+/* FIXTURE CARDS */
+.fixture-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fixture-card{border:2px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .18s;background:var(--surface);user-select:none;}
+.fixture-card:hover{border-color:var(--sage);}
+.fixture-card.selected{border-color:var(--sage-dk);background:var(--sage-lt);}
+.fixture-name{font-size:12px;font-weight:500;color:var(--ink-m);margin-bottom:4px;}
+.fixture-specs{font-size:11px;color:var(--ink-l);line-height:1.7;}
+.fixture-lm{font-size:13px;color:var(--sage-dk);font-weight:500;}
+
+/* RIGHT RESULTS */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;box-shadow:var(--shadow);}
+.result-card.full{grid-column:1/-1;}
+.result-label{font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:6px;}
+.result-value{font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1.1;}
+.result-value span{font-size:13px;color:var(--ink-l);margin-left:4px;}
+.result-sub{font-size:11px;color:var(--ink-l);margin-top:4px;line-height:1.6;}
+
+/* LAYER TABLE */
+.layer-table{width:100%;border-collapse:collapse;}
+.layer-table th{font-size:10px;color:var(--ink-l);letter-spacing:1px;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);font-weight:400;}
+.layer-table td{font-size:12px;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink-m);}
+.layer-table tr:last-child td{border-bottom:none;}
+.layer-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;letter-spacing:1px;}
+.badge-g{background:var(--sage-lt);color:var(--sage-dk);}
+.badge-a{background:var(--amber-lt);color:var(--amber);}
+.badge-b{background:var(--blue-lt);color:var(--blue);}
+
+/* WARNING */
+.warning-box{display:none;background:var(--amber-lt);border:1px solid rgba(200,150,10,.3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:#7a5c00;line-height:1.7;margin-bottom:14px;}
+.warning-box.show{display:block;}
+
+/* COLOR TEMP */
+.ct-row{display:flex;gap:10px;align-items:flex-start;}
+.ct-swatch{width:48px;height:48px;border-radius:var(--r);flex-shrink:0;border:1px solid var(--border);}
+.ct-info{}
+.ct-val{font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:2px;}
+.ct-desc{font-size:12px;color:var(--ink-l);line-height:1.6;}
+
+/* CANVAS PLAN */
+.canvas-wrap{position:relative;background:var(--surface3);border-radius:var(--r);overflow:hidden;}
+#planCanvas{display:block;width:100%;height:auto;}
+.canvas-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-l);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* BEAM RADIUS TABLE */
+.beam-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.beam-table th{font-size:10px;color:var(--ink-l);padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:400;}
+.beam-table td{font-size:12px;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--ink-m);}
+.beam-table tr:last-child td{border-bottom:none;}
+
+/* DIVIDER */
+.section-div{font-size:10px;color:var(--ink-f);letter-spacing:3px;padding:4px 0 10px;text-transform:uppercase;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+@media(max-width:900px){
+  .app-body{grid-template-columns:1fr;}
+  .result-grid{grid-template-columns:1fr;}
+  .result-card.full{grid-column:1;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <div class="app-title">燈 光 照 度 配 置 助 理</div>
+  </div>
+  <div class="app-sub">LIGHTING DESIGN CALCULATOR</div>
+</div>
+
+<div class="app-body">
+
+  <!-- ═══ LEFT PANEL ═══ -->
+  <div class="panel-left">
+
+    <!-- 空間維度 -->
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-icon">📐</span><span class="card-hd-title">空 間 維 度</span></div>
+      <div class="card-body">
+        <div class="field">
+          <div class="field-label">長 / 寬 / 高 <span class="field-hint">cm</span></div>
+          <div class="field-row">
+            <input type="number" id="roomL" value="500" min="100" oninput="calc()">
+            <input type="number" id="roomW" value="400" min="100" oninput="calc()">
+            <input type="number" id="roomH" value="270" min="200" oninput="calc()">
+          </div>
+        </div>
+        <div class="computed-row">
+          <span class="computed-label">面積</span>
+          <span class="computed-val" id="disp-area">—</span>
+        </div>
+        <div class="computed-row" style="margin-top:4px;">
+          <span class="computed-label">坪數</span>
+          <span class="computed-val" id="disp-ping">—</span>
+        </div>
+        <div class="computed-row" style="margin-top:4px;">
+          <span class="computed-label">空間指數 RCR</span>
+          <span class="computed-val" id="disp-rcr">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空間條件 -->
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-icon">🏠</span><span class="card-hd-title">空 間 條 件</span></div>
+      <div class="card-body">
+        <div class="field">
+          <div class="field-label">牆面反射率（U 值）</div>
+          <select id="uVal" onchange="calc()">
+            <option value="0.6">淺色系牆面 / 白色天花（U = 0.6）</option>
+            <option value="0.4" selected>中性色 / 木皮飾板（U = 0.4）</option>
+            <option value="0.2">深色 / 清水模 / 木炭色（U = 0.2）</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label">情境類型</div>
+          <select id="scene" onchange="onSceneChange()">
+            <option value="150">休閒客廳（150 Lux）</option>
+            <option value="400">餐廳桌面（400 Lux）</option>
+            <option value="100">溫馨臥室（100 Lux）</option>
+            <option value="500">閱讀 / 工作區（500 Lux）</option>
+            <option value="300">走廊 / 過渡空間（300 Lux）</option>
+            <option value="750">專業廚房操作台（750 Lux）</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label">目標照度 <span class="field-hint">可手動覆寫</span></div>
+          <input type="number" id="targetLux" value="150" min="50" max="2000" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 燈具選擇 -->
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-icon">💡</span><span class="card-hd-title">燈 具 類 型</span></div>
+      <div class="card-body">
+        <div class="fixture-grid" id="fixtureGrid"></div>
+      </div>
+    </div>
+
+  </div><!-- /panel-left -->
+
+  <!-- ═══ RIGHT PANEL ═══ -->
+  <div class="panel-right">
+
+    <div class="warning-box" id="warningBox">
+      ⚠️ <strong>挑高空間提醒：</strong>空間高度超過 300 cm，光衰明顯。建議將目標照度提高 15%，或改用光束角 36° 以下的聚光燈具（防眩崁燈 / 軌道投射燈）以集中光通量，避免大量光源浪費在牆面與天花。
+    </div>
+
+    <!-- 核心數值 -->
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="result-label">總光通量需求</div>
+        <div class="result-value" id="r-lumens">—<span>lm</span></div>
+        <div class="result-sub" id="r-formula">—</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">建議燈具數量</div>
+        <div class="result-value" id="r-count">—<span id="r-count-unit">顆</span></div>
+        <div class="result-sub" id="r-count-sub">—</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">建議配置陣列</div>
+        <div class="result-value" id="r-array">—</div>
+        <div class="result-sub" id="r-array-sub">—</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">燈具間距建議</div>
+        <div class="result-value" id="r-spacing">—<span>cm</span></div>
+        <div class="result-sub" id="r-spacing-sub">—</div>
+      </div>
+    </div>
+
+    <!-- 光束角擴散 -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hd"><span class="card-hd-icon">🔦</span><span class="card-hd-title">光束角擴散半徑</span></div>
+      <div class="card-body">
+        <table class="beam-table">
+          <thead><tr><th>光束角</th><th>照射距離（高度）</th><th>地面光圈直徑</th><th>建議最大間距</th></tr></thead>
+          <tbody id="beamTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 照明層次建議 -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hd"><span class="card-hd-icon">🎨</span><span class="card-hd-title">照 明 層 次 建 議</span></div>
+      <div class="card-body">
+        <table class="layer-table">
+          <thead><tr><th>層次</th><th>功能</th><th>建議比例</th><th>適用燈具</th><th>建議照度貢獻</th></tr></thead>
+          <tbody id="layerTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 色溫建議 -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hd"><span class="card-hd-icon">🌡️</span><span class="card-hd-title">色 溫 建 議</span></div>
+      <div class="card-body">
+        <div class="ct-row">
+          <div class="ct-swatch" id="ct-swatch"></div>
+          <div class="ct-info">
+            <div class="ct-val" id="ct-val">—</div>
+            <div class="ct-desc" id="ct-desc">—</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:var(--surface3);border-radius:var(--r);font-size:11px;color:var(--ink-l);line-height:1.8;" id="ct-cri"></div>
+      </div>
+    </div>
+
+    <!-- 2D 俯視配置圖 -->
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-icon">🗺️</span><span class="card-hd-title">2D 天花燈具配置圖</span></div>
+      <div class="card-body">
+        <div class="canvas-wrap">
+          <canvas id="planCanvas" width="700" height="460"></canvas>
+        </div>
+        <div class="canvas-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#8a9082;"></div>燈具位置</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(200,180,100,.35);border:1px solid #c8b464;"></div>光束擴散範圍</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#e8e4da;border:1px solid #c8c0b0;"></div>空間邊界</div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--ink-f);" id="canvas-note">— 請輸入空間尺寸並選擇燈具查看配置圖 —</div>
+      </div>
+    </div>
+
+  </div><!-- /panel-right -->
+</div><!-- /app-body -->
+
+<script>
+// ══════════════════════════════════════════════════
+// FIXTURE DATABASE
+// ══════════════════════════════════════════════════
+const FIXTURES = [
+  {id:'wide',name:'廣角崁燈',spec:'9W · 120° · Ra≥80',lm:800,angle:120,w:9,cri:80,type:'point',desc:'均勻基礎照明\n適合客廳、走廊通用照明'},
+  {id:'anti',name:'防眩崁燈',spec:'12W · 36° · Ra≥90',lm:1000,angle:36,w:12,cri:90,type:'point',desc:'高演色、低眩光\n適合展示、洗牆、精品陳列'},
+  {id:'track',name:'軌道投射燈',spec:'7W · 24° · Ra≥90',lm:600,angle:24,w:7,cri:90,type:'point',desc:'重點照明、聚焦效果\n適合畫作、展品、餐桌聚光'},
+  {id:'strip',name:'LED 燈帶',spec:'每公尺 · Ra≥80',lm:1000,angle:120,w:12,cri:80,type:'strip',desc:'間接照明、氣氛層次\n適合層板底、天花線槽'},
+];
+
+// ══════════════════════════════════════════════════
+// SCENE CONFIG
+// ══════════════════════════════════════════════════
+const SCENES = {
+  '100':{label:'溫馨臥室',ct:2700,ctName:'2700K 燭光暖白',ctColor:'#ffcf7a',ctDesc:'接近燭光的極暖色溫，讓空間充滿溫暖放鬆感，適合睡前情境，有助褪黑激素分泌。',cri:'建議選用 CRI ≥ 80 的燈具，臥室無需過高演色性，重點在氛圍層次。色溫建議搭配調光迴路，睡前可降至 10% 亮度。',layers:[{n:'基礎照明',b:'badge-g',ratio:'40%',fixture:'廣角崁燈（天花）',lux:'40 Lux'},{n:'情境照明',b:'badge-b',ratio:'40%',fixture:'燈帶（床頭板後 / 層板）',lux:'40 Lux'},{n:'重點照明',b:'badge-a',ratio:'20%',fixture:'床頭壁燈 / 閱讀燈',lux:'20 Lux'}]},
+  '150':{label:'休閒客廳',ct:3000,ctName:'3000K 暖白光',ctColor:'#ffd580',ctDesc:'暖黃色調，創造輕鬆愉快的社交氛圍，適合家庭聚會與日常休閒，比純暖白更明亮。',cri:'建議選用 CRI ≥ 80，客廳以氛圍為主。若有藝術品或精品傢具，局部重點燈可選 CRI ≥ 90 的防眩崁燈加強質感呈現。',layers:[{n:'基礎照明',b:'badge-g',ratio:'50%',fixture:'廣角崁燈（均勻分佈）',lux:'75 Lux'},{n:'情境照明',b:'badge-b',ratio:'30%',fixture:'燈帶（天花間接）',lux:'45 Lux'},{n:'重點照明',b:'badge-a',ratio:'20%',fixture:'軌道燈（沙發背牆 / 畫作）',lux:'30 Lux'}]},
+  '300':{label:'走廊 / 過渡空間',ct:3000,ctName:'3000K 暖白光',ctColor:'#ffd580',ctDesc:'走廊以安全與引導為主，建議使用暖白光讓空間有延伸感，避免過強白光造成不舒適感。',cri:'CRI ≥ 80 即可。可搭配感應開關與小夜燈設計，兼顧節能與安全引導。',layers:[{n:'基礎照明',b:'badge-g',ratio:'70%',fixture:'廣角崁燈（沿走廊均布）',lux:'210 Lux'},{n:'情境照明',b:'badge-b',ratio:'20%',fixture:'燈帶（踢腳線 / 間接）',lux:'60 Lux'},{n:'重點照明',b:'badge-a',ratio:'10%',fixture:'端景牆投射燈',lux:'30 Lux'}]},
+  '400':{label:'餐廳桌面',ct:2700,ctName:'2700K 燭光暖白',ctColor:'#ffcf7a',ctDesc:'餐廳最能展現食物色彩的色溫，暖光讓食物看起來更美味可口，也讓用餐氣氛更溫馨。',cri:'強烈建議 CRI ≥ 90，高演色性讓食物色彩真實呈現，提升用餐體驗。餐桌上方建議單獨迴路，可獨立調光。',layers:[{n:'基礎照明',b:'badge-g',ratio:'30%',fixture:'廣角崁燈（周邊）',lux:'120 Lux'},{n:'重點照明',b:'badge-a',ratio:'50%',fixture:'吊燈 / 軌道燈（桌面聚焦）',lux:'200 Lux'},{n:'情境照明',b:'badge-b',ratio:'20%',fixture:'燈帶（層板 / 酒櫃）',lux:'80 Lux'}]},
+  '500':{label:'閱讀 / 工作區',ct:4000,ctName:'4000K 中性自然光',ctColor:'#f5f0d0',ctDesc:'接近日光的中性色溫，讓眼睛長時間閱讀不疲勞，提升專注力與工作效率，色彩辨識度佳。',cri:'建議 CRI ≥ 90，精確的色彩辨識對設計、繪圖類工作至關重要。避免使用過暖的色溫，會降低工作效率。',layers:[{n:'基礎照明',b:'badge-g',ratio:'60%',fixture:'防眩崁燈（均勻）',lux:'300 Lux'},{n:'重點照明',b:'badge-a',ratio:'30%',fixture:'桌燈 / 軌道燈（工作面）',lux:'150 Lux'},{n:'情境照明',b:'badge-b',ratio:'10%',fixture:'燈帶（書架底部）',lux:'50 Lux'}]},
+  '750':{label:'廚房操作台',ct:4000,ctName:'4000K 中性自然光',ctColor:'#f5f0d0',ctDesc:'廚房需要高亮度與準確色彩辨識，4000K自然光讓食材顏色真實，操作安全，眼睛不疲勞。',cri:'強烈建議 CRI ≥ 90，食材新鮮度的辨識依賴高演色性光源。操作台下方需設置獨立的工作照明。',layers:[{n:'基礎照明',b:'badge-g',ratio:'40%',fixture:'廣角崁燈（均勻）',lux:'300 Lux'},{n:'重點照明',b:'badge-a',ratio:'45%',fixture:'防眩崁燈 / 吊櫃底燈（操作台）',lux:'337 Lux'},{n:'情境照明',b:'badge-b',ratio:'15%',fixture:'燈帶（吊櫃頂間接）',lux:'113 Lux'}]},
+};
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let selectedFixture = FIXTURES[0];
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function init(){
+  // Render fixture cards
+  const grid = document.getElementById('fixtureGrid');
+  FIXTURES.forEach(f=>{
+    const card = document.createElement('div');
+    card.className = 'fixture-card'+(f.id===selectedFixture.id?' selected':'');
+    card.dataset.id = f.id;
+    card.innerHTML =
+      '<div class="fixture-name">'+f.name+'</div>'+
+      '<div class="fixture-specs">'+f.spec+'<br>CRI Ra≥'+f.cri+'<br><span class="fixture-lm">'+f.lm+' lm'+(f.type==='strip'?'/m':'')+'</span></div>'+
+      '<div style="font-size:10px;color:var(--ink-f);margin-top:5px;line-height:1.5;white-space:pre-line">'+f.desc+'</div>';
+    card.addEventListener('click',()=>{
+      selectedFixture = f;
+      document.querySelectorAll('.fixture-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      calc();
+    });
+    grid.appendChild(card);
+  });
+  calc();
+}
+
+// ══════════════════════════════════════════════════
+// SCENE CHANGE
+// ══════════════════════════════════════════════════
+function onSceneChange(){
+  const lux = document.getElementById('scene').value;
+  document.getElementById('targetLux').value = lux;
+  calc();
+}
+
+// ══════════════════════════════════════════════════
+// MAIN CALC
+// ══════════════════════════════════════════════════
+function calc(){
+  const L = parseFloat(document.getElementById('roomL').value)||0;
+  const W = parseFloat(document.getElementById('roomW').value)||0;
+  const H = parseFloat(document.getElementById('roomH').value)||0;
+  const U = parseFloat(document.getElementById('uVal').value)||0.4;
+  const E = parseFloat(document.getElementById('targetLux').value)||150;
+  const M = 0.8;
+
+  // Area
+  const area = (L*W)/10000; // m²
+  const ping = area/3.30579;
+  document.getElementById('disp-area').textContent = area.toFixed(2)+' m²';
+  document.getElementById('disp-ping').textContent = ping.toFixed(2)+' 坪';
+
+  // RCR (Room Cavity Ratio) = 5 * H * (L+W) / (L*W)  — in cm units
+  const rcr = (L>0&&W>0&&H>0) ? (5*(H/100)*((L+W)/100))/((L/100)*(W/100)) : 0;
+  document.getElementById('disp-rcr').textContent = rcr.toFixed(2);
+
+  // Warning
+  document.getElementById('warningBox').classList.toggle('show', H>300);
+
+  // Lumens
+  const totalLm = (E * area) / (U * M);
+  document.getElementById('r-lumens').innerHTML = Math.round(totalLm).toLocaleString()+'<span>lm</span>';
+  document.getElementById('r-formula').textContent =
+    '( '+E+' lux × '+area.toFixed(2)+' m² ) ÷ ( U'+U+' × M'+M+' )';
+
+  // Count
+  const f = selectedFixture;
+  if(f.type==='strip'){
+    const meters = Math.ceil(totalLm / f.lm);
+    document.getElementById('r-count').innerHTML = meters+'<span id="r-count-unit"> 公尺</span>';
+    document.getElementById('r-count-sub').textContent = '燈帶 '+f.lm+' lm/m，建議沿天花線槽鋪設';
+    document.getElementById('r-array').textContent = '—';
+    document.getElementById('r-array-sub').textContent = '燈帶請依空間周長配置';
+    document.getElementById('r-spacing').textContent = '—';
+    document.getElementById('r-spacing-sub').textContent = '燈帶為連續光源';
+  } else {
+    const count = Math.ceil(totalLm / f.lm);
+    document.getElementById('r-count').innerHTML = count+'<span> 顆</span>';
+    document.getElementById('r-count-sub').textContent =
+      '每顆 '+f.lm+' lm，共需 '+(count*f.w)+' W';
+
+    // Array
+    const ratio = L/W;
+    let cols = Math.max(1,Math.round(Math.sqrt(count*ratio)));
+    let rows = Math.max(1,Math.ceil(count/cols));
+    while(rows*cols < count){ cols++; }
+    document.getElementById('r-array').textContent = rows+' × '+cols;
+    document.getElementById('r-array-sub').textContent =
+      '共 '+rows*cols+' 顆（含 '+(rows*cols-count)+' 顆餘量）';
+
+    // Spacing
+    const spaceX = cols>1 ? Math.round((L/100)/(cols)*100) : Math.round(L/100);
+    const spaceY = rows>1 ? Math.round((W/100)/(rows)*100) : Math.round(W/100);
+    document.getElementById('r-spacing').innerHTML =
+      spaceX+'<span> × </span>'+spaceY+'<span> cm</span>';
+    document.getElementById('r-spacing-sub').textContent =
+      'X軸間距 '+spaceX+' cm　Y軸間距 '+spaceY+' cm';
+
+    // Draw plan
+    drawPlan(L,W,H,rows,cols,spaceX,spaceY,f);
+  }
+
+  // Beam table
+  renderBeamTable(H);
+
+  // Scene info
+  const sceneKey = document.getElementById('scene').value;
+  const sc = SCENES[sceneKey];
+  if(sc){
+    renderLayers(sc);
+    renderCT(sc);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// BEAM TABLE
+// ══════════════════════════════════════════════════
+function renderBeamTable(H){
+  const angles = [24,36,60,90,120];
+  const tbody = document.getElementById('beamTable');
+  tbody.innerHTML = '';
+  const hm = H/100;
+  angles.forEach(a=>{
+    const r = Math.round(hm * Math.tan((a/2)*Math.PI/180) * 100); // cm
+    const dia = r*2;
+    const maxSpacing = Math.round(dia*0.7);
+    const tr = document.createElement('tr');
+    const isSelected = Math.abs(a - selectedFixture.angle) < 5;
+    tr.style.background = isSelected?'var(--sage-lt)':'';
+    tr.innerHTML =
+      '<td>'+(isSelected?'<strong>':'')+'光束角 '+a+'°'+(isSelected?'（目前選用）</strong>':'')+'</td>'+
+      '<td>'+H+' cm</td>'+
+      '<td>Ø '+dia+' cm</td>'+
+      '<td>≤ '+maxSpacing+' cm</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// LAYER TABLE
+// ══════════════════════════════════════════════════
+function renderLayers(sc){
+  const tbody = document.getElementById('layerTable');
+  tbody.innerHTML = '';
+  sc.layers.forEach(l=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><span class="layer-badge '+l.b+'">'+l.n+'</span></td>'+
+      '<td>'+({badge_g:'整體均勻照明',badge_a:'局部重點強調',badge_b:'氣氛情境渲染'}[l.b]||'—')+'</td>'+
+      '<td>'+l.ratio+'</td>'+
+      '<td style="color:var(--ink-m)">'+l.fixture+'</td>'+
+      '<td style="color:var(--sage-dk);font-family:var(--serif)">'+l.lux+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// COLOR TEMP
+// ══════════════════════════════════════════════════
+function renderCT(sc){
+  document.getElementById('ct-swatch').style.background = sc.ctColor;
+  document.getElementById('ct-val').textContent = sc.ctName;
+  document.getElementById('ct-desc').textContent = sc.ctDesc;
+  document.getElementById('ct-cri').innerHTML =
+    '<strong style="color:var(--ink-m);letter-spacing:1px;">CRI 建議：</strong> '+sc.cri;
+}
+
+// ══════════════════════════════════════════════════
+// 2D PLAN CANVAS
+// ══════════════════════════════════════════════════
+function drawPlan(L,W,H,rows,cols,spaceX,spaceY,fixture){
+  const canvas = document.getElementById('planCanvas');
+  const ctx = canvas.getContext('2d');
+  const CW = canvas.width;
+  const CH = canvas.height;
+  ctx.clearRect(0,0,CW,CH);
+
+  const PAD = 50;
+  const scaleX = (CW-PAD*2)/L;
+  const scaleY = (CH-PAD*2)/W;
+  const scale = Math.min(scaleX,scaleY);
+  const drawW = L*scale;
+  const drawH = W*scale;
+  const ox = (CW-drawW)/2;
+  const oy = (CH-drawH)/2;
+
+  // Room
+  ctx.fillStyle='#f0efe9';
+  ctx.fillRect(ox,oy,drawW,drawH);
+  ctx.strokeStyle='#c8c0b0';
+  ctx.lineWidth=2;
+  ctx.strokeRect(ox,oy,drawW,drawH);
+
+  // Grid lines (faint)
+  ctx.strokeStyle='rgba(180,175,165,.3)';
+  ctx.lineWidth=0.5;
+  ctx.setLineDash([4,6]);
+  for(let r=0;r<=rows;r++){
+    const y = oy+(r*(drawH/rows));
+    ctx.beginPath();ctx.moveTo(ox,y);ctx.lineTo(ox+drawW,y);ctx.stroke();
+  }
+  for(let c=0;c<=cols;c++){
+    const x = ox+(c*(drawW/cols));
+    ctx.beginPath();ctx.moveTo(x,oy);ctx.lineTo(x,oy+drawH);ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Beam radius
+  const hm = H/100;
+  const beamR = hm * Math.tan((fixture.angle/2)*Math.PI/180) * 100 * scale;
+
+  // Lights
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cx = ox + (c+0.5)*(drawW/cols);
+      const cy = oy + (r+0.5)*(drawH/rows);
+
+      // Beam circle
+      if(fixture.type!=='strip'){
+        ctx.beginPath();
+        ctx.arc(cx,cy,beamR,0,Math.PI*2);
+        ctx.fillStyle='rgba(200,180,100,.15)';
+        ctx.fill();
+        ctx.strokeStyle='rgba(200,180,100,.4)';
+        ctx.lineWidth=1;
+        ctx.stroke();
+      }
+
+      // Fixture dot
+      ctx.beginPath();
+      ctx.arc(cx,cy,5,0,Math.PI*2);
+      ctx.fillStyle='#8a9082';
+      ctx.fill();
+      ctx.strokeStyle='#5a6a58';
+      ctx.lineWidth=1.5;
+      ctx.stroke();
+    }
+  }
+
+  // Dimensions
+  ctx.fillStyle='#8a8780';
+  ctx.font='11px Noto Sans TC, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText((L/100).toFixed(1)+' m',CW/2,oy-12);
+  ctx.save();
+  ctx.translate(ox-14,CH/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText((W/100).toFixed(1)+' m',0,0);
+  ctx.restore();
+
+  // Scale bar
+  const barLen = 100*scale; // 1m
+  ctx.strokeStyle='#8a8780';
+  ctx.lineWidth=1.5;
+  const bx = ox+drawW-barLen-10, by=oy+drawH+18;
+  ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx+barLen,by);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bx,by-3);ctx.lineTo(bx,by+3);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bx+barLen,by-3);ctx.lineTo(bx+barLen,by+3);ctx.stroke();
+  ctx.textAlign='center';ctx.fillStyle='#8a8780';
+  ctx.fillText('1 m',bx+barLen/2,by+11);
+
+  // Note
+  document.getElementById('canvas-note').textContent =
+    '空間 '+( L/100).toFixed(1)+' × '+(W/100).toFixed(1)+' m　配置 '+rows+'×'+cols+' = '+rows*cols+' 顆　光束角 '+fixture.angle+'°　地面光圈 Ø '+Math.round(hm*Math.tan((fixture.angle/2)*Math.PI/180)*200)+' cm';
+}
+
+init();
+</script>
+</body>
+</html>
