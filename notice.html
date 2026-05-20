@@ -26,10 +26,10 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
 .hbtn-primary:hover{background:#6e7a6a;}
 .hbtn-ghost{background:var(--paper-w);color:var(--ink-m);border:1px solid var(--border);}
 .hbtn-ghost:hover{border-color:var(--sage-dk);color:var(--sage-dk);}
-.workspace{display:grid;grid-template-columns:400px 1fr;flex:1;}
+.workspace{display:grid;grid-template-columns:420px 1fr;flex:1;}
 .editor{background:var(--paper-w);border-right:1px solid var(--border);overflow-y:auto;height:calc(100vh - 67px);padding:20px;}
 .section{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--rl);margin-bottom:14px;overflow:hidden;}
-.section-hd{padding:11px 16px;background:var(--paper-w);border-bottom:1px solid var(--border-l);}
+.section-hd{padding:11px 16px;background:var(--paper-w);border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;}
 .section-hd h3{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--ink-m);letter-spacing:2px;}
 .section-body{padding:14px 16px;}
 .field{margin-bottom:12px;}
@@ -41,22 +41,46 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
 .day-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
 .day-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;background:var(--paper-w);border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;}
 .day-chip.active{background:var(--sage-pa);border-color:var(--sage-dk);color:var(--sage-dk);}
+
+/* font size control */
+.font-ctrl{display:flex;align-items:center;gap:6px;}
+.font-ctrl label{font-size:11px;color:var(--ink-l);letter-spacing:1px;white-space:nowrap;}
+.font-ctrl input[type=range]{flex:1;accent-color:var(--sage-dk);height:4px;}
+.font-ctrl span{font-size:11px;color:var(--sage-dk);min-width:28px;text-align:right;}
+
+/* font control group */
+.font-group{background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;}
+.font-group-title{font-size:10px;color:var(--ink-f);letter-spacing:2px;margin-bottom:2px;}
+
+/* checklist */
 .check-list{display:flex;flex-direction:column;gap:6px;}
-.check-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);cursor:pointer;transition:all .15s;user-select:none;}
+.check-item{background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);transition:border-color .15s;}
 .check-item:hover{border-color:var(--sage-dk);}
 .check-item.active{background:var(--sage-pa);border-color:var(--sage-dk);}
-.check-box{width:16px;height:16px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.check-item-top{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;cursor:pointer;user-select:none;}
+.check-box{width:16px;height:16px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px;}
 .check-item.active .check-box{background:var(--sage-dk);border-color:var(--sage-dk);}
 .check-mark{font-size:10px;color:#fff;display:none;}
 .check-item.active .check-mark{display:block;}
-.check-text{font-size:12px;color:var(--ink-m);flex:1;line-height:1.4;}
-.check-del{font-size:15px;color:var(--ink-f);cursor:pointer;padding:0 3px;flex-shrink:0;line-height:1;}
-.check-del:hover{color:var(--red);}
+.check-text-wrap{flex:1;min-width:0;}
+.check-text{font-size:12px;color:var(--ink-m);line-height:1.5;}
+.check-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-f);padding:2px 4px;border-radius:3px;line-height:1;transition:all .15s;}
+.icon-btn:hover{background:var(--border-l);color:var(--ink);}
+.icon-btn.del:hover{background:#fdecea;color:var(--red);}
+
+/* edit area inside item */
+.check-edit{display:none;padding:0 10px 8px 34px;}
+.check-edit.open{display:block;}
+.check-edit textarea{width:100%;border:1px solid var(--sage);border-radius:var(--r);padding:6px 8px;font-size:12px;font-family:var(--sans);color:var(--ink);background:var(--paper-c);outline:none;resize:vertical;min-height:52px;line-height:1.6;}
+
 .add-custom{display:flex;gap:6px;margin-top:8px;}
 .add-custom input{flex:1;border:1px dashed var(--border);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:var(--sans);color:var(--ink);background:transparent;outline:none;}
 .add-custom input:focus{border-color:var(--sage-dk);background:var(--paper-c);}
 .add-custom button{padding:6px 12px;background:var(--sage-pa);color:var(--sage-dk);border:1px solid var(--sage);border-radius:var(--r);font-size:12px;font-family:var(--sans);cursor:pointer;white-space:nowrap;}
 .add-custom button:hover{background:var(--sage-dk);color:#fff;}
+
+/* preview */
 .preview-wrap{overflow-y:auto;height:calc(100vh - 67px);background:#b0aba4;display:flex;align-items:flex-start;justify-content:center;padding:32px 24px;}
 .a4{width:794px;min-height:1123px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;font-family:var(--sans);}
 .n-stripe{height:8px;background:var(--sage-dk);}
@@ -64,47 +88,47 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
 .n-logo{height:40px;width:auto;}
 .n-case-no{font-size:11px;color:var(--ink-l);letter-spacing:2px;}
 .n-title-wrap{text-align:center;padding:16px 40px 20px;border-bottom:1px solid var(--border-l);}
-.n-title{font-family:var(--serif);font-size:28px;font-weight:300;letter-spacing:10px;color:var(--ink);margin-bottom:6px;}
-.n-subtitle{font-size:11px;color:var(--ink-l);letter-spacing:4px;}
+.n-title{font-family:var(--serif);font-weight:300;letter-spacing:10px;color:var(--ink);margin-bottom:6px;}
+.n-subtitle{color:var(--ink-l);letter-spacing:4px;}
 .n-info{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border-l);}
 .n-info-item{padding:14px 40px;display:flex;align-items:baseline;gap:10px;}
 .n-info-item:first-child{border-right:1px solid var(--border-l);}
-.n-info-label{font-size:10px;color:var(--ink-l);letter-spacing:2px;white-space:nowrap;flex-shrink:0;}
-.n-info-val{font-size:14px;color:var(--ink);letter-spacing:1px;font-family:var(--serif);}
+.n-info-label{color:var(--ink-l);letter-spacing:2px;white-space:nowrap;flex-shrink:0;}
+.n-info-val{color:var(--ink);letter-spacing:1px;font-family:var(--serif);}
 .n-section{padding:18px 40px;border-bottom:1px solid var(--border-l);}
 .n-sec-title{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .n-sec-bar{width:3px;height:16px;background:var(--sage-dk);border-radius:2px;flex-shrink:0;}
-.n-sec-name{font-family:var(--serif);font-size:13px;font-weight:400;letter-spacing:3px;color:var(--ink-m);}
+.n-sec-name{font-family:var(--serif);font-weight:400;letter-spacing:3px;color:var(--ink-m);}
 .n-period{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .n-period-box{background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);padding:12px 16px;}
-.n-period-label{font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:4px;}
-.n-period-val{font-family:var(--serif);font-size:15px;color:var(--ink);}
+.n-period-label{color:var(--ink-l);letter-spacing:2px;margin-bottom:4px;}
+.n-period-val{font-family:var(--serif);color:var(--ink);}
 .n-days{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
-.n-day-tag{padding:3px 12px;border-radius:20px;font-size:11px;letter-spacing:1px;background:var(--sage-pa);color:var(--sage-dk);border:1px solid var(--sage);}
+.n-day-tag{padding:3px 12px;border-radius:20px;letter-spacing:1px;background:var(--sage-pa);color:var(--sage-dk);border:1px solid var(--sage);}
 .n-time-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
-.n-time-label{font-size:11px;color:var(--ink-l);letter-spacing:1px;}
-.n-time-val{font-size:13px;color:var(--ink);letter-spacing:1px;}
+.n-time-label{color:var(--ink-l);letter-spacing:1px;}
+.n-time-val{color:var(--ink);letter-spacing:1px;}
 .n-item-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
-.n-item-tag{padding:6px 12px;background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);font-size:12px;color:var(--ink-m);letter-spacing:1px;text-align:center;}
+.n-item-tag{padding:6px 12px;background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);color:var(--ink-m);letter-spacing:1px;text-align:center;}
 .n-notice-list{display:flex;flex-direction:column;gap:6px;}
 .n-notice-row{display:flex;align-items:flex-start;gap:10px;padding:7px 12px;background:var(--paper-w);border-left:2px solid var(--sage-dk);border-radius:0 var(--r) var(--r) 0;}
-.n-notice-num{font-size:11px;color:var(--sage-dk);font-weight:500;flex-shrink:0;padding-top:1px;}
-.n-notice-text{font-size:12px;color:var(--ink-m);line-height:1.6;letter-spacing:.5px;}
+.n-notice-num{color:var(--sage-dk);font-weight:500;flex-shrink:0;padding-top:1px;}
+.n-notice-text{color:var(--ink-m);line-height:1.6;letter-spacing:.5px;}
 .n-contact{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;}
 .n-contact-box{background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);padding:12px 16px;}
-.n-contact-role{font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:4px;}
-.n-contact-name{font-family:var(--serif);font-size:14px;color:var(--ink);margin-bottom:2px;}
-.n-contact-tel{font-size:13px;color:var(--sage-dk);letter-spacing:1px;}
+.n-contact-role{color:var(--ink-l);letter-spacing:2px;margin-bottom:4px;}
+.n-contact-name{font-family:var(--serif);color:var(--ink);margin-bottom:2px;}
+.n-contact-tel{color:var(--sage-dk);letter-spacing:1px;}
 .n-footer{margin-top:auto;padding:14px 40px;border-top:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;background:var(--paper-w);}
-.n-footer-brand{font-size:10px;color:var(--ink-l);letter-spacing:2px;}
-.n-footer-reg{font-size:10px;color:var(--ink-f);letter-spacing:1px;}
+.n-footer-brand{color:var(--ink-l);letter-spacing:2px;}
+.n-footer-reg{color:var(--ink-f);letter-spacing:1px;}
 .n-empty{color:var(--ink-f) !important;font-style:italic;}
-.n-polite{margin-top:0;padding:10px 14px;background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);font-size:11px;color:var(--ink-l);letter-spacing:1px;line-height:1.8;text-align:center;}
+.n-polite{padding:10px 14px;background:var(--paper-w);border:1px solid var(--border-l);border-radius:var(--r);color:var(--ink-l);letter-spacing:1px;line-height:1.8;text-align:center;}
 @media print{
   body,html{margin:0;padding:0;}
   header,.editor,.preview-wrap{display:none !important;}
   .print-area{display:block !important;}
-  .a4{box-shadow:none;width:21cm;min-height:29.7cm;margin:0;padding:0;}
+  .a4{box-shadow:none;width:21cm;min-height:29.7cm;margin:0;}
 }
 .print-area{display:none;position:fixed;top:0;left:0;width:100%;z-index:9999;background:#fff;}
 </style>
@@ -121,6 +145,7 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
 </header>
 <div class="workspace">
   <div class="editor">
+
     <!-- 基本資訊 -->
     <div class="section">
       <div class="section-hd"><h3>基 本 資 訊</h3></div>
@@ -133,6 +158,48 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
         </div>
       </div>
     </div>
+
+    <!-- 字體大小 -->
+    <div class="section">
+      <div class="section-hd"><h3>字 體 大 小</h3></div>
+      <div class="section-body">
+        <div class="font-group">
+          <div class="font-group-title">海報標題</div>
+          <div class="font-ctrl"><label>大標題</label><input type="range" min="20" max="40" value="28" oninput="setFS('n-title',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>28px</span></div>
+          <div class="font-ctrl"><label>副標題</label><input type="range" min="8" max="16" value="11" oninput="setFS('n-subtitle',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>11px</span></div>
+        </div>
+        <div class="font-group">
+          <div class="font-group-title">資訊欄位</div>
+          <div class="font-ctrl"><label>欄位標籤</label><input type="range" min="8" max="16" value="10" oninput="setFSClass('n-info-label',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>10px</span></div>
+          <div class="font-ctrl"><label>欄位內容</label><input type="range" min="10" max="22" value="14" oninput="setFSClass('n-info-val',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>14px</span></div>
+        </div>
+        <div class="font-group">
+          <div class="font-group-title">施工期間</div>
+          <div class="font-ctrl"><label>日期數值</label><input type="range" min="10" max="22" value="15" oninput="setFSClass('n-period-val',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>15px</span></div>
+          <div class="font-ctrl"><label>標籤文字</label><input type="range" min="8" max="16" value="11" oninput="setFSClass('n-day-tag',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>11px</span></div>
+        </div>
+        <div class="font-group">
+          <div class="font-group-title">施工項目</div>
+          <div class="font-ctrl"><label>項目標籤</label><input type="range" min="9" max="18" value="12" oninput="setFSClass('n-item-tag',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>12px</span></div>
+        </div>
+        <div class="font-group">
+          <div class="font-group-title">注意事項</div>
+          <div class="font-ctrl"><label>編號</label><input type="range" min="8" max="16" value="11" oninput="setFSClass('n-notice-num',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>11px</span></div>
+          <div class="font-ctrl"><label>條文內容</label><input type="range" min="9" max="18" value="12" oninput="setFSClass('n-notice-text',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>12px</span></div>
+        </div>
+        <div class="font-group">
+          <div class="font-group-title">聯絡資訊</div>
+          <div class="font-ctrl"><label>角色標籤</label><input type="range" min="8" max="14" value="10" oninput="setFSClass('n-contact-role',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>10px</span></div>
+          <div class="font-ctrl"><label>姓名</label><input type="range" min="10" max="20" value="14" oninput="setFSClass('n-contact-name',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>14px</span></div>
+          <div class="font-ctrl"><label>電話</label><input type="range" min="9" max="18" value="13" oninput="setFSClass('n-contact-tel',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>13px</span></div>
+        </div>
+        <div class="font-group">
+          <div class="font-group-title">區塊標題</div>
+          <div class="font-ctrl"><label>段落標題</label><input type="range" min="10" max="18" value="13" oninput="setFSClass('n-sec-name',this.value+'px');this.nextElementSibling.textContent=this.value+'px'"><span>13px</span></div>
+        </div>
+      </div>
+    </div>
+
     <!-- 施工期間 -->
     <div class="section">
       <div class="section-hd"><h3>施 工 期 間</h3></div>
@@ -151,6 +218,7 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
         <div class="field"><label>施工日</label><div class="day-grid" id="day-grid"></div></div>
       </div>
     </div>
+
     <!-- 施工項目 -->
     <div class="section">
       <div class="section-hd"><h3>施 工 項 目</h3></div>
@@ -162,6 +230,7 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
         </div>
       </div>
     </div>
+
     <!-- 注意事項 -->
     <div class="section">
       <div class="section-hd"><h3>注 意 事 項</h3></div>
@@ -173,6 +242,7 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
         </div>
       </div>
     </div>
+
     <!-- 聯絡資訊 -->
     <div class="section">
       <div class="section-hd"><h3>聯 絡 資 訊</h3></div>
@@ -198,80 +268,80 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:1
         <div class="n-case-no" id="p-no"></div>
       </div>
       <div class="n-title-wrap">
-        <div class="n-title">室 內 裝 修 施 工 公 告</div>
-        <div class="n-subtitle">INTERIOR RENOVATION NOTICE</div>
+        <div class="n-title" id="n-title" style="font-size:28px;">室 內 裝 修 施 工 公 告</div>
+        <div class="n-subtitle" id="n-subtitle" style="font-size:11px;">INTERIOR RENOVATION NOTICE</div>
       </div>
       <div class="n-info">
         <div class="n-info-item">
-          <div class="n-info-label">施工地點</div>
-          <div class="n-info-val n-empty" id="p-addr">請填寫施工地點</div>
+          <div class="n-info-label" style="font-size:10px;">施工地點</div>
+          <div class="n-info-val n-empty" id="p-addr" style="font-size:14px;">請填寫施工地點</div>
         </div>
         <div class="n-info-item">
-          <div class="n-info-label">業主</div>
-          <div class="n-info-val n-empty" id="p-owner">請填寫業主姓名</div>
+          <div class="n-info-label" style="font-size:10px;">業主</div>
+          <div class="n-info-val n-empty" id="p-owner" style="font-size:14px;">請填寫業主姓名</div>
         </div>
       </div>
       <div class="n-section">
-        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name">施 工 期 間</div></div>
+        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name" style="font-size:13px;">施 工 期 間</div></div>
         <div class="n-period">
-          <div class="n-period-box"><div class="n-period-label">開始日期</div><div class="n-period-val n-empty" id="p-start">—</div></div>
-          <div class="n-period-box"><div class="n-period-label">預計完工</div><div class="n-period-val n-empty" id="p-end">—</div></div>
+          <div class="n-period-box"><div class="n-period-label" style="font-size:10px;">開始日期</div><div class="n-period-val n-empty" id="p-start" style="font-size:15px;">—</div></div>
+          <div class="n-period-box"><div class="n-period-label" style="font-size:10px;">預計完工</div><div class="n-period-val n-empty" id="p-end" style="font-size:15px;">—</div></div>
         </div>
         <div class="n-time-row">
-          <div class="n-time-label">每日施工時段</div>
-          <div class="n-time-val" id="p-time">08:00 ～ 17:00</div>
+          <div class="n-time-label" style="font-size:11px;">每日施工時段</div>
+          <div class="n-time-val" id="p-time" style="font-size:13px;">08:00 ～ 17:00</div>
         </div>
         <div class="n-days" id="p-days"></div>
       </div>
       <div class="n-section">
-        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name">施 工 項 目</div></div>
-        <div class="n-item-grid" id="p-work-grid"><div class="n-item-tag n-empty">請從左側勾選施工項目</div></div>
+        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name" style="font-size:13px;">施 工 項 目</div></div>
+        <div class="n-item-grid" id="p-work-grid"><div class="n-item-tag n-empty" style="font-size:12px;">請從左側勾選施工項目</div></div>
       </div>
       <div class="n-section">
-        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name">注 意 事 項</div></div>
-        <div class="n-notice-list" id="p-notice-list"><div class="n-empty" style="padding:4px 0">請從左側勾選注意事項</div></div>
+        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name" style="font-size:13px;">注 意 事 項</div></div>
+        <div class="n-notice-list" id="p-notice-list"><div class="n-empty" style="padding:4px 0;font-size:12px;">請從左側勾選注意事項</div></div>
       </div>
       <div class="n-section">
-        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name">聯 絡 資 訊</div></div>
+        <div class="n-sec-title"><div class="n-sec-bar"></div><div class="n-sec-name" style="font-size:13px;">聯 絡 資 訊</div></div>
         <div class="n-contact">
           <div class="n-contact-box">
-            <div class="n-contact-role">設 計 師</div>
-            <div class="n-contact-name" id="p-designer">郭明彰</div>
-            <div class="n-contact-tel" id="p-designer-tel">—</div>
+            <div class="n-contact-role" style="font-size:10px;">設 計 師</div>
+            <div class="n-contact-name" id="p-designer" style="font-size:14px;">郭明彰</div>
+            <div class="n-contact-tel" id="p-designer-tel" style="font-size:13px;">—</div>
           </div>
           <div class="n-contact-box">
-            <div class="n-contact-role">監 工</div>
-            <div class="n-contact-name" id="p-super">—</div>
-            <div class="n-contact-tel" id="p-super-tel">—</div>
+            <div class="n-contact-role" style="font-size:10px;">監 工</div>
+            <div class="n-contact-name" id="p-super" style="font-size:14px;">—</div>
+            <div class="n-contact-tel" id="p-super-tel" style="font-size:13px;">—</div>
           </div>
         </div>
-        <div class="n-polite">施工期間造成任何不便，敬請見諒。如有疑問，請隨時與上述聯絡人聯繫，感謝您的配合。</div>
+        <div class="n-polite" style="font-size:11px;">施工期間造成任何不便，敬請見諒。如有疑問，請隨時與上述聯絡人聯繫，感謝您的配合。</div>
       </div>
       <div class="n-footer">
-        <div class="n-footer-brand">得森室內裝修設計有限公司　ERIC KUO SPACE DESIGN</div>
-        <div class="n-footer-reg">高雄市苓雅區　內政部建築物室內裝修業登記證</div>
+        <div class="n-footer-brand" style="font-size:10px;">得森室內裝修設計有限公司　ERIC KUO SPACE DESIGN</div>
+        <div class="n-footer-reg" style="font-size:10px;">高雄市苓雅區　內政部建築物室內裝修業登記證</div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const DAYS = ['週一','週二','週三','週四','週五','週六','週日'];
-const activeDays = new Set(['週一','週二','週三','週四','週五']);
-const WORK_DEFAULTS = ['假設工程','拆除工程','清運工程','泥作工程','防水工程','水電工程','空調工程','鋁窗工程','木作工程','系統櫃','油漆工程','衛浴設備','地板工程','玻璃工程','燈具工程','弱電工程'];
-const NOTICE_DEFAULTS = ['施工期間噪音較大，敬請見諒','電梯可能短暫被工程使用，造成不便敬請包涵','公共走道請保持暢通，勿堆放雜物','施工廢棄物將統一清運，不佔用公共空間','施工人員均配掛識別證，如有疑慮可查驗','若有緊急狀況請立即聯繫工地負責人','粉塵較多期間，請關閉鄰近窗戶，造成不便敬請見諒','完工後將恢復公共空間整潔，感謝您的耐心等候'];
-let workItems = WORK_DEFAULTS.map((t,i)=>({id:'w'+i,text:t,active:false,custom:false}));
-let noticeItems = NOTICE_DEFAULTS.map((t,i)=>({id:'n'+i,text:t,active:false,custom:false}));
+const DAYS=['週一','週二','週三','週四','週五','週六','週日'];
+const activeDays=new Set(['週一','週二','週三','週四','週五']);
+const WORK_DEFAULTS=['假設工程','拆除工程','清運工程','泥作工程','防水工程','水電工程','空調工程','鋁窗工程','木作工程','系統櫃','油漆工程','衛浴設備','地板工程','玻璃工程','燈具工程','弱電工程'];
+const NOTICE_DEFAULTS=['施工期間噪音較大，敬請見諒','電梯可能短暫被工程使用，造成不便敬請包涵','公共走道請保持暢通，勿堆放雜物','施工廢棄物將統一清運，不佔用公共空間','施工人員均配掛識別證，如有疑慮可查驗','若有緊急狀況請立即聯繫工地負責人','粉塵較多期間，請關閉鄰近窗戶，造成不便敬請見諒','完工後將恢復公共空間整潔，感謝您的耐心等候'];
+let workItems=WORK_DEFAULTS.map((t,i)=>({id:'w'+i,text:t,active:false,custom:false}));
+let noticeItems=NOTICE_DEFAULTS.map((t,i)=>({id:'n'+i,text:t,active:false,custom:false}));
 
-// Days init
-const dayGrid = document.getElementById('day-grid');
+// Days
+const dayGrid=document.getElementById('day-grid');
 DAYS.forEach(d=>{
-  const chip = document.createElement('div');
-  chip.className = 'day-chip'+(activeDays.has(d)?' active':'');
-  chip.textContent = d;
+  const chip=document.createElement('div');
+  chip.className='day-chip'+(activeDays.has(d)?' active':'');
+  chip.textContent=d;
   chip.addEventListener('click',()=>{
     if(activeDays.has(d)) activeDays.delete(d); else activeDays.add(d);
-    chip.classList.toggle('active', activeDays.has(d));
+    chip.classList.toggle('active',activeDays.has(d));
     render();
   });
   dayGrid.appendChild(chip);
@@ -281,88 +351,183 @@ renderCheckList('work');
 renderCheckList('notice');
 render();
 
+// ── FONT SIZE CONTROLS ──────────────────────────────────────────
+function setFS(id, size){
+  const el=document.getElementById(id);
+  if(el) el.style.fontSize=size;
+}
+function setFSClass(cls, size){
+  document.querySelectorAll('.'+cls).forEach(el=>el.style.fontSize=size);
+}
+
+// ── CHECKLIST ───────────────────────────────────────────────────
 function renderCheckList(type){
-  const items = type==='work' ? workItems : noticeItems;
-  const el = document.getElementById(type+'-list');
+  const items=type==='work'?workItems:noticeItems;
+  const el=document.getElementById(type+'-list');
   el.innerHTML='';
-  items.forEach(item=>{
-    const div = document.createElement('div');
-    div.className = 'check-item'+(item.active?' active':'');
-    div.innerHTML = '<div class="check-box"><span class="check-mark">✓</span></div><div class="check-text">'+item.text+'</div>'+(item.custom?'<span class="check-del" title="刪除">×</span>':'');
-    div.addEventListener('click',e=>{
-      if(e.target.classList.contains('check-del')) return;
+  items.forEach((item,idx)=>{
+    const div=document.createElement('div');
+    div.className='check-item'+(item.active?' active':'');
+    div.dataset.id=item.id;
+
+    // top row: checkbox + text + action buttons
+    const top=document.createElement('div');
+    top.className='check-item-top';
+
+    const box=document.createElement('div');
+    box.className='check-box';
+    box.innerHTML='<span class="check-mark">✓</span>';
+
+    const textWrap=document.createElement('div');
+    textWrap.className='check-text-wrap';
+    const textEl=document.createElement('div');
+    textEl.className='check-text';
+    textEl.textContent=item.text;
+    textWrap.appendChild(textEl);
+
+    const actions=document.createElement('div');
+    actions.className='check-actions';
+
+    // up button
+    const upBtn=document.createElement('button');
+    upBtn.className='icon-btn';
+    upBtn.title='往上移';
+    upBtn.textContent='↑';
+    upBtn.disabled=idx===0;
+    upBtn.style.opacity=idx===0?'0.3':'1';
+    upBtn.addEventListener('click',e=>{e.stopPropagation();moveItem(type,idx,-1);});
+
+    // down button
+    const dnBtn=document.createElement('button');
+    dnBtn.className='icon-btn';
+    dnBtn.title='往下移';
+    dnBtn.textContent='↓';
+    dnBtn.disabled=idx===items.length-1;
+    dnBtn.style.opacity=idx===items.length-1?'0.3':'1';
+    dnBtn.addEventListener('click',e=>{e.stopPropagation();moveItem(type,idx,1);});
+
+    // edit button (pencil)
+    const editBtn=document.createElement('button');
+    editBtn.className='icon-btn';
+    editBtn.title='編輯內文';
+    editBtn.textContent='✏️';
+    editBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const ea=div.querySelector('.check-edit');
+      ea.classList.toggle('open');
+      if(ea.classList.contains('open')) ea.querySelector('textarea').focus();
+    });
+
+    // del button (only custom)
+    if(item.custom){
+      const delBtn=document.createElement('button');
+      delBtn.className='icon-btn del';
+      delBtn.title='刪除';
+      delBtn.textContent='×';
+      delBtn.addEventListener('click',e=>{
+        e.stopPropagation();
+        if(type==='work') workItems=workItems.filter(x=>x.id!==item.id);
+        else noticeItems=noticeItems.filter(x=>x.id!==item.id);
+        renderCheckList(type);render();
+      });
+      actions.appendChild(delBtn);
+    }
+
+    actions.prepend(dnBtn);
+    actions.prepend(upBtn);
+    actions.prepend(editBtn);
+    top.appendChild(box);
+    top.appendChild(textWrap);
+    top.appendChild(actions);
+
+    // toggle active on top click (not on buttons)
+    top.addEventListener('click',e=>{
+      if(e.target.closest('.check-actions')) return;
       item.active=!item.active;
       div.classList.toggle('active',item.active);
       render();
     });
-    if(item.custom){
-      div.querySelector('.check-del').addEventListener('click',()=>{
-        if(type==='work') workItems=workItems.filter(x=>x.id!==item.id);
-        else noticeItems=noticeItems.filter(x=>x.id!==item.id);
-        renderCheckList(type); render();
-      });
-    }
+
+    // edit area
+    const editArea=document.createElement('div');
+    editArea.className='check-edit';
+    const ta=document.createElement('textarea');
+    ta.value=item.text;
+    ta.addEventListener('input',()=>{
+      item.text=ta.value;
+      textEl.textContent=ta.value;
+      render();
+    });
+    editArea.appendChild(ta);
+
+    div.appendChild(top);
+    div.appendChild(editArea);
     el.appendChild(div);
   });
 }
 
+function moveItem(type,idx,dir){
+  const arr=type==='work'?workItems:noticeItems;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=arr.length) return;
+  [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
+  if(type==='work') workItems=arr; else noticeItems=arr;
+  renderCheckList(type);render();
+}
+
 function addCustom(type){
-  const input = document.getElementById(type+'-custom-input');
-  const text = input.value.trim();
+  const input=document.getElementById(type+'-custom-input');
+  const text=input.value.trim();
   if(!text) return;
-  const id = type+Date.now();
+  const id=type+Date.now();
   if(type==='work') workItems.push({id,text,active:true,custom:true});
   else noticeItems.push({id,text,active:true,custom:true});
   input.value='';
-  renderCheckList(type); render();
+  renderCheckList(type);render();
 }
 
+// ── RENDER PREVIEW ───────────────────────────────────────────────
 function fmtDate(val){
   if(!val) return null;
-  const [y,m,d]=val.split('-');
+  const[y,m,d]=val.split('-');
   return y+' 年 '+parseInt(m)+' 月 '+parseInt(d)+' 日';
 }
-function setVal(id,val){ const e=document.getElementById(id); if(e) e.textContent=val||''; }
+function setVal(id,val){const e=document.getElementById(id);if(e)e.textContent=val||'';}
 function setValEmpty(id,val,ph){
-  const e=document.getElementById(id); if(!e) return;
+  const e=document.getElementById(id);if(!e)return;
   if(val){e.textContent=val;e.classList.remove('n-empty');}
   else{e.textContent=ph;e.classList.add('n-empty');}
 }
-
 function render(){
-  setVal('p-no', document.getElementById('f-no').value.trim());
-  setValEmpty('p-addr', document.getElementById('f-addr').value.trim(), '請填寫施工地點');
-  setValEmpty('p-owner', document.getElementById('f-owner').value.trim(), '請填寫業主姓名');
-  setValEmpty('p-start', fmtDate(document.getElementById('f-start').value), '—');
-  setValEmpty('p-end', fmtDate(document.getElementById('f-end').value), '—');
+  setVal('p-no',document.getElementById('f-no').value.trim());
+  setValEmpty('p-addr',document.getElementById('f-addr').value.trim(),'請填寫施工地點');
+  setValEmpty('p-owner',document.getElementById('f-owner').value.trim(),'請填寫業主姓名');
+  setValEmpty('p-start',fmtDate(document.getElementById('f-start').value),'—');
+  setValEmpty('p-end',fmtDate(document.getElementById('f-end').value),'—');
   const ts=document.getElementById('f-time-s').value.trim()||'08:00';
   const te=document.getElementById('f-time-e').value.trim()||'17:00';
-  setVal('p-time', ts+' ～ '+te);
-  // days
+  setVal('p-time',ts+' ～ '+te);
   document.getElementById('p-days').innerHTML=[...activeDays].map(d=>'<div class="n-day-tag">'+d+'</div>').join('');
-  // work
   const aw=workItems.filter(x=>x.active);
   const wg=document.getElementById('p-work-grid');
-  wg.innerHTML = aw.length ? aw.map(x=>'<div class="n-item-tag">'+x.text+'</div>').join('') : '<div class="n-item-tag n-empty">請從左側勾選施工項目</div>';
-  // notice
+  wg.innerHTML=aw.length?aw.map(x=>'<div class="n-item-tag">'+x.text+'</div>').join(''):'<div class="n-item-tag n-empty">請從左側勾選施工項目</div>';
   const an=noticeItems.filter(x=>x.active);
   const nl=document.getElementById('p-notice-list');
-  nl.innerHTML = an.length ? an.map((x,i)=>'<div class="n-notice-row"><div class="n-notice-num">'+String(i+1).padStart(2,'0')+'</div><div class="n-notice-text">'+x.text+'</div></div>').join('') : '<div class="n-empty" style="padding:4px 0">請從左側勾選注意事項</div>';
-  // contact
-  setValEmpty('p-designer', document.getElementById('f-designer').value.trim(), '郭明彰');
-  setValEmpty('p-designer-tel', document.getElementById('f-designer-tel').value.trim(), '—');
-  setValEmpty('p-super', document.getElementById('f-super').value.trim(), '—');
-  setValEmpty('p-super-tel', document.getElementById('f-super-tel').value.trim(), '—');
+  nl.innerHTML=an.length?an.map((x,i)=>'<div class="n-notice-row"><div class="n-notice-num">'+String(i+1).padStart(2,'0')+'</div><div class="n-notice-text">'+x.text+'</div></div>').join(''):'<div class="n-empty" style="padding:4px 0">請從左側勾選注意事項</div>';
+  setValEmpty('p-designer',document.getElementById('f-designer').value.trim(),'郭明彰');
+  setValEmpty('p-designer-tel',document.getElementById('f-designer-tel').value.trim(),'—');
+  setValEmpty('p-super',document.getElementById('f-super').value.trim(),'—');
+  setValEmpty('p-super-tel',document.getElementById('f-super-tel').value.trim(),'—');
 }
 
+// ── PRINT / EXPORT ───────────────────────────────────────────────
 function doPrint(){
-  const clone = document.getElementById('a4').cloneNode(true);
-  const pa = document.getElementById('printArea');
-  pa.innerHTML=''; pa.appendChild(clone); pa.style.display='block';
+  const clone=document.getElementById('a4').cloneNode(true);
+  const pa=document.getElementById('printArea');
+  pa.innerHTML='';pa.appendChild(clone);pa.style.display='block';
   window.print();
   setTimeout(()=>{pa.style.display='none';pa.innerHTML='';},1200);
 }
-
 async function downloadJPG(){
   if(typeof html2canvas==='undefined'){
     await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
