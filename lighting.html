@@ -3,1096 +3,1039 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>燈光情境與照度配置助理</title>
+<title>燈光照度配置助理 — 得森設計</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f4f3f0;--surface:#ffffff;--surface2:#f9f8f6;--surface3:#f0efe9;
+  --bg:#f4f3f0;--surface:#fff;--surface2:#f9f8f6;--surface3:#f0efe9;
   --border:#e2e0da;--border2:#d4d1c9;
   --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#b8b5ae;
-  --sage:#8a9082;--sage-lt:#eef0ea;--sage-dk:#6e7a6a;
+  --sage:#8a9082;--sage-lt:#eef0ea;--sage-dk:#6e7a6a;--sage-pa:#d8dcd4;
   --amber:#c8960a;--amber-lt:#fef9e7;
   --red:#c0392b;--red-lt:#fdecea;
   --blue:#3a6ea8;--blue-lt:#eaf1fb;
   --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
-  --r:8px;--rl:14px;--shadow:0 2px 12px rgba(0,0,0,.06);
+  --r:8px;--rl:14px;--sh:0 2px 12px rgba(0,0,0,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:14px;}
 body{display:flex;flex-direction:column;}
 
-/* HEADER */
-.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.app-title{font-family:var(--serif);font-size:17px;font-weight:400;letter-spacing:3px;color:var(--ink);}
-.app-sub{font-size:11px;color:var(--ink-l);letter-spacing:2px;}
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;}
+.hd-left{display:flex;align-items:center;gap:12px;}
+.hd-logo{height:34px;width:auto;}
+.hd-brand{font-family:var(--serif);font-size:12px;color:var(--ink-m);letter-spacing:2px;border-left:1px solid var(--border);padding-left:12px;}
+.hd-title{font-family:var(--serif);font-size:15px;letter-spacing:3px;color:var(--ink);border-left:1px solid var(--border);padding-left:12px;}
+.hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.hbtn{padding:6px 14px;border-radius:var(--r);font-size:12px;font-family:var(--sans);cursor:pointer;letter-spacing:.5px;border:none;transition:all .18s;white-space:nowrap;}
+.hbtn-ghost{background:var(--surface2);color:var(--ink-m);border:1px solid var(--border);}
+.hbtn-ghost:hover{border-color:var(--sage);color:var(--sage-dk);}
+.hbtn-sage{background:var(--sage-lt);color:var(--sage-dk);border:1px solid var(--sage-pa);}
+.hbtn-sage:hover{background:var(--sage-dk);color:#fff;}
+.hbtn-primary{background:var(--sage-dk);color:#fff;}
+.hbtn-primary:hover{background:#5a6a58;}
+.back-btn{font-size:12px;color:var(--ink-l);text-decoration:none;letter-spacing:.5px;padding:6px 12px;border-radius:var(--r);transition:all .15s;}
+.back-btn:hover{background:var(--surface3);color:var(--ink);}
 
-/* LAYOUT */
-.app-body{display:grid;grid-template-columns:380px 1fr;flex:1;overflow:hidden;}
-.panel-left{overflow-y:auto;padding:20px;background:var(--bg);border-right:1px solid var(--border);}
-.panel-right{overflow-y:auto;padding:20px;background:var(--bg);}
+/* ── LAYOUT ── */
+.workspace{display:grid;grid-template-columns:400px 1fr;flex:1;min-height:0;overflow:hidden;}
+.panel-l{overflow-y:auto;padding:18px;background:var(--bg);border-right:1px solid var(--border);height:calc(100vh - 56px);}
+.panel-r{overflow-y:auto;padding:18px;background:var(--bg);height:calc(100vh - 56px);}
 
-/* CARD */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);}
-.card-hd{padding:12px 18px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
-.card-hd-icon{font-size:15px;}
-.card-hd-title{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--ink-m);letter-spacing:2px;}
-.card-body{padding:16px 18px;}
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh);}
+.card-hd{padding:11px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-icon{font-size:14px;}
+.card-title{font-family:var(--serif);font-size:12px;font-weight:400;color:var(--ink-m);letter-spacing:2px;}
+.card-body{padding:14px 16px;}
 
-/* FORM */
-.field{margin-bottom:14px;}
+/* ── FORM ── */
+.field{margin-bottom:12px;}
 .field:last-child{margin-bottom:0;}
-.field-label{font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;}
+.field-label{font-size:11px;color:var(--ink-l);letter-spacing:.8px;margin-bottom:4px;display:flex;justify-content:space-between;}
 .field-hint{font-size:10px;color:var(--ink-f);}
-.field-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .field-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-input[type=number],input[type=text],select{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;font-size:13px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;transition:border-color .18s;}
-input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--sage);}
-.unit{font-size:11px;color:var(--ink-l);}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+input[type=number],input[type=text],select,textarea{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:7px 10px;font-size:13px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--sage);}
+.computed-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface3);border-radius:var(--r);margin-top:5px;}
+.computed-label{font-size:11px;color:var(--ink-l);}
+.computed-val{font-size:13px;font-weight:500;color:var(--sage-dk);font-family:var(--serif);}
 
-/* COMPUTED DISPLAY */
-.computed-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface3);border-radius:var(--r);margin-top:6px;}
-.computed-label{font-size:11px;color:var(--ink-l);letter-spacing:.5px;}
-.computed-val{font-size:14px;font-weight:500;color:var(--sage-dk);font-family:var(--serif);}
-
-/* FIXTURE CARDS */
+/* ── FIXTURE MULTI-SELECT ── */
 .fixture-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.fixture-card{border:2px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .18s;background:var(--surface);user-select:none;}
-.fixture-card:hover{border-color:var(--sage);}
-.fixture-card.selected{border-color:var(--sage-dk);background:var(--sage-lt);}
-.fixture-name{font-size:12px;font-weight:500;color:var(--ink-m);margin-bottom:4px;}
-.fixture-specs{font-size:11px;color:var(--ink-l);line-height:1.7;}
-.fixture-lm{font-size:13px;color:var(--sage-dk);font-weight:500;}
+.fx-card{border:2px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .15s;background:var(--surface);user-select:none;position:relative;}
+.fx-card:hover{border-color:var(--sage);}
+.fx-card.selected{border-color:var(--sage-dk);background:var(--sage-lt);}
+.fx-check{position:absolute;top:8px;right:8px;width:18px;height:18px;border:1.5px solid var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;background:var(--surface);transition:all .15s;}
+.fx-card.selected .fx-check{background:var(--sage-dk);border-color:var(--sage-dk);}
+.fx-name{font-size:12px;font-weight:600;color:var(--ink-m);margin-bottom:3px;padding-right:20px;}
+.fx-spec{font-size:10px;color:var(--ink-l);line-height:1.6;}
+.fx-lm{font-size:12px;color:var(--sage-dk);font-weight:600;margin-top:3px;}
 
-/* RIGHT RESULTS */
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;box-shadow:var(--shadow);}
-.result-card.full{grid-column:1/-1;}
-.result-label{font-size:10px;color:var(--ink-l);letter-spacing:2px;margin-bottom:6px;}
-.result-value{font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1.1;}
-.result-value span{font-size:13px;color:var(--ink-l);margin-left:4px;}
-.result-sub{font-size:11px;color:var(--ink-l);margin-top:4px;line-height:1.6;}
+/* mix ratio sliders */
+.mix-panel{margin-top:10px;display:none;}
+.mix-panel.show{display:block;}
+.mix-item{margin-bottom:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);}
+.mix-item:last-child{margin-bottom:0;}
+.mix-label{font-size:11px;color:var(--ink-m);font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;}
+.mix-pct{color:var(--sage-dk);}
+input[type=range]{width:100%;accent-color:var(--sage-dk);height:4px;cursor:pointer;}
 
-/* LAYER TABLE */
-.layer-table{width:100%;border-collapse:collapse;}
-.layer-table th{font-size:10px;color:var(--ink-l);letter-spacing:1px;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);font-weight:400;}
-.layer-table td{font-size:12px;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink-m);}
-.layer-table tr:last-child td{border-bottom:none;}
-.layer-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;letter-spacing:1px;}
+/* strip mode */
+.strip-mode-wrap{margin-top:8px;}
+.strip-mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;}
+.sm-btn{border:1.5px solid var(--border2);border-radius:var(--r);padding:8px 4px;cursor:pointer;text-align:center;background:var(--surface);transition:all .15s;user-select:none;font-size:11px;color:var(--ink-m);}
+.sm-btn:hover{border-color:var(--sage);}
+.sm-btn.active{border-color:var(--sage-dk);background:var(--sage-lt);color:var(--sage-dk);}
+.sm-icon{font-size:16px;margin-bottom:2px;}
+.side-chips{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.side-chip{display:flex;align-items:center;gap:5px;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:11px;color:var(--ink-m);user-select:none;transition:all .12s;}
+.side-chip:hover{border-color:var(--sage);}
+.side-chip.active{background:var(--sage-lt);border-color:var(--sage-dk);color:var(--sage-dk);}
+
+/* ── RIGHT RESULTS ── */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;box-shadow:var(--sh);}
+.rc.full{grid-column:1/-1;}
+.rc-label{font-size:10px;color:var(--ink-l);letter-spacing:1.5px;margin-bottom:5px;}
+.rc-val{font-family:var(--serif);font-size:24px;color:var(--ink);line-height:1.1;}
+.rc-val span{font-size:12px;color:var(--ink-l);margin-left:3px;}
+.rc-val.ok{color:#2e7d32;}
+.rc-val.warn{color:#c8960a;}
+.rc-val.bad{color:#c0392b;}
+.rc-sub{font-size:11px;color:var(--ink-l);margin-top:4px;line-height:1.6;}
+.rc-detail{margin-top:7px;padding:7px 9px;background:var(--surface3);border-radius:var(--r);font-size:10px;color:var(--ink-l);line-height:1.8;}
+.rc-detail b{color:var(--ink-m);}
+
+/* mix results */
+.mix-result-list{display:flex;flex-direction:column;gap:6px;}
+.mix-result-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);}
+.mix-result-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.mix-result-name{font-size:12px;font-weight:600;color:var(--ink-m);flex:1;}
+.mix-result-count{font-family:var(--serif);font-size:16px;color:var(--sage-dk);}
+.mix-result-detail{font-size:10px;color:var(--ink-l);}
+
+/* warning / correction */
+.warn-box{display:none;border-radius:var(--r);padding:9px 13px;font-size:11px;line-height:1.8;margin-bottom:12px;}
+.warn-box.show{display:block;}
+.warn-box.amber{background:var(--amber-lt);border:1px solid rgba(200,150,10,.3);color:#6b4c00;}
+.warn-box.red{background:var(--red-lt);border:1px solid rgba(192,57,43,.25);color:#7a1a10;}
+.correction-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;background:#f5c842;color:#5a3d00;font-weight:600;margin-right:5px;}
+.correction-row{margin-top:3px;}
+
+/* layer table */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10px;color:var(--ink-l);letter-spacing:.8px;text-align:left;padding:5px 9px;border-bottom:1px solid var(--border);font-weight:400;}
+.tbl td{font-size:11px;padding:7px 9px;border-bottom:1px solid var(--border);color:var(--ink-m);}
+.tbl tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;}
 .badge-g{background:var(--sage-lt);color:var(--sage-dk);}
 .badge-a{background:var(--amber-lt);color:var(--amber);}
 .badge-b{background:var(--blue-lt);color:var(--blue);}
 
-/* WARNING */
-.warning-box{display:none;background:var(--amber-lt);border:1px solid rgba(200,150,10,.3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:#7a5c00;line-height:1.7;margin-bottom:14px;}
-.warning-box.show{display:block;}
-
-/* COLOR TEMP */
+/* color temp */
 .ct-row{display:flex;gap:10px;align-items:flex-start;}
-.ct-swatch{width:48px;height:48px;border-radius:var(--r);flex-shrink:0;border:1px solid var(--border);}
-.ct-info{}
-.ct-val{font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:2px;}
-.ct-desc{font-size:12px;color:var(--ink-l);line-height:1.6;}
+.ct-swatch{width:44px;height:44px;border-radius:var(--r);flex-shrink:0;border:1px solid var(--border);}
+.ct-val{font-family:var(--serif);font-size:16px;color:var(--ink);margin-bottom:2px;}
+.ct-desc{font-size:11px;color:var(--ink-l);line-height:1.6;}
+.ct-cri{margin-top:8px;padding:8px 10px;background:var(--surface3);border-radius:var(--r);font-size:11px;color:var(--ink-l);line-height:1.7;}
 
-/* CANVAS PLAN */
-.canvas-wrap{position:relative;background:var(--surface3);border-radius:var(--r);overflow:hidden;}
-#planCanvas{display:block;width:100%;height:auto;}
-.canvas-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-l);}
-.legend-dot{width:10px;height:10px;border-radius:50%;}
+/* canvas */
+.cv-wrap{background:var(--surface3);border-radius:var(--r);overflow:hidden;}
+.cv-dark{background:#12121e;}
+.cv-legend{display:flex;gap:14px;margin-top:7px;flex-wrap:wrap;}
+.cv-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--ink-l);}
+.cv-leg-dot{width:9px;height:9px;border-radius:50%;}
 
-/* BEAM RADIUS TABLE */
-.beam-table{width:100%;border-collapse:collapse;margin-top:8px;}
-.beam-table th{font-size:10px;color:var(--ink-l);padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:400;}
-.beam-table td{font-size:12px;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--ink-m);}
-.beam-table tr:last-child td{border-bottom:none;}
+/* beam table */
+.beam-tbl{width:100%;border-collapse:collapse;}
+.beam-tbl th{font-size:10px;color:var(--ink-l);padding:4px 7px;text-align:left;border-bottom:1px solid var(--border);font-weight:400;}
+.beam-tbl td{font-size:11px;padding:5px 7px;border-bottom:1px solid var(--border);color:var(--ink-m);}
+.beam-tbl tr:last-child td{border-bottom:none;}
+.beam-tbl tr.hl{background:var(--sage-lt);}
 
-/* DIVIDER */
-.section-div{font-size:10px;color:var(--ink-f);letter-spacing:3px;padding:4px 0 10px;text-transform:uppercase;}
+/* draft drawer */
+.backdrop{display:none;position:fixed;inset:0;background:rgba(43,41,38,.4);z-index:200;}
+.backdrop.open{display:block;}
+.drawer{position:fixed;top:0;right:-440px;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:201;display:flex;flex-direction:column;transition:right .26s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 24px rgba(0,0,0,.1);}
+.drawer.open{right:0;}
+.drawer-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.drawer-title{font-family:var(--serif);font-size:15px;font-weight:400;color:var(--ink);letter-spacing:2px;}
+.drawer-close{background:none;border:none;font-size:18px;color:var(--ink-l);cursor:pointer;padding:2px 6px;border-radius:4px;}
+.drawer-close:hover{color:var(--ink);background:var(--surface3);}
+.drawer-save{padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.d-save-row{display:flex;gap:7px;}
+.d-save-input{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--ink);background:var(--surface2);outline:none;}
+.d-save-input:focus{border-color:var(--sage);}
+.d-save-btn{padding:7px 14px;background:var(--sage-dk);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-family:var(--sans);cursor:pointer;}
+.d-save-btn:hover{background:#5a6a58;}
+.drawer-list{flex:1;overflow-y:auto;padding:12px 18px;display:flex;flex-direction:column;gap:9px;}
+.draft-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;}
+.draft-card:hover{border-color:var(--sage);}
+.draft-name{font-family:var(--serif);font-size:14px;color:var(--ink);margin-bottom:3px;}
+.draft-meta{font-size:10px;color:var(--ink-l);margin-bottom:9px;}
+.draft-acts{display:flex;gap:7px;}
+.d-btn{padding:5px 12px;border-radius:var(--r);font-size:11px;font-family:var(--sans);cursor:pointer;border:none;}
+.d-btn-load{background:var(--sage-lt);color:var(--sage-dk);border:1px solid var(--sage-pa);}
+.d-btn-load:hover{background:var(--sage-dk);color:#fff;}
+.d-btn-del{background:var(--red-lt);color:var(--red);border:1px solid rgba(192,57,43,.2);}
+.d-btn-del:hover{background:var(--red);color:#fff;}
+.drawer-empty{text-align:center;padding:36px 16px;color:var(--ink-f);font-size:12px;line-height:1.8;}
 
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:9px 20px;border-radius:24px;font-size:12px;opacity:0;transition:all .28s;z-index:300;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* STRIP PANEL */
-.strip-panel{display:none;margin-top:12px;}
-.strip-panel.show{display:block;}
-.strip-mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
-.strip-mode-btn{border:2px solid var(--border2);border-radius:var(--r);padding:10px 6px;cursor:pointer;text-align:center;background:var(--surface);transition:all .18s;user-select:none;}
-.strip-mode-btn:hover{border-color:var(--sage);}
-.strip-mode-btn.active{border-color:var(--sage-dk);background:var(--sage-lt);}
-.strip-mode-icon{font-size:20px;margin-bottom:4px;}
-.strip-mode-label{font-size:11px;color:var(--ink-m);letter-spacing:.5px;font-weight:500;}
-.strip-mode-sub{font-size:10px;color:var(--ink-f);margin-top:2px;}
-.strip-sides{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
-.strip-side-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;user-select:none;font-size:12px;color:var(--ink-m);transition:all .15s;}
-.strip-side-chip:hover{border-color:var(--sage);}
-.strip-side-chip.active{background:var(--sage-lt);border-color:var(--sage-dk);color:var(--sage-dk);}
-.strip-side-chip input{display:none;}
-.strip-result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
-.strip-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;text-align:center;}
-.strip-stat-val{font-family:var(--serif);font-size:18px;color:var(--sage-dk);}
-.strip-stat-label{font-size:10px;color:var(--ink-l);letter-spacing:1px;margin-top:2px;}
-/* SECTION CANVAS */
-#sectionCanvas{display:block;width:100%;height:auto;border-radius:var(--r);}
-
-
-/* CORRECTION BOX */
-.correction-box{display:none;background:#fff8e1;border:1px solid #f0c040;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#6b4c00;line-height:1.8;margin-bottom:14px;}
-.correction-box.show{display:block;}
-.correction-box strong{color:#8a5e00;}
-.correction-row{display:flex;gap:6px;align-items:baseline;margin-top:3px;}
-.correction-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;letter-spacing:.5px;background:#f5c842;color:#5a3d00;font-weight:600;}
-/* count color states */
-.result-value.ok{color:#2e7d32;}
-.result-value.warn{color:#c8960a;}
-.result-value.bad{color:#c0392b;}
-/* correction detail */
-.calc-detail{margin-top:8px;padding:8px 10px;background:var(--surface3);border-radius:var(--r);font-size:11px;color:var(--ink-l);line-height:1.9;}
-.calc-detail b{color:var(--ink-m);}
-
-/* SCROLLBAR */
-::-webkit-scrollbar{width:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-
-@media(max-width:900px){
-  .app-body{grid-template-columns:1fr;}
-  .result-grid{grid-template-columns:1fr;}
-  .result-card.full{grid-column:1;}
+/* print */
+@media print{
+  header,.panel-l,.backdrop,.drawer,.toast{display:none!important;}
+  .workspace{display:block;}
+  .panel-r{height:auto;overflow:visible;padding:0;}
+  .card,.rc{box-shadow:none;break-inside:avoid;}
 }
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
 <body>
 
-<div class="app-header">
-  <div>
-    <div class="app-title">燈 光 照 度 配 置 助 理</div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- DRAFT DRAWER -->
+<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div class="drawer-title">草 稿 管 理</div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
   </div>
-  <div class="app-sub">LIGHTING DESIGN CALCULATOR</div>
+  <div class="drawer-save">
+    <div style="font-size:11px;color:var(--ink-l);letter-spacing:.5px;margin-bottom:7px;">儲存目前設定</div>
+    <div class="d-save-row">
+      <input class="d-save-input" id="draftNameInput" placeholder="草稿名稱">
+      <button class="d-save-btn" onclick="saveDraft()">儲存</button>
+    </div>
+  </div>
+  <div class="drawer-list" id="draftList"></div>
 </div>
 
-<div class="app-body">
+<!-- HEADER -->
+<header>
+  <div class="hd-left">
+    <img class="hd-logo" src="data:image/jpeg;base64,/9j/4QE4RXhpZgAATU0AKgAAAAgACAESAAMAAAABAAEAAAEaAAUAAAABAAAAbgEbAAUAAAABAAAAdgEoAAMAAAABAAIAAAExAAIAAAAhAAAAfgEyAAIAAAAUAAAAoAITAAMAAAABAAEAAIdpAAQAAAABAAAAtAAAAAAAAAEsAAAAAQAAASwAAAABQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkAADIwMTk6MTA6MjkgMTQ6MjE6NTAAAAiQAAAHAAAABDAyMjGQBAACAAAAFAAAARqRAQAHAAAABAECAwCgAAAHAAAABDAxMDCgAQADAAAAAQABAACgAgAEAAAAAQAAA4egAwAEAAAAAQAAAIWkBgADAAAAAQAAAAAAAAAAMjAxOToxMDoyOSAyMjoyMTo0NwAAAP/hNBRodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcEdJbWc9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9nL2ltZy8iIHhtbG5zOnBkZj0iaHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczppbGx1c3RyYXRvcj0iaHR0cDovL25zLmFkb2JlLmNvbS9pbGx1c3RyYXRvci8xLjAvIiBkYzpmb3JtYXQ9ImltYWdlL2pwZWciIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkiIHhtcDpNZXRhZGF0YURhdGU9IjIwMTktMTAtMjlUMjI6MjE6NDcrMDg6MDAiIHhtcDpDcmVhdGVEYXRlPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAxOS0xMC0yOVQxNDoyMTo1MFoiIHBkZjpQcm9kdWNlcj0iQWRvYmUgUERGIGxpYnJhcnkgMTAuMDEiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0idXVpZDo1RDIwODkyNDkzQkZEQjExOTE0QTg1OTBEMzE1MDhDOCIgeG1wTU06UmVuZGl0aW9uQ2xhc3M9InByb29mOnBkZiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1Zjk3MjFjOS1hM2JmLTRiZjEtYjVjMC02MTQ5ZThkMTE5ZmEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NWY5NzIxYzktYTNiZi00YmYxLWI1YzAtNjE0OWU4ZDExOWZhIiBpbGx1c3RyYXRvcjpTdGFydHVwUHJvZmlsZT0iUHJpbnQiPiA8ZGM6dGl0bGU+IDxyZGY6QWx0PiA8cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPuW+l+ajru+8v+WQjeeJh0HvvL/osaHniZnljaHvvL/nh5nph5HvvL/pm5npnaI155uSdzwvcmRmOmxpPiA8L3JkZjpBbHQ+IDwvZGM6dGl0bGU+IDx4bXA6VGh1bWJuYWlscz4gPHJkZjpBbHQ+IDxyZGY6bGkgeG1wR0ltZzpmb3JtYXQ9IkpQRUciIHhtcEdJbWc6aW1hZ2U9Ii85ai80QUFRU2taSlJnQUJBZ0VCTEFFc0FBRC83UUFzVUdodmRHOXphRzl3SURNdU1BQTRRa2xOQSswQUFBQUFBQkFCTEFBQUFBRUEmI3hBO0FRRXNBQUFBQVFBQi8rNEFEa0ZrYjJKbEFHVEFBQUFBQWYvYkFJUUFCZ1FFQkFVRUJnVUZCZ2tHQlFZSkN3Z0dCZ2dMREFvS0N3b0smI3hBO0RCQU1EQXdNREF3UURBNFBFQThPREJNVEZCUVRFeHdiR3hzY0h4OGZIeDhmSHg4Zkh3RUhCd2NOREEwWUVCQVlHaFVSRlJvZkh4OGYmI3hBO0h4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zi84QUFFUWdBbUFFQUF3RVImI3hBO0FBSVJBUU1SQWYvRUFhSUFBQUFIQVFFQkFRRUFBQUFBQUFBQUFBUUZBd0lHQVFBSENBa0tDd0VBQWdJREFRRUJBUUVBQUFBQUFBQUEmI3hBO0FRQUNBd1FGQmdjSUNRb0xFQUFDQVFNREFnUUNCZ2NEQkFJR0FuTUJBZ01SQkFBRklSSXhRVkVHRTJFaWNZRVVNcEdoQnhXeFFpUEImI3hBO1V0SGhNeFppOENSeWd2RWxRelJUa3FLeVkzUENOVVFuazZPek5oZFVaSFREMHVJSUpvTUpDaGdaaEpSRlJxUzBWdE5WS0JyeTQvUEUmI3hBOzFPVDBaWFdGbGFXMXhkWGw5V1oyaHBhbXRzYlc1dlkzUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8rQ2s1U1ZscGVZbVomI3hBO3FibkoyZW41S2pwS1dtcDZpcHFxdXNyYTZ2b1JBQUlDQVFJREJRVUVCUVlFQ0FNRGJRRUFBaEVEQkNFU01VRUZVUk5oSWdaeGdaRXkmI3hBO29iSHdGTUhSNFNOQ0ZWSmljdkV6SkRSRGdoYVNVeVdpWTdMQ0IzUFNOZUpFZ3hkVWt3Z0pDaGdaSmpaRkdpZGtkRlUzOHFPend5Z3AmI3hBOzArUHpoSlNrdE1UVTVQUmxkWVdWcGJYRjFlWDFSbFptZG9hV3ByYkcxdWIyUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8mI3hBOytEbEpXV2w1aVptcHVjblo2ZmtxT2twYWFucUttcXE2eXRycSt2L2FBQXdEQVFBQ0VRTVJBRDhBOVAyOXJiT2pNOFNNeGtrcXhVRS8mI3hBOzNqZU9WeGlEMDcyNmM1QTdFOGg5eXA5U3MvOEFmRWYvQUFDLzB5WEJIdVllTEx2THZxVm4vdmlQL2dGL3Bqd1I3bDhXWGVYZlVyUC8mI3hBO0FIeEgvd0FBdjlNZUNQY3ZpeTd5NzZsWi93QytJLzhBZ0YvcGp3UjdsOFdYZVhmVXJQOEEzeEgvQU1BdjlNZUNQY3ZpeTd5NzZsWi8mI3hBOzc0ai9BT0FYK21QQkh1WHhaZDVkOVNzLzk4Ui84QXY5TWVDUGN2aXk3eTc2bFovNzRqLzRCZjZZOEVlNWZGbDNsMzFLei8zeEgvd0MmI3hBOy93Qk1lQ1Bjdml5N3kxWnFxd2xWQUNpU1FBRFlBQ1JzRU9YelRsTy93SDNLK1RhM1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlZHMC91bS80eVMvOG5HeU1PWHorOW5rNS9BZmNyWkpnN0ZYWXE3RlhZcTdGWFlxN0ZYWXFvMm4mI3hBOzkwMy9BQmtsL3dDVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWVWJUKzZiL0FJeVMvd0RKeHNqRGw4L3ZaNU9md0gzSWE0MVJsbGxndGJkN2lXQTBtWS91NGtKVU9PVWpkZmhZZllESEpNRVomI3hBO0RJSllZNUJRaDFEQWlwRzRydFVERlYrS3V4VjJLdXhWMkt1eFYyS3FOcC9kTi94a2wvNU9Oa1ljdm45N1BKeitBKzVXeVRCMkt1eFYmI3hBOzJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VlJ0UDdwditNa3YvQUNjYkl3NWZQNzJlVG44Qjl5V1gmI3hBO0ZocW91cnA0SWJXV09XWDFvSG1kMWRHTUN3SFlSc09pbnYwT1NZSmpZMmkyOXZHcktvbkVjYVRPdjdSUmFkZGlmYkZVUmlyc1ZkaXImI3hBO3NWZGlyc1ZkaXFqYWYzVGY4WkpmK1RqWkdITDUvZXp5Yy9nUHVWc2t3ZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZkaXJzVlViVCs2Yi9qSkwveWNiSXc1ZlA3MmVUbjhCOXl0a21Ec1ZkaXJzVmRpcnNWZGlyc1ZkaXFqYWYzVGY4WkomI3hBO2YrVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVlE2TGMmI3hBO3hCbFJFZFN6TUdMbFQ4VEZ1bkZ2SHh5QUJEWVRFODcvQUI4VjNPOC8zMUgvQU1qRy93Q2FNTnk3dng4a1ZIdlB5L2E3bmVmNzZqLzUmI3hBO0dOL3pSamN1NzhmSmFqM241ZnRkenZQOTlSLzhqRy81b3h1WGQrUGt0Ujd6OHYydTUzbisrby8rUmpmODBZM0x1L0h5V285NStYN1gmI3hBO2M3ei9BSDFIL3dBakcvNW94dVhkK1BrdFI3ejh2MnU1M24rK28vOEFrWTMvQURSamN1NzhmSmFqM241ZnRkenZQOTlSL3dESXh2OEEmI3hBO21qRzVkMzQrUzFIdlB5L2E3bmVmNzZqL0FPUmpmODBZM0x1L0h5V285NStYN1hjN3ovZlVmL0l4dithTWJsM2ZqNUxVZTgvTDlxNkMmI3hBO05vNDZOVGtXWmpUb09URnFmampFVUVUTmxVeVRGMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3UmI3hBO3hWMkt1eFZLN0ZOU3ViU0tiNjh5OGh1REhHVFViRTFBWHJUd3lBSkxZUkVjNy9Id1YvcW1wZjhBTGVmK1JTWWFsMy9qNW91UGNmbismI3hBO3gzMVRVdjhBbHZQL0FDS1RHcGQvNCthM0h1UHovWTc2cHFYL0FDM24va1VtTlM3L0FNZk5iajNINS9zZDlVMUwvbHZQL0lwTWFsMy8mI3hBO0FJK2EzSHVQei9ZNzZwcVgvTGVmK1JTWTFMdi9BQjgxdVBjZm4reDMxVFV2K1c4Lzhpa3hxWGYrUG10eDdqOC8yTytxYWwveTNuL2smI3hBO1VtTlM3L3g4MXVQY2ZuK3gzMVRVditXOC93RElwTWFsMy9qNXJjZTQvUDhBWTc2cHFYL0xlZjhBa1VtTlM3L3g4MXVQY2ZuK3hKTmYmI3hBOzFmVTdEUmJtZUc1SW5qdWhDc2pMR2R1SUZLY2FidHY0NE9MMDJ5RUJ4QWQ5ZmF4ZTU4eitjdUpNV29CQ3BITC9BRWVJMUZkd0FRTzMmI3hBO2ZHcGQvd0NQbWk0ZHgrZjdFUEw1MDgyaU5ndW9xamtFSTVoaElEYml0S2I0K3J2L0FCODF1SGNmbit4UVBucnplMjZhaFVIcFNDSHcmI3hBOzkweDlYZjhBajVyY080L1A5aUFuL01uempFd1VYNVoyK3lub1ExQTdsdmdydGo2dS93REh6VzRkeCtmN0hTZm1GNTNWdVExUGtwR3kmI3hBO3JCQit2aGo2dTliaDNINS9zV2Y4ckc4N01DVjFQWUE5YmVEL0FKbzdlR1BxNzF1SGNmbit4MHY1a2VjVFFRNnB5cUtsaEJBYWY4azkmI3hBOzhmVjMvajVyY080L1A5amNINWgrZTNERWFoelZCdXdoZzY5YVU0WStydlc0ZHgrZjdFeGc4NytjVysxcVlKSUhTQ0dsVDJCNGl1R3AmI3hBO2QvNCthM0R1UHovWXJyNXg4M282TytwQ1NJMERLSUlRYXNSdlVMMndHd2tDSjVBL1A5ajFhSmkwU01keVZCUDNaTnFYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZVRm92L0hNZytUZjhTT1JoeStmM3M4blA0RDdrYmttRHNWZGlxVGVidGV2OUQwVjlRc05JdU5idVZkRVcmI3hBO3d0UDcxZzVvVzZIWmVwMnhWSjlUODk2elpSNmt5ZVZkU3Vtc0pMZU9KWVVMZldST3dWbmhvcEpFVmF0dDB4VmtGdnJjY3VwZm84MmwmI3hBOzNIS0VEbVo3ZVFXLzJGZmlKNmVtVDhkT3ZVRWRzVlRIRlhZcTdGV0grYVFEb1Y3VVZBdmlmK0Z5by9TZmkzais4SCtiK2hpYzlUdjAmI3hBO0hqMXkxb1MyZEZyOWl2VWdmUlVZRlFGemNOSEdSQ3ZxU0hjS093TzFUVEZVdlcwa2U1QUJEdExTUVQrKzNnZGdOdW5YRlhKcWVsUlcmI3hBOzZTSnpsZ2trOUFYS1J5TW5ObTQxNUJhY0NmMi9zKzlNVXRwZFdWNURKTll1c2tTczBieUlOZ3lIaWFkaWNVTGhGYlNKNmNSQlZSOGYmI3hBO0hxZDl3RGlxL1RxVFJ2d05Ja2NnOWlRUGhvRFhDcWFJdEZGRXAzQXIzNllxdmIrNURBY1R5VTllL0tudGtaOHZsOTdaajUvQS9jOXQmI3hBO2cvdUkvd0RWSDZzazFyOFZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcUMwWC9qbVFmSnYrSkhJdzVmUDcyZVRuOEI5eU55VEJ3SUlxT20mI3hBO0t1eFYyS3V4VjJLdXhWMkt1eFZodm0yditINzdhdjhBcDM4TXFQMG40dDQvdkIvbS9vWXBLZ0I1QVZyU29yMjJIVExXaExiMmVqQkkmI3hBO1J5bU80clhpQUsvYU5Odm93S2xaaWxqa1pxY3BmMnBUMFlEZXJmS3VLdFNXYlBheUloY0pNcFNTbXpLU0tjaDFwOUdLc2Rpc1BNUysmI3hBO1dyRFJvb0h0cnV5K3EyNzMwRTZDSjQ0V1ZaR1VncTlHaURmQ3lWREgvWllwVXZMY0VqUXVzVU53aXdYZDRwbjlXa1VpUVhMeFJ4Y08mI3hBO1JyKzdGS2xCOW5ydmlwWksxdWdVeklBQWFWWG9DUGw0NG9YV0laWXpKRjlwcER6V3UxSys0NjRWVENKbEtDUnFMeEJOU2FVN2Q4VmEmI3hBOzRTVGNYZXF4aGw5TkNhTjlvVVp2Znd5TStYeSs5c3g4L2dmdWU1UWYzRWYrcVAxWkpyWDRxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlUmI3hBO0Zvdi9BQnpJUGszL0FCSTVHSEw1L2V6eWMvZ1B1UzY1aWl1cnUrK3RNczBVRXZwaTNsa0t4ckg5V1NTb2lBNFNFeU4rMzIrN0pNRnUmI3hBO3JSMzEzNWZpVkdSQzMxVjFjTng1RGtyT0NCeFZSMzc3ZHNWU0NLejF1Mjh2M2tNTWxMaWFlRllvMGxSSkJHaUtrakYxa1hadVBhaDcmI3hBOzk5bFV1MU9mek5wUGxJK2hZeWF0ZkpxQ20zc1Z2bmlZUUtySUc5YUl1NVg0QWVMZkR2dDJYRlc5WDF6ekphMjBrMWg1Y252YmtUQkkmI3hBO1lScWpvR2dQcUQxR3FRcXNYaEJDOWxkYWtiNHFnYjdYUE9hdmYrajVabWtqaHYxdDdTVWFySVBXdG1Fckc1NGdoeHg0UmluK1YxMk8mI3hBO0tzaGJ6VjV1c3RNbmEzMEtLWVd0MUxEYncvWGZWbm10WXpMd25IcUttNzhFK0V0V2plSW9WVnllZVBOUmt2bzVkQ0VKdDV3bG8vcWUmI3hBO3FzOFhHWnVRNGZaTGVuR056dHovQU1rakZVODBUWE5TdWIvVTROVGhpdFlMYVFMWXlobC9mUmt2OGRSSkl2UlYyMkk3Z1lxbEhtNjQmI3hBO2pYeTVleUJnVU44YU1OeDltdVZINlQ4VytQMWovTi9RdzlwMUZ1MDY3by94R1Rmb05xOVBBWlkwSUxrb1pwSTNMaVNqRVZydFNtMkYmI3hBO1VEUGRjWXhNZzV4cU5vUVBqTk45dCt1M1RBcVYzT3MzRnpwaXMyanp6ck9XaXViRStpeGFJMURCdVVpSVZZZHVYZmNkY1VvQmRKMHEmI3hBOzIxK0F3NlRQR3RzbjdyVS9WcWxDcCtCZ1plYmtWNC9FcEF4VlVzTlMrbzZQUzIwaTdSNVo1R2UyWjRtbFV5bHBIbDVOSzY4UzdkT1YmI3hBO2FucFRGVXgrdXpHNEFTM2NLRVZ1YkZTckZ3MVYyWW1xY1FEdDMyNzRVTzA2NjRRenlWQVVPVElwNjdiZmZ0aXFLaGxrbGYxSk5vNjgmI3hBO2tqSklKcDBaaC9ERlVXMHpzYTdVcXA3ZnpaR2ZMNWZlMlkrZndQM0Y3dGIvQU54SC9xcitySk5hL0ZYWXE3RlhZcTdGWFlxN0ZYWXEmI3hBOzdGWFlxZ3RGL3dDT1pCOG0vd0NKSEl3NWZQNzJlVG44Qjl5dEpZV01yczhsdkU3dDlwbVJTVFFVM0pIaGttQ3I2Y2ZBSnhIQmRsV2cmI3hBO29BUEFZcTcwWXY1Ris0WXF4VDh4OVJmUzlEZ250N2krczNlNmpReWFYWUxxTTdEaTdtTXhGSDRxL0duT214cHZ2aXJBdE44OVhFWVQmI3hBO25jK2E5UWYwVEZ3T2d4Z2wvd0IzU1drY2EvNzdJcC9sNzlzVTBnb2Z6QWx0NyszTW1wZWFyaUdFeEM0Z2JRNEZFZ0VrY2JsbjRMNlkmI3hBO1BFbGo0TTFOK0l4V21UYS9lNnBiWCtyOE5aMXBFMGowZWNOdnBVRXlQeWhqbC9jdHdCbXI2TFZvZGpJUjJIRlFvUmVZcm1mVEFWMUgmI3hBO3pLajJNVHl5WGFhTkNEZGd3TGMwQWUza2pxaXhNbTNFRm5JcWRpRldZK1NkSjFXR3krdmFsckZ6cTBlb1FXOHR2QmUyc0Z0SmIvQVcmI3hBO2VxeEtwNVB6SEpXcnhJMnhWS3ZQand4ZVdMdm5zcDFFS1BtVnBsUitrL0Z2SDF4L3pmME1JZDlMa2g5TndDcG9XV2dvU054c2ZEcmwmI3hBO2pRc0V1amlvTUtGZUpCQlVIcnRpcVhUeWFYRTMraWowZHhYZ3EwOTZiZGZuaXFsUGYyTDdSc09KQjNCQXhWRHZjYVVLT3dCZWxBV0MmI3hBO3Nmb0pHS3JJYnV3RHNRS0wxb0tmUGZZZDhWVkpiL1RCRTFRUFRJK0k5cUg2TVZTNnh1Yk5uZVNST01TeU1ZSWUzMmpRa2VJd3FuQ2EmI3hBO2xaTUtFRGlPMWVveFZTbjFEVDBibXFJWktCUXhwMHJYSXo1ZkpzeDgvZ2Z1ZlJscWEyc0pIZEZQNERKTmFyaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZTM1NMcTJUVG9WZVZGWUExVXNBZnRIeHl1TWdPdmUzVGhJbllIa1B1U0xXOVUxR1B6Rkd1blRKS2ZRWXcyOHM3UlcmI3hBO3p5OFg0aVJsRW5FRnFWUEUvTE5UbXp5R3NpQkwwMTM3ZFdneGx4VTErbS96RE5yY3NkTzBPTzZVeC9WSXhxYzhrYmd0Kzg5UnphUmwmI3hBO2FMOW1pbXB6YjhZN3cyK0ZMdVB5UTdhMSthUDFhQmtzUEwvMWdqL1NJbTFHNENnODJGRVlXemZzY1R1T3BQaHU4WTd3dmhTN2o4bXQmI3hBO2FnOHc2NXBUV2VxNmZwTTFMY1NvaWFsY3hLYnhrWkdqTFJSSS9wY1dJNVYzcjluYkhqajNyNFV1NC9KaVY5K1hWeEZLWTdIUWRHdWImI3hBO2FUN1puMXJVMFllb3JpV245NVRlVjZVOXZBVWVPUGV2aHk3ajhtUXdhSHFrSzZmSEhwV2xLaE1ZMUJqckY2UkduR01TZWloaVBxSDQmI3hBO1dDaGl2UWVKeDR4M2hmQ2wzSDVLZjZHMTJEVTExTzAwalNFdnJKM05oY1ByRjdLR1YrY2Y3eUV4SWkxaWtQZC9pN2RHRHh4N3d2aFMmI3hBOzdqOGsxdGRlL01oL3F5ejZYb2tkVC9wa28xT1dpL3ZHQjlKQmJOei9BSFFVamt5N21tUEdPOEw0VXU0L0pPdEMxWFdaa25PdXcyRmsmI3hBOzZ2UzJGbmVOZEJrOFhNa052eFBzSzRlT1BldmhTN2o4bUMvbkZkbUh5WEpKR2FoOVlqQUk3Z294d1IzaWZpbWRpY2Y4MzduaXlhNWQmI3hBO3NwcUdJOXdjdjlQZTRaRSs0dHZyVjF4T3pFSHJVZFJqNmU5SHI3aWo5TDFUUlpMU2R0V2x2WTdsU1JBbHVpTWhIQTBMRnpVZkhTdnQmI3hBO1hJbXU4Tmc0dTQvSlkxMTVXVzZRSmMzeTIvQmpKKzRRc0pQajRoZmlXbyt4VSs1MndiZDRaZXJ1UHlRK29YdmwxclZQcTF4ZXlUVWImI3hBO2tIZ1JWRERseG9ROWZEOGNkdTlhbDNINUl4YnZ5S2xEOWUxUVJrc1c1VzBXd3ExTnhKMXB4cnQ0NDdkNFR2M0g1SVN5dXZLYzBVVW0mI3hBO29YT3BKSjFlT0tDTmtCNWdjdmlkYW5oVS9QSGJ2V3BkeCtTVzMxL2F4WGtxYVcwOHRsVUZKSjBDU0VrQXZ5VmFqWjZnYjlNUlhlZ2kmI3hBO1hjVmk2dGRiVVZ0dlk1TDA5NlBYM0g1T2ZWYmsvYURBQUd2VWRzakt1OW5qTWdkd2VSKzU5aWFjYTZmYW54aGovd0NJakFVQkVZcGQmI3hBO2lyc1ZkaXJzVmRpcnNWZGlyc1ZkaXFIVFQ3ZEVWRk1vVlFBbzlhWFlEYitiRlZOdEgwOXAxdUdqTFRxS0xNWGN1QjdOeXIzeUJ4Uk0mI3hBO3VJZ2NYZjFXbFg2bEQvTkwvd0FqcGY4QW1ySnE3NmxEL05ML0FNanBmK2FzVmQ5U2gvbWwvd0NSMHY4QXpWaXJ2cVVQODB2L0FDT2wmI3hBOy93Q2FzVmQ5U2gvbWwvNUhTLzhBTldLdStwUS96Uy84anBmK2FzVmQ5U2gvbWwvNUhTLzgxWXE3NmxEL0FEUy84anBmK2FzVlFHcysmI3hBO1ZOQjFxeE5ocWxyOWJ0VEt0d1k1SkpQN3hGNHEzSU1HMkhhdE1JTklJQjVwSVB5Zy9MZ2RORlQvQUpHei93RFZURHhsaDRVZTV2OEEmI3hBOzVWRCtYUDhBMVprLzVHei9BUFZUSGpLK0ZIdWEvd0NWUWZseC93QldWUDhBa2JQL0FOVk1lTXI0VVd2K1ZPL2x0LzFaRS81R3ovOEEmI3hBO1ZUSGlLZkRpMS95cHY4dFArckpIL3dBalovOEFxcGp4RmZERGgrVG41YWovQUtVa2YvSTJmL3FwanhGZkRpNy9BSlU1K1d2L0FGWkkmI3hBOy93RGtiUDhBOVZNZUlyNGNXaCtUUDVaaXRORVRjMS92cmp2L0FNOU1lSXJ3QnY4QTVVMytXbi9Wa1Qva2JjZjlWTWVJcjRZYWI4bXYmI3hBO3kwTks2S20zU2sxd1AxU1k4Ulh3d3pLT05JNDFqUVVSQUZVZUFBb01pelhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1hZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlgmI3hBO1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcWdOY251SU5OZDdlUXhTbVNHTVMmI3hBO0FLeFVTU29oSURCbHJSdTR4VkRSUnlXbW9JRWplYWVXRzRaakxKemQvU2tpVk9MRThVREI2OFZBR0twRnJObjVvZlc1cHJTUzQ5SXomI3hBO3hSUVJCcEJEUW1CaTc4UnNvQWF2YllqN1IzVlU5V2Z6V2ZNSmt0clc2TnJIT3FJeXlFUW1MNFdZOEsxLzNYVHJUNzZGVkJ5ZWF2TWMmI3hBO3V0NnZhdzZEcS9HeXVoRkJLWGVLQ2VQNGkwa1RTVzRRcUZRa0JHWWswSFVpcXFYYWg1OTgwV2R2Y3l4ZVZ0ZXVmcTl6RGJRUm96RnAmI3hBO3d3WW1VRDZ1ZmhIQlExSzd0MnBYRlZlMzgrZVk0YjY1L3dDZFkxMmI2cGZteFJaVCs1bWk0VEg2MnBNSzFqQmlIUS90TDhzVlRIV2YmI3hBO3pLOHc2YzE4c1hrelU3MDJ0MkxhSDZ1Q3duaWIxZjMwWkNGZjkwaXExMjVMVTRxbTE1NXgxU0piazJ2bDIrdW10cGxpSzhXajVJV2wmI3hBO1V5cnpYNHdQU0IrRGw5b2ZTcXlqRlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1ZPNHRyZTVoYUc0aVNhRnFjbzVGREthR29xRFViRVZ4VlN0dE0wMjFrTXR0YVF3U0VGUzhjYW8zRWtFaXFnYmJERlZ6NmZZTzVkN2EmI3hBO0puWTFaaWlrays1SXhWYitqTk4vNVpJZitSYS8weFY1ejVoMGJ6WmIrY0k3ZXdpMUM3MGU5WlpIdWJlUFRWdHJSWlpBcFFpUlBYZjAmI3hBO2hIeTI3T2Q5dGxXUHlYSDVudEZadC9oclVva3M0ZjhBVFpHazBaUFZLaU9zamwxNyttK3lnZmFPdytFaFN0MERXZk9Wd0VzcjdTNzYmI3hBO3pNOTNGYnlhbE0yalA5WFFNbnFPWTBUa1J4aWZuOEpweU5DS2JLcTl2TjUxMDJhU2Q3Ty8xbTNzN2lhMkVaL1F5cGNoQ3NRbTVLRWsmI3hBO1VmQ1pBb1d0VFR4NHFFTlBiL21GSHBOeGN2RnFrTXl5S3NNY3I2QVN5TTBxQitTeDBRcUdVbGFIb3UvMnNVdmM4VU94VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMktvRFdvTmNtc3VHaTNkdlpYbklIMXImI3hBO3FCN21QalExSHBwTGJtdlRmbGlyRnRmMGY4ekpkRGhoZzFtd3ViZ3JKSHFVWDZMRHBjTE5JRkFXT1c3VlZXT05pR3F4NWZoaWxnUysmI3hBO1ZmUHYxQ1hVSlBMZHFkU2t1SmtFSTByVHZVQ01QVVdhbjZUSzA1U3pwdktTZWRhVXJ5Q3BscU5oNXdpdjViU1B5aGF5YWVkUm52UHImI3hBO0VlbTJVd2UybzA2d01rbDRoOWVTVFl6YkRsdlR1U3FCbDBMOHhyeUhoY2VXN2N4UzNFWWlpbDBuU1hhSll5cGFXWGpxQVVnbjdQRTgmI3hBO2hUNVZDdjhBLzlrPSIgeG1wR0ltZzp3aWR0aD0iMjU2IiB4bXBHSW1nOmhlaWdodD0iMTUyIi8+IDwvcmRmOkFsdD4gPC94bXA6VGh1bWJuYWlscz4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENTNiAoTWFjaW50b3NoKSIgc3RFdnQ6Y2hhbmdlZD0iLyIgc3RFdnQ6d2hlbj0iMjAxNi0wOS0xM1QxMToyNjo1OSswODowMCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowNzgwMTE3NDA3MjA2ODExODIyQUJFRjE0ODg5RUJGRiIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENDIChNYWNpbnRvc2gpIiBzdEV2dDpjaGFuZ2VkPSIvIiBzdEV2dDp3aGVuPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjVmOTcyMWM5LWEzYmYtNGJmMS1iNWMwLTYxNDllOGQxMTlmYSIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOnJlbmRpdGlvbkNsYXNzPSJwcm9vZjpwZGYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Mjk2Yzg5MzMtYjZmYy00M2U5LThiZDctZWMyODA1N2NiMWRmIiBzdFJlZjppbnN0YW5jZUlEPSJ1dWlkOjgzOTg0Y2U3LTZiNjQtOTk0NS05ZWZlLWE3Y2ZkNmUwMjNlZSIgc3RSZWY6b3JpZ2luYWxEb2N1bWVudElEPSJ1dWlkOjVEMjA4OTI0OTNCRkRCMTE5MTRBODU5MEQzMTUwOEM4Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDw/eHBhY2tldCBlbmQ9InciPz4A/9sAhAABAQEBAQECAQECAwICAgMEAwMDAwQGBAQEBAQGBwYGBgYGBgcHBwcHBwcHCAgICAgICQkJCQkLCwsLCwsLCwsLAQICAgMDAwUDAwULCAYICwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwv/3QAEAAr/wAARCACBAJkDASIAAhEBAxEB/8QBogAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoLEAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+foBAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKCxEAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD+/iiiigAooooAKKKKACiiigAoopoYEUAOpm9a53xT4y8J+B9Hk8Q+M9StdJsIfv3F5KsMa+25iB9BX5kfGX/grR8CPAxl0z4W2tz4vvl+USIDa2YIx/y0dd5x/sx7T2OKAP1YDgjIqSvlf9jv44eJP2iPgVp/xW8VW9tZ3d9c3SGG0DCNUhlaNR8zMcgAZ9T2r6ooAKKKKACiiigAooooA//Q/v4ooooAKKKaCCM0AOopu4YrzX4lfGT4WfB3SP7c+J+vWeiW+CV+0yBXfHUIg+dyPRFJoA9J3CjeK/GD4z/8Fg/AmiiXSfgXoMutzgFVvtRzb2oPqsQ/euPY+VX5L/Gf9tD9o347ebZ+N/Ec0WnSDDadY/6NabT2ZEP7wD/poWoA/pE+M37eX7MvwQMtj4g8QR6lqcXB0/SsXc4I7NtIjQ+zutfkp8Z/+CvHxZ8U+dpfwX0m38NWhyou7jF3eY9QMeSh9QVk+tfIfwY/YO/aa+N4iu/D/h99L0ybaft+qf6LBt9VBG9x/uIwr9a/gx/wSD+E/hfydW+M+rXHia6TBNpbZtLMf7JIJmcD1Dx/7tAH4WalrXxv/aM8YqmpTat4w1qb/VxfvLuQD0RBkIo/2QF9BX318GP+CS/x38deVqnxSurbwhYvgmN8Xd4R6bEbYPqZAR/d7V/RB4C+GPw9+FujDw/8OtFs9Fs+CYrOFYgxHdtoyx92ya7cp3oA8X+AHwO8N/s8/C3T/hV4Uubm8s7AyOJboqZGeVi7H5VUAZPAxwOOa9soooAKKKKACiiigAooooA//9H+/im7hTq85+Levar4V+FfiXxToTrHe6ZpV5dW7Mu5VlhhZkJHcAjpQB3N9qNjplnJqGpSpbwQrvkkkYIiKOpJPAA/Kvz++NH/AAUy/Zk+Eyzafo2ov4r1OPK+RpIEkKsOm6ckRY/3Gc+1fznfEv4+/Hf9oLV4rf4ha/fa3JPIqw2S/LDvPCiOCMCMH6Jmvpf4Mf8ABM/9pv4seTqOr6enhPTX5+0aqTHNg9dkCgyZ/wB4IPegDsPjN/wVW/aK+I3mad4C+z+DdOk4AtMTXZU9jO44PvGiV8U+E/h78c/2ivFUsvhnTtV8WapOw8+5O+c59ZZn4X6uwHvX9CXwY/4JT/s7fDgxal488/xjqCYJ+1/ubQN7QR9R7SM49q/SLQfDmgeFtLi0PwzY2+nWUAxHb2sSwxIP9lEAA/AUAfgJ8GP+CPnjzWhFq3xz12LQoD8xsdOxc3WP7rSkCJD/ALvmiv1s+C/7Fv7OXwI8q88EeHIJNRhwRqF6PtN2GHdXfiM/9cwgr6nx6U6gBmzin0UUAFN3CnV+M37eX7eXxv8A2bfjfD8P/h7Dpj2D6ZBd5u4Gkk3ys4PIdePkHGKAP2Xzx6U6vk39in4z+L/2gf2e9K+KHjpLdNSvZrmOQWqGOPEMrIuAS2OB619ZUAFFFFABRRRQAUUUUAf/0v7+K8i+Pf8AyQvxn/2AdR/9J3r12vI/j3/yQrxn/wBgHUf/AEnegD+Tz9jof8ZUfD5fTXbL9JBX9jm3iv45P2Of+Tqvh/8A9hyy/wDRgr+x6gAooooAKKaGGKQOpGaAH0UUUAFfzJ/8Fc/+Tqrf/sBWf/oyav6bK/mT/wCCuf8AydVb/wDYCs//AEZNQB+sP/BLj/kzXw//ANfN/wD+lD1+hdfnp/wS4/5M18P/APXzf/8ApQ9foXQAUUUzeMZPFAD6KYHBANG8elAD6KKKAP/T/v4ryP49/wDJCvGf/YB1H/0nevXK8j+Pf/JCvGf/AGAdR/8ASd6AP5Pf2Of+Tqvh/wD9hyy/9GCv7Hq/jh/Y5/5Oq+H/AP2HLL/0YK/seoAKKKKAPyJ/bg/4KP6n8AfGknwh+EdhbXut2iI9/dXoZoYDIocRoiFSz7SpJJ2jIGCcgeF/swf8FXfGuteP9P8AA/x+s7E6dqcyWyalZoYHt5JDhTKpYo0eeDjaV6/N0r4s/wCCjvwq8W/Dz9qLxBr2swSf2d4km/tCwutp8uVGUb0B6bomypA5AwcYIr5U+Efws8W/Gj4haX8OPBNs9xfanKqZVcrCnG6RiOAkYGSfbFAH9tFFFFABX8yf/BXP/k6q3/7AVn/6Mmr+myv5k/8Agrn/AMnVW/8A2ArP/wBGTUAfrD/wS4/5M18P/wDXzf8A/pQ9foXX56f8EuP+TNfD/wD183//AKUPX6F0AFeOfHT4zeFvgB8LdU+KfjDLWunIoSKPG+aVyFSNfdmP4DnoK9jr4A/4KT/C7xb8Vf2WtRsfBtu93eaVdQakbeIZklih3BwoHUqr7sDrtwPSgD8ptW/4K9ftJXPiZtU0jTdFtdNDfu7F4JJfk9Hk8xWJ912j/ZFftd+yV+1B4b/ap+GH/Cb6Vb/2dfWc32bULJm3+RMAGG1sDKMDlTgdCO1fx88dK/ox/wCCQvwl8XeC/hX4h+IniOKW1tvFNxa/YIpARugtFk/eqMfddpcA9wnpjIB+v9FFFAH/1P7+K8j+Pf8AyQrxn/2AdR/9J3r1yvI/j3/yQrxn/wBgHUf/AEnegD+T39jn/k6r4f8A/Ycsv/Rgr+x6v44f2Of+Tqvh/wD9hyy/9GCv7HqACiiigDkfGHgLwZ8QtGfw7480qz1mwc7jb3sCTx7sYBAcEAgdCOR2rD8A/B34V/CxJl+HHh3TtDNxjzTZW6Qs+Om4qATjtnpXpVFABRRRQAV/Mn/wVz/5Oqt/+wFZ/wDoyav6bK/mT/4K5/8AJ1Vv/wBgKz/9GTUAfrD/AMEuP+TNfD//AF83/wD6UPX6F1+en/BLj/kzXw//ANfN/wD+lD1+hdABUYUipKKAPD9U/Zo/Z61vxE3i3WPBGh3OpO/mPcS2MLM7/wB5sry3uea9oht44I1hhUIiAAKowABwAPQVYooAKKKKAP/V/v4ryP49/wDJCvGf/YB1H/0nevXK8j+Pf/JCvGf/AGAdR/8ASd6AP5Pf2Of+Tqvh/wD9hyy/9GCv7Hq/jh/Y5/5Oq+H/AP2HLL/0YK/seoAKKKKACiiigAooooAK/mT/AOCuf/J1Vv8A9gKz/wDRk1f02V/Mn/wVz/5Oqt/+wFZ/+jJqAP1h/wCCXH/Jmvh//r5v/wD0oev0Lr89P+CXPH7G3h8f9PV//wClD1+hdABRRRQAUUUUAFFFFAH/1v7+K8e/aBmjt/gJ42nl+VI9A1IsfQC3evYa8r+NnhrVfG/wY8W+DNAQPf6vot/ZW6MwVTLcQNGgJPAG4gZ6UAfyLfsy+KNB8DftC+DfGHiu4Fnpumata3FzOwJWOKNgWJ2gnAHoK/pu/wCHhn7G3/Q8Wv8A34uP/jVfhTD/AMEuP2xpJVWTQrSMHjcb+DA+u1z+grb/AOHUf7XX/Pnpf/gav+FAH7d/8PDP2Nv+h4tf+/Fx/wDGqP8Ah4Z+xt/0PFr/AN+Lj/41X4if8Oof2uf+fPTP/A5f8KP+HUP7XP8Az56Z/wCBy/4UAft3/wAPDP2Nv+h4tf8Avxcf/GqP+Hhn7G3/AEPFr/34uP8A41X4if8ADqH9rn/nz0z/AMDl/wAKP+HUP7XP/Pnpn/gcv+FAH7d/8PDP2Nv+h4tf+/Fx/wDGqP8Ah4Z+xt/0PFr/AN+Lj/41X4if8Oof2uf+fPTP/A5f8KP+HUP7XP8Az56Z/wCBy/4UAft3/wAPDP2Nv+h4tf8Avxcf/Gq/Br/gpD8XPh18av2hIfGPww1OPVtNXSLa3M8asqiSN5Sy/OqnjI7V1X/DqH9rn/nz0z/wOX/Csu7/AOCWn7YdvL5cOjWdwMD5kv4dv0+Zl/lQB+xv/BLaeOT9jnQo06x3d8rex89jj8jX6I18XfsFfBzx58CP2drL4ffEe1S01SK7upnjjkWUBZWyvzISufpX2jQAUUUUAFFFFABRRRQB/9f+/iq5/wBVJ+NWKrn/AFUn40AO/wCWf4Cm07/ln+AptABRRRQAUUUUAFFFFABUr9B9RUVSv0H1FAEfZfwqeoOy/hU9ABRRRQAUUUUAFFFFAH//2Q==" alt="得森設計">
+    <div class="hd-brand">得森室內裝修設計有限公司</div>
+    <div class="hd-title">燈 光 照 度 配 置 助 理</div>
+  </div>
+  <div class="hd-right">
+    <a href="index.html" class="back-btn">← 首頁</a>
+    <button class="hbtn hbtn-sage" onclick="openDrawer()">📁 草稿</button>
+    <button class="hbtn hbtn-ghost" onclick="exportJPG()">↓ JPG</button>
+    <button class="hbtn hbtn-ghost" onclick="exportPDF()">↓ PDF</button>
+  </div>
+</header>
 
-  <!-- ═══ LEFT PANEL ═══ -->
-  <div class="panel-left">
+<div class="workspace">
+<!-- ══ LEFT ══ -->
+<div class="panel-l">
 
-    <!-- 空間維度 -->
-    <div class="card">
-      <div class="card-hd"><span class="card-hd-icon">📐</span><span class="card-hd-title">空 間 維 度</span></div>
-      <div class="card-body">
-        <div class="field">
-          <div class="field-label">長 / 寬 / 高 <span class="field-hint">cm</span></div>
-          <div class="field-row">
-            <input type="number" id="roomL" value="500" min="100" oninput="calc()">
-            <input type="number" id="roomW" value="400" min="100" oninput="calc()">
-            <input type="number" id="roomH" value="270" min="200" oninput="calc()">
+  <!-- 專案資訊 -->
+  <div class="card">
+    <div class="card-hd"><span class="card-icon">📋</span><span class="card-title">專 案 資 訊</span></div>
+    <div class="card-body">
+      <div class="field"><div class="field-label">專案名稱</div><input type="text" id="f-project" placeholder="例：苓雅區郭宅全室裝修" oninput="calc()"></div>
+      <div class="field"><div class="field-label">空間名稱</div><input type="text" id="f-space" placeholder="例：主臥室、客廳、餐廳" oninput="calc()"></div>
+    </div>
+  </div>
+
+  <!-- 空間維度 -->
+  <div class="card">
+    <div class="card-hd"><span class="card-icon">📐</span><span class="card-title">空 間 維 度</span></div>
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">長 / 寬 / 高 <span class="field-hint">cm</span></div>
+        <div class="field-row3">
+          <input type="number" id="roomL" value="500" min="100" oninput="calc()">
+          <input type="number" id="roomW" value="400" min="100" oninput="calc()">
+          <input type="number" id="roomH" value="270" min="200" oninput="calc()">
+        </div>
+      </div>
+      <div class="computed-row"><span class="computed-label">面積</span><span class="computed-val" id="d-area">—</span></div>
+      <div class="computed-row" style="margin-top:4px;"><span class="computed-label">坪數</span><span class="computed-val" id="d-ping">—</span></div>
+      <div class="computed-row" style="margin-top:4px;"><span class="computed-label">空間指數 RCR</span><span class="computed-val" id="d-rcr">—</span></div>
+    </div>
+  </div>
+
+  <!-- 空間條件 -->
+  <div class="card">
+    <div class="card-hd"><span class="card-icon">🏠</span><span class="card-title">空 間 條 件</span></div>
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">牆面反射率（U 值）</div>
+        <select id="uVal" onchange="calc()">
+          <option value="0.6">淺色系 / 白色天花（U=0.6）</option>
+          <option value="0.4" selected>中性色 / 木皮（U=0.4）</option>
+          <option value="0.2">深色 / 清水模（U=0.2）</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">情境類型</div>
+        <select id="scene" onchange="onSceneChange()">
+          <option value="150">休閒客廳（150 Lux）</option>
+          <option value="400">餐廳桌面（400 Lux）</option>
+          <option value="100">溫馨臥室（100 Lux）</option>
+          <option value="500">閱讀 / 工作區（500 Lux）</option>
+          <option value="300">走廊 / 過渡空間（300 Lux）</option>
+          <option value="750">廚房操作台（750 Lux）</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">目標照度 <span class="field-hint">可手動覆寫</span></div>
+        <input type="number" id="targetLux" value="150" min="50" max="2000" oninput="calc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- 燈具選擇（多選） -->
+  <div class="card">
+    <div class="card-hd"><span class="card-icon">💡</span><span class="card-title">燈 具 選 擇（可多選混搭）</span></div>
+    <div class="card-body">
+      <div class="fixture-grid" id="fxGrid"></div>
+
+      <!-- Strip mode (only when strip selected) -->
+      <div class="strip-mode-wrap" id="stripModeWrap" style="display:none;">
+        <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+        <div style="font-size:11px;color:var(--ink-l);margin-bottom:6px;letter-spacing:.5px;">燈帶鋪設模式</div>
+        <div class="strip-mode-grid">
+          <div class="sm-btn active" data-mode="rect" onclick="setStripMode('rect')"><div class="sm-icon">⬜</div>口字型</div>
+          <div class="sm-btn" data-mode="line" onclick="setStripMode('line')"><div class="sm-icon">➖</div>偏邊一字</div>
+          <div class="sm-btn" data-mode="free" onclick="setStripMode('free')"><div class="sm-icon">✏️</div>自由型</div>
+        </div>
+        <div id="stripSidesWrap" style="display:none;">
+          <div style="font-size:11px;color:var(--ink-l);margin-bottom:5px;">選擇鋪設面</div>
+          <div class="side-chips">
+            <div class="side-chip active" data-side="top" onclick="toggleFreeSide(this)">上牆（長邊）</div>
+            <div class="side-chip active" data-side="bottom" onclick="toggleFreeSide(this)">下牆（長邊）</div>
+            <div class="side-chip active" data-side="left" onclick="toggleFreeSide(this)">左牆（短邊）</div>
+            <div class="side-chip active" data-side="right" onclick="toggleFreeSide(this)">右牆（短邊）</div>
           </div>
         </div>
-        <div class="computed-row">
-          <span class="computed-label">面積</span>
-          <span class="computed-val" id="disp-area">—</span>
-        </div>
-        <div class="computed-row" style="margin-top:4px;">
-          <span class="computed-label">坪數</span>
-          <span class="computed-val" id="disp-ping">—</span>
-        </div>
-        <div class="computed-row" style="margin-top:4px;">
-          <span class="computed-label">空間指數 RCR</span>
-          <span class="computed-val" id="disp-rcr">—</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 空間條件 -->
-    <div class="card">
-      <div class="card-hd"><span class="card-hd-icon">🏠</span><span class="card-hd-title">空 間 條 件</span></div>
-      <div class="card-body">
-        <div class="field">
-          <div class="field-label">牆面反射率（U 值）</div>
-          <select id="uVal" onchange="calc()">
-            <option value="0.6">淺色系牆面 / 白色天花（U = 0.6）</option>
-            <option value="0.4" selected>中性色 / 木皮飾板（U = 0.4）</option>
-            <option value="0.2">深色 / 清水模 / 木炭色（U = 0.2）</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="field-label">情境類型</div>
-          <select id="scene" onchange="onSceneChange()">
-            <option value="150">休閒客廳（150 Lux）</option>
-            <option value="400">餐廳桌面（400 Lux）</option>
-            <option value="100">溫馨臥室（100 Lux）</option>
-            <option value="500">閱讀 / 工作區（500 Lux）</option>
-            <option value="300">走廊 / 過渡空間（300 Lux）</option>
-            <option value="750">專業廚房操作台（750 Lux）</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="field-label">目標照度 <span class="field-hint">可手動覆寫</span></div>
-          <input type="number" id="targetLux" value="150" min="50" max="2000" oninput="calc()">
-        </div>
-      </div>
-    </div>
-
-    <!-- 燈具選擇 -->
-    <div class="card">
-      <div class="card-hd"><span class="card-hd-icon">💡</span><span class="card-hd-title">燈 具 類 型</span></div>
-      <div class="card-body">
-        <div class="fixture-grid" id="fixtureGrid"></div>
-
-        <!-- STRIP PANEL -->
-        <div class="strip-panel" id="stripPanel">
-          <div style="height:1px;background:var(--border);margin:12px 0;"></div>
-          <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:8px;">燈帶鋪設模式</div>
-          <div class="strip-mode-grid">
-            <div class="strip-mode-btn active" data-mode="rect" onclick="setStripMode('rect')">
-              <div class="strip-mode-icon">⬜</div>
-              <div class="strip-mode-label">口字型</div>
-              <div class="strip-mode-sub">四面天花線槽</div>
-            </div>
-            <div class="strip-mode-btn" data-mode="line" onclick="setStripMode('line')">
-              <div class="strip-mode-icon">➖</div>
-              <div class="strip-mode-label">偏邊一字型</div>
-              <div class="strip-mode-sub">單邊或對邊</div>
-            </div>
-            <div class="strip-mode-btn" data-mode="free" onclick="setStripMode('free')">
-              <div class="strip-mode-icon">✏️</div>
-              <div class="strip-mode-label">自由型</div>
-              <div class="strip-mode-sub">自選哪幾面</div>
-            </div>
-          </div>
-          <!-- free mode side selector -->
-          <div id="stripSides" style="display:none;">
-            <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:6px;">選擇鋪設面</div>
-            <div class="strip-sides">
-              <div class="strip-side-chip active" data-side="top" onclick="toggleSide(this)"><input type="checkbox" checked>上牆（長邊）</div>
-              <div class="strip-side-chip active" data-side="bottom" onclick="toggleSide(this)"><input type="checkbox" checked>下牆（長邊）</div>
-              <div class="strip-side-chip active" data-side="left" onclick="toggleSide(this)"><input type="checkbox" checked>左牆（短邊）</div>
-              <div class="strip-side-chip active" data-side="right" onclick="toggleSide(this)"><input type="checkbox" checked>右牆（短邊）</div>
-            </div>
-          </div>
-          <!-- line mode side selector -->
-          <div id="stripLineSides" style="display:none;">
-            <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:6px;">選擇方向</div>
-            <div class="strip-sides">
-              <div class="strip-side-chip active" data-side="top" onclick="toggleLineSide(this)">上牆（長邊）</div>
-              <div class="strip-side-chip" data-side="bottom" onclick="toggleLineSide(this)">下牆（長邊）</div>
-              <div class="strip-side-chip" data-side="left" onclick="toggleLineSide(this)">左牆（短邊）</div>
-              <div class="strip-side-chip" data-side="right" onclick="toggleLineSide(this)">右牆（短邊）</div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:var(--ink-f);margin-top:8px;line-height:1.7;">
-            💡 凹槽建議內退牆面 15～30 cm，確保光源不直接外露
+        <div id="stripLineWrap" style="display:none;">
+          <div style="font-size:11px;color:var(--ink-l);margin-bottom:5px;">選擇方向</div>
+          <div class="side-chips">
+            <div class="side-chip active" data-side="top" onclick="setLineSide(this)">上牆（長邊）</div>
+            <div class="side-chip" data-side="bottom" onclick="setLineSide(this)">下牆（長邊）</div>
+            <div class="side-chip" data-side="left" onclick="setLineSide(this)">左牆（短邊）</div>
+            <div class="side-chip" data-side="right" onclick="setLineSide(this)">右牆（短邊）</div>
           </div>
         </div>
+        <div style="font-size:10px;color:var(--ink-f);margin-top:6px;line-height:1.6;">💡 凹槽建議內退牆面 15～30 cm，光源不直接外露</div>
+      </div>
+
+      <!-- Mix ratio sliders (when >1 non-strip selected) -->
+      <div class="mix-panel" id="mixPanel">
+        <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+        <div style="font-size:11px;color:var(--ink-l);margin-bottom:8px;letter-spacing:.5px;">各燈具光通量分配比例</div>
+        <div id="mixSliders"></div>
       </div>
     </div>
+  </div>
 
-  </div><!-- /panel-left -->
+</div><!-- /panel-l -->
 
-  <!-- ═══ RIGHT PANEL ═══ -->
-  <div class="panel-right">
+<!-- ══ RIGHT ══ -->
+<div class="panel-r" id="exportTarget">
 
-    <div class="warning-box" id="warningBox">
-      ⚠️ <strong>挑高空間提醒：</strong>空間高度超過 300 cm，光衰明顯。建議將目標照度提高 15%，或改用光束角 36° 以下的聚光燈具（防眩崁燈 / 軌道投射燈）以集中光通量，避免大量光源浪費在牆面與天花。
+  <!-- project title for export -->
+  <div id="export-title" style="display:none;font-family:var(--serif);font-size:18px;letter-spacing:3px;color:var(--ink);padding:10px 0 16px;border-bottom:1px solid var(--border);margin-bottom:14px;"></div>
+
+  <!-- warnings -->
+  <div class="warn-box amber" id="warnHigh">⚠️ <strong>挑高空間：</strong>高度超過 300cm，光衰明顯，建議目標照度提高 15% 或改用 36° 以下聚光燈具。</div>
+  <div class="warn-box amber" id="warnCorrection"><strong>🔧 自動合理性校正</strong><div id="warnCorrContent"></div></div>
+  <div class="warn-box red" id="warnBeam"></div>
+
+  <!-- core results -->
+  <div class="result-grid">
+    <div class="rc">
+      <div class="rc-label">總光通量需求</div>
+      <div class="rc-val" id="r-lm">—<span>lm</span></div>
+      <div class="rc-sub" id="r-formula">—</div>
+      <div class="rc-detail" id="r-detail" style="display:none;"></div>
     </div>
-
-    <div class="correction-box" id="correctionBox">
-      <strong>🔧 自動合理性校正</strong>
-      <div id="correctionContent"></div>
+    <div class="rc">
+      <div class="rc-label">燈具配置結果</div>
+      <div class="rc-val" id="r-count">—</div>
+      <div class="rc-sub" id="r-count-sub">—</div>
     </div>
-
-    <!-- 核心數值 -->
-    <div class="result-grid">
-      <div class="result-card">
-        <div class="result-label">總光通量需求</div>
-        <div class="result-value" id="r-lumens">—<span>lm</span></div>
-        <div class="result-sub" id="r-formula">—</div>
-        <div class="calc-detail" id="r-detail" style="display:none;"></div>
-      </div>
-      <div class="result-card">
-        <div class="result-label">建議燈具數量</div>
-        <div class="result-value" id="r-count">—<span id="r-count-unit">顆</span></div>
-        <div class="result-sub" id="r-count-sub">—</div>
-      </div>
-      <div class="result-card">
-        <div class="result-label">建議配置陣列</div>
-        <div class="result-value" id="r-array">—</div>
-        <div class="result-sub" id="r-array-sub">—</div>
-      </div>
-      <div class="result-card">
-        <div class="result-label">燈具間距建議</div>
-        <div class="result-value" id="r-spacing">—<span>cm</span></div>
-        <div class="result-sub" id="r-spacing-sub">—</div>
-      </div>
+    <div class="rc">
+      <div class="rc-label">建議配置陣列</div>
+      <div class="rc-val" id="r-array">—</div>
+      <div class="rc-sub" id="r-array-sub">—</div>
     </div>
-
-    <!-- 光束角擴散 -->
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-hd"><span class="card-hd-icon">🔦</span><span class="card-hd-title">光束角擴散半徑</span></div>
-      <div class="card-body">
-        <table class="beam-table">
-          <thead><tr><th>光束角</th><th>照射距離（高度）</th><th>地面光圈直徑</th><th>建議最大間距</th></tr></thead>
-          <tbody id="beamTable"></tbody>
-        </table>
-      </div>
+    <div class="rc">
+      <div class="rc-label">燈具間距</div>
+      <div class="rc-val" id="r-spacing">—<span>cm</span></div>
+      <div class="rc-sub" id="r-spacing-sub">—</div>
     </div>
+  </div>
 
-    <!-- 照明層次建議 -->
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-hd"><span class="card-hd-icon">🎨</span><span class="card-hd-title">照 明 層 次 建 議</span></div>
-      <div class="card-body">
-        <table class="layer-table">
-          <thead><tr><th>層次</th><th>功能</th><th>建議比例</th><th>適用燈具</th><th>建議照度貢獻</th></tr></thead>
-          <tbody id="layerTable"></tbody>
-        </table>
-      </div>
+  <!-- mix results (multi-fixture) -->
+  <div class="card" id="mixResultCard" style="display:none;margin-bottom:12px;">
+    <div class="card-hd"><span class="card-icon">🎛️</span><span class="card-title">混 搭 燈 具 明 細</span></div>
+    <div class="card-body"><div class="mix-result-list" id="mixResultList"></div></div>
+  </div>
+
+  <!-- beam radius -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hd"><span class="card-icon">🔦</span><span class="card-title">光 束 角 擴 散 半 徑</span></div>
+    <div class="card-body">
+      <table class="beam-tbl"><thead><tr><th>光束角</th><th>高度</th><th>地面光圈直徑</th><th>建議最大間距</th></tr></thead>
+      <tbody id="beamTbl"></tbody></table>
     </div>
+  </div>
 
-    <!-- 色溫建議 -->
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-hd"><span class="card-hd-icon">🌡️</span><span class="card-hd-title">色 溫 建 議</span></div>
-      <div class="card-body">
-        <div class="ct-row">
-          <div class="ct-swatch" id="ct-swatch"></div>
-          <div class="ct-info">
-            <div class="ct-val" id="ct-val">—</div>
-            <div class="ct-desc" id="ct-desc">—</div>
-          </div>
-        </div>
-        <div style="margin-top:12px;padding:10px 12px;background:var(--surface3);border-radius:var(--r);font-size:11px;color:var(--ink-l);line-height:1.8;" id="ct-cri"></div>
+  <!-- layer suggestions -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hd"><span class="card-icon">🎨</span><span class="card-title">照 明 層 次 建 議</span></div>
+    <div class="card-body"><table class="tbl"><thead><tr><th>層次</th><th>功能</th><th>建議比例</th><th>適用燈具</th><th>照度貢獻</th></tr></thead>
+    <tbody id="layerTbl"></tbody></table></div>
+  </div>
+
+  <!-- color temp -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hd"><span class="card-icon">🌡️</span><span class="card-title">色 溫 建 議</span></div>
+    <div class="card-body">
+      <div class="ct-row">
+        <div class="ct-swatch" id="ct-swatch"></div>
+        <div><div class="ct-val" id="ct-val">—</div><div class="ct-desc" id="ct-desc">—</div></div>
       </div>
+      <div class="ct-cri" id="ct-cri"></div>
     </div>
+  </div>
 
-    <!-- 2D 俯視配置圖 -->
-    <div class="card" id="planCard">
-      <div class="card-hd"><span class="card-hd-icon">🗺️</span><span class="card-hd-title">2D 天花燈具配置圖</span></div>
-      <div class="card-body">
-        <div class="canvas-wrap">
-          <canvas id="planCanvas" width="700" height="460"></canvas>
-        </div>
-        <div class="canvas-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#8a9082;"></div>燈具位置</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(200,180,100,.35);border:1px solid #c8b464;"></div>光束擴散範圍</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#e8e4da;border:1px solid #c8c0b0;"></div>空間邊界</div>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--ink-f);" id="canvas-note">— 請輸入空間尺寸並選擇燈具查看配置圖 —</div>
+  <!-- 2D plan -->
+  <div class="card" id="planCard" style="margin-bottom:12px;">
+    <div class="card-hd"><span class="card-icon">🗺️</span><span class="card-title">2D 天花燈具配置圖</span></div>
+    <div class="card-body">
+      <div class="cv-wrap"><canvas id="planCanvas" width="680" height="420" style="display:block;width:100%;height:auto;"></canvas></div>
+      <div class="cv-legend">
+        <div class="cv-leg-item"><div class="cv-leg-dot" style="background:#8a9082;"></div>燈具</div>
+        <div class="cv-leg-item"><div class="cv-leg-dot" style="background:rgba(200,180,100,.4);border:1px solid #c8b464;"></div>光束範圍</div>
       </div>
+      <div style="margin-top:6px;font-size:10px;color:var(--ink-f);" id="plan-note"></div>
     </div>
+  </div>
 
-    <!-- 燈帶剖面光暈模擬 -->
-    <div class="card" id="sectionCard" style="display:none;">
-      <div class="card-hd"><span class="card-hd-icon">✨</span><span class="card-hd-title">燈帶間接照明剖面模擬</span></div>
-      <div class="card-body">
-        <!-- strip stats -->
-        <div class="strip-result-grid" id="stripStats"></div>
-        <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-        <!-- section canvas -->
-        <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:8px;">空間剖面光暈模擬（正面視角）</div>
-        <div class="canvas-wrap" style="background:#1a1a2e;">
-          <canvas id="sectionCanvas" width="700" height="360"></canvas>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--ink-f);" id="section-note"></div>
-        <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-        <!-- top view strip -->
-        <div style="font-size:11px;color:var(--ink-l);letter-spacing:1px;margin-bottom:8px;">天花俯視鋪設路徑</div>
-        <div class="canvas-wrap">
-          <canvas id="stripPlanCanvas" width="700" height="420"></canvas>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--ink-f);" id="strip-plan-note"></div>
-      </div>
+  <!-- section canvas (strip) -->
+  <div class="card" id="sectionCard" style="display:none;margin-bottom:12px;">
+    <div class="card-hd"><span class="card-icon">✨</span><span class="card-title">燈帶間接照明剖面模擬</span></div>
+    <div class="card-body">
+      <div class="strip-result-grid" id="stripStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;"></div>
+      <div style="font-size:11px;color:var(--ink-l);margin-bottom:6px;">剖面光暈模擬</div>
+      <div class="cv-wrap cv-dark"><canvas id="sectionCanvas" width="680" height="340" style="display:block;width:100%;height:auto;"></canvas></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--ink-l);margin-bottom:6px;">天花俯視鋪設路徑</div>
+      <div class="cv-wrap"><canvas id="stripPlanCanvas" width="680" height="400" style="display:block;width:100%;height:auto;"></canvas></div>
+      <div style="margin-top:6px;font-size:10px;color:var(--ink-f);" id="strip-note"></div>
     </div>
+  </div>
 
-  </div><!-- /panel-right -->
-</div><!-- /app-body -->
+</div><!-- /panel-r -->
+</div><!-- /workspace -->
 
 <script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const FX_DB = [
+  {id:'wide', name:'廣角崁燈',  spec:'9W · 120° · Ra≥80', lm:800,  angle:120, w:9,  cri:80, type:'point', color:'#8a9082'},
+  {id:'anti', name:'防眩崁燈',  spec:'12W · 36° · Ra≥90', lm:1000, angle:36,  w:12, cri:90, type:'point', color:'#5c7a6e'},
+  {id:'track',name:'軌道投射燈',spec:'7W · 24° · Ra≥90',  lm:600,  angle:24,  w:7,  cri:90, type:'point', color:'#6e7a8a'},
+  {id:'ceil', name:'吸頂燈',    spec:'28W · 150° · Ra≥80',lm:2800, angle:150, w:28, cri:80, type:'point', color:'#9a8070'},
+  {id:'pend', name:'吊燈',      spec:'40W · 60° · Ra≥90', lm:3200, angle:60,  w:40, cri:90, type:'point', color:'#7a6a9a'},
+  {id:'strip',name:'LED 燈帶',  spec:'12W/m · Ra≥80',      lm:1000, angle:120, w:12, cri:80, type:'strip', color:'#c8960a'},
+];
 
-// ══════════════════════════════════════════════════
-// STRIP STATE & FUNCTIONS
-// ══════════════════════════════════════════════════
+const SCENES = {
+  '100':{label:'溫馨臥室',ct:2700,ctName:'2700K 燭光暖白',ctColor:'#ffcf7a',ctDesc:'接近燭光的極暖色溫，讓空間充滿溫暖放鬆感，適合睡前情境。',cri:'建議 CRI ≥ 80，搭配調光迴路，睡前可降至 10% 亮度。',layers:[{n:'基礎照明',b:'badge-g',r:'40%',f:'廣角崁燈 / 吸頂燈',l:'40 Lux'},{n:'情境照明',b:'badge-b',r:'40%',f:'燈帶（床頭板後）',l:'40 Lux'},{n:'重點照明',b:'badge-a',r:'20%',f:'床頭壁燈',l:'20 Lux'}]},
+  '150':{label:'休閒客廳',ct:3000,ctName:'3000K 暖白光',ctColor:'#ffd580',ctDesc:'暖黃色調，創造輕鬆愉快的社交氛圍，適合家庭聚會與日常休閒。',cri:'建議 CRI ≥ 80，藝術品局部可用 CRI ≥ 90 防眩崁燈。',layers:[{n:'基礎照明',b:'badge-g',r:'50%',f:'廣角崁燈 / 吸頂燈',l:'75 Lux'},{n:'情境照明',b:'badge-b',r:'30%',f:'燈帶（天花間接）',l:'45 Lux'},{n:'重點照明',b:'badge-a',r:'20%',f:'軌道燈（畫作）',l:'30 Lux'}]},
+  '300':{label:'走廊空間',ct:3000,ctName:'3000K 暖白光',ctColor:'#ffd580',ctDesc:'走廊以安全引導為主，暖白光讓空間有延伸感。',cri:'CRI ≥ 80，可搭配感應開關節能。',layers:[{n:'基礎照明',b:'badge-g',r:'70%',f:'廣角崁燈',l:'210 Lux'},{n:'情境照明',b:'badge-b',r:'20%',f:'燈帶（踢腳線）',l:'60 Lux'},{n:'重點照明',b:'badge-a',r:'10%',f:'端景牆投射燈',l:'30 Lux'}]},
+  '400':{label:'餐廳桌面',ct:2700,ctName:'2700K 燭光暖白',ctColor:'#ffcf7a',ctDesc:'暖光讓食物看起來更美味可口，餐廳最佳色溫。',cri:'強烈建議 CRI ≥ 90，讓食物色彩真實呈現。',layers:[{n:'基礎照明',b:'badge-g',r:'30%',f:'廣角崁燈（周邊）',l:'120 Lux'},{n:'重點照明',b:'badge-a',r:'50%',f:'吊燈 / 軌道燈（桌面）',l:'200 Lux'},{n:'情境照明',b:'badge-b',r:'20%',f:'燈帶（層板）',l:'80 Lux'}]},
+  '500':{label:'閱讀工作區',ct:4000,ctName:'4000K 中性自然光',ctColor:'#f5f0d0',ctDesc:'接近日光的中性色溫，提升專注力與工作效率。',cri:'建議 CRI ≥ 90，精確色彩辨識對設計工作至關重要。',layers:[{n:'基礎照明',b:'badge-g',r:'60%',f:'防眩崁燈（均勻）',l:'300 Lux'},{n:'重點照明',b:'badge-a',r:'30%',f:'桌燈 / 軌道燈',l:'150 Lux'},{n:'情境照明',b:'badge-b',r:'10%',f:'燈帶（書架底）',l:'50 Lux'}]},
+  '750':{label:'廚房操作台',ct:4000,ctName:'4000K 中性自然光',ctColor:'#f5f0d0',ctDesc:'高亮度與準確色彩辨識，操作安全、眼睛不疲勞。',cri:'強烈建議 CRI ≥ 90，確保食材新鮮度辨識。',layers:[{n:'基礎照明',b:'badge-g',r:'40%',f:'廣角崁燈',l:'300 Lux'},{n:'重點照明',b:'badge-a',r:'45%',f:'防眩崁燈（操作台）',l:'337 Lux'},{n:'情境照明',b:'badge-b',r:'15%',f:'燈帶（吊櫃頂）',l:'113 Lux'}]},
+};
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let selectedFx = new Set(['wide']); // multi-select
+let mixRatios = {}; // id -> ratio (0~1)
 let stripMode = 'rect';
 let freeSides = new Set(['top','bottom','left','right']);
 let lineSide = 'top';
 
-function setStripMode(mode){
-  stripMode = mode;
-  document.querySelectorAll('.strip-mode-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.mode===mode);
-  });
-  document.getElementById('stripSides').style.display = mode==='free'?'':'none';
-  document.getElementById('stripLineSides').style.display = mode==='line'?'':'none';
-  calc();
-}
-
-function toggleSide(el){
-  const side = el.dataset.side;
-  if(freeSides.has(side)) freeSides.delete(side); else freeSides.add(side);
-  el.classList.toggle('active', freeSides.has(side));
-  calc();
-}
-
-function toggleLineSide(el){
-  document.querySelectorAll('#stripLineSides .strip-side-chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  lineSide = el.dataset.side;
-  calc();
-}
-
-function getStripMeters(L,W){
-  // L=long side(cm), W=short side(cm)
-  const lm = L/100, wm = W/100;
-  if(stripMode==='rect') return 2*(lm+wm);
-  if(stripMode==='line'){
-    return (lineSide==='top'||lineSide==='bottom') ? lm : wm;
-  }
-  // free
-  let total=0;
-  if(freeSides.has('top')||freeSides.has('bottom')) total += [...freeSides].filter(s=>s==='top'||s==='bottom').length * lm;
-  if(freeSides.has('left')||freeSides.has('right')) total += [...freeSides].filter(s=>s==='left'||s==='right').length * wm;
-  return total;
-}
-
-function calcStrip(L,W,H,f){
-  const meters = getStripMeters(L,W);
-  const totalW = meters * f.w;
-  const maxPerCircuit = 5; // metres per driver circuit
-  const drivers = Math.ceil(meters / maxPerCircuit);
-  const totalLmStrip = meters * f.lm;
-
-  // Update result cards
-  document.getElementById('r-count').innerHTML = meters.toFixed(1)+'<span> 公尺</span>';
-  document.getElementById('r-count-sub').textContent = '依'+{rect:'口字型',line:'偏邊一字型',free:'自由型'}[stripMode]+'鋪設，含內退裕量';
-  document.getElementById('r-array').textContent = drivers+' 迴路';
-  document.getElementById('r-array-sub').textContent = '每條迴路建議不超過 '+maxPerCircuit+' m';
-  document.getElementById('r-spacing').textContent = totalW.toFixed(0)+'<span> W</span>';
-  document.getElementById('r-spacing-sub').textContent = '總功率，建議每迴路獨立開關';
-
-  // Strip stats
-  document.getElementById('stripStats').innerHTML =
-    '<div class="strip-stat"><div class="strip-stat-val">'+meters.toFixed(1)+'</div><div class="strip-stat-label">總長度 (m)</div></div>'+
-    '<div class="strip-stat"><div class="strip-stat-val">'+drivers+'</div><div class="strip-stat-label">驅動器數量</div></div>'+
-    '<div class="strip-stat"><div class="strip-stat-val">'+totalLmStrip.toFixed(0)+'</div><div class="strip-stat-label">總光通量 (lm)</div></div>';
-
-  // Section note
-  document.getElementById('section-note').textContent =
-    '模擬空間 '+( L/100).toFixed(1)+' × 高 '+(H/100).toFixed(1)+' m，燈帶藏於天花凹槽，光向上漫射後均勻擴散';
-
-  // Draw
-  drawSectionCanvas(L,W,H,f);
-  drawStripPlan(L,W);
-}
-
-// ── SECTION CANVAS (剖面光暈) ──────────────────────────────────────────────
-function drawSectionCanvas(L,W,H,f){
-  const canvas = document.getElementById('sectionCanvas');
-  const ctx = canvas.getContext('2d');
-  const CW=canvas.width, CH=canvas.height;
-  ctx.clearRect(0,0,CW,CH);
-
-  // Background: room dark ambiance
-  ctx.fillStyle='#12121e';
-  ctx.fillRect(0,0,CW,CH);
-
-  const PAD={t:30,b:50,l:60,r:60};
-  const rw=CW-PAD.l-PAD.r;
-  const rh=CH-PAD.t-PAD.b;
-  const ox=PAD.l, oy=PAD.t;
-
-  // Ceiling
-  ctx.fillStyle='#2a2a3e';
-  ctx.fillRect(ox,oy,rw,18);
-  // Floor
-  ctx.fillStyle='#1e1e2e';
-  ctx.fillRect(ox,oy+rh-12,rw,12);
-  // Left wall
-  ctx.fillStyle='#1e1e2e';
-  ctx.fillRect(ox,oy,12,rh);
-  // Right wall
-  ctx.fillRect(ox+rw-12,oy,12,rh);
-
-  // Ceiling line
-  ctx.strokeStyle='rgba(180,175,165,.4)';
-  ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(ox+12,oy+18);ctx.lineTo(ox+rw-12,oy+18);ctx.stroke();
-  // Floor line
-  ctx.beginPath();ctx.moveTo(ox+12,oy+rh-12);ctx.lineTo(ox+rw-12,oy+rh-12);ctx.stroke();
-
-  // Determine which sides have strips
-  let hasSides=[];
-  if(stripMode==='rect') hasSides=['left','right'];
-  else if(stripMode==='line') hasSides=[lineSide==='left'||lineSide==='right'?lineSide:'left'];
-  else hasSides=[...freeSides].filter(s=>s==='left'||s==='right');
-  // For section view: left/right = left-wall right-wall; top/bottom = treated as both walls for section
-  if(stripMode==='rect'||[...freeSides].has&&freeSides.has('top')) hasSides=['left','right'];
-
-  // Groove position: 30cm from ceiling in real space → proportional
-  const grooveY = oy + 18 + (30/(H))*rh;
-  const grooveDepth = 10;
-
-  const sides = stripMode==='rect' ? ['left','right'] :
-                stripMode==='line' ? (lineSide==='left'||lineSide==='right'?[lineSide]:['left']) :
-                [...freeSides].filter(s=>s==='left'||s==='right');
-
-  const activeSides = sides.length>0 ? sides : ['left','right'];
-
-  activeSides.forEach(side=>{
-    const gx = side==='left' ? ox+12 : ox+rw-12-grooveDepth;
-
-    // Groove recess
-    ctx.fillStyle='#0a0a18';
-    ctx.fillRect(gx, grooveY, grooveDepth, grooveDepth);
-
-    // LED strip glow point
-    const ledX = gx + grooveDepth/2;
-    const ledY = grooveY + grooveDepth/2;
-
-    // Upward glow to ceiling
-    const upGrad = ctx.createRadialGradient(ledX,ledY,0,ledX,ledY,rh*0.6);
-    upGrad.addColorStop(0,'rgba(255,220,120,.6)');
-    upGrad.addColorStop(0.15,'rgba(255,200,80,.25)');
-    upGrad.addColorStop(0.4,'rgba(255,180,60,.08)');
-    upGrad.addColorStop(1,'rgba(255,160,40,0)');
-    ctx.fillStyle=upGrad;
-    ctx.beginPath();
-    ctx.arc(ledX,ledY,rh*0.6,0,Math.PI*2);
-    ctx.fill();
-
-    // Ceiling wash (bounce light)
-    const ceilGrad = ctx.createLinearGradient(ox,oy+18,ox,oy+18+rh*0.4);
-    ceilGrad.addColorStop(0,'rgba(255,230,150,.18)');
-    ceilGrad.addColorStop(1,'rgba(255,200,100,0)');
-    const washW = rw * (side==='left'?0.6:0.6);
-    const washX = side==='left'?ox+12:ox+rw-12-washW;
-    ctx.fillStyle=ceilGrad;
-    ctx.fillRect(washX,oy+18,washW,rh*0.4);
-
-    // Downward ambient glow
-    const downGrad = ctx.createRadialGradient(ledX,oy+rh-12,0,ledX,oy+rh-12,rw*0.55);
-    downGrad.addColorStop(0,'rgba(255,200,100,.12)');
-    downGrad.addColorStop(1,'rgba(255,180,60,0)');
-    ctx.fillStyle=downGrad;
-    ctx.beginPath();ctx.arc(ledX,oy+rh-12,rw*0.55,0,Math.PI*2);ctx.fill();
-
-    // LED dot
-    const ledGrad2 = ctx.createRadialGradient(ledX,ledY,0,ledX,ledY,8);
-    ledGrad2.addColorStop(0,'#fffde7');
-    ledGrad2.addColorStop(0.4,'#ffe082');
-    ledGrad2.addColorStop(1,'rgba(255,200,80,0)');
-    ctx.fillStyle=ledGrad2;
-    ctx.beginPath();ctx.arc(ledX,ledY,8,0,Math.PI*2);ctx.fill();
-
-    // Wall glow along
-    const wallGrad = ctx.createLinearGradient(
-      side==='left'?ox+12:ox+rw-12, oy,
-      side==='left'?ox+60:ox+rw-60, oy
-    );
-    wallGrad.addColorStop(0,'rgba(255,210,100,.22)');
-    wallGrad.addColorStop(1,'rgba(255,200,80,0)');
-    ctx.fillStyle=wallGrad;
-    ctx.fillRect(side==='left'?ox+12:ox+rw-60, oy+18, 48, rh-30);
-  });
-
-  // Labels
-  ctx.fillStyle='rgba(255,255,255,.5)';
-  ctx.font='11px Noto Sans TC,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('天 花 板',(ox+ox+rw)/2, oy+12);
-  ctx.fillText('地 板',(ox+ox+rw)/2, oy+rh+14);
-  ctx.textAlign='left';
-  ctx.fillText((H/100).toFixed(1)+' m', ox+rw+6, (oy+oy+rh)/2);
-
-  // Dim line for height
-  ctx.strokeStyle='rgba(255,255,255,.15)';
-  ctx.lineWidth=1;
-  ctx.setLineDash([3,5]);
-  ctx.beginPath();ctx.moveTo(ox+rw+4,oy+18);ctx.lineTo(ox+rw+4,oy+rh-12);ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-// ── STRIP PLAN CANVAS (俯視路徑) ──────────────────────────────────────────
-function drawStripPlan(L,W){
-  const canvas = document.getElementById('stripPlanCanvas');
-  const ctx = canvas.getContext('2d');
-  const CW=canvas.width, CH=canvas.height;
-  ctx.clearRect(0,0,CW,CH);
-
-  const PAD=50;
-  const scale = Math.min((CW-PAD*2)/L,(CH-PAD*2)/W);
-  const dw=L*scale, dh=W*scale;
-  const ox=(CW-dw)/2, oy=(CH-dh)/2;
-
-  // Room fill
-  ctx.fillStyle='#f0efe9';
-  ctx.fillRect(ox,oy,dw,dh);
-  ctx.strokeStyle='#c8c0b0';ctx.lineWidth=2;
-  ctx.strokeRect(ox,oy,dw,dh);
-
-  // Inset (30cm internal margin)
-  const inset = 30*scale;
-  const ix=ox+inset, iy=oy+inset, iw=dw-inset*2, ih=dh-inset*2;
-
-  // Draw strip lines based on mode
-  const stripColor='#f5c842';
-  const glowColor='rgba(245,200,66,.25)';
-  ctx.lineWidth=4;
-  ctx.lineCap='round';
-
-  function drawStripLine(x1,y1,x2,y2){
-    // glow
-    ctx.shadowColor='#f5c842';
-    ctx.shadowBlur=12;
-    ctx.strokeStyle=stripColor;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    ctx.shadowBlur=0;
-    // dots along line
-    const dist=Math.sqrt((x2-x1)**2+(y2-y1)**2);
-    const steps=Math.floor(dist/20);
-    for(let i=0;i<=steps;i++){
-      const t=i/steps;
-      const dx=x1+(x2-x1)*t, dy=y1+(y2-y1)*t;
-      ctx.fillStyle='#fff9e6';
-      ctx.beginPath();ctx.arc(dx,dy,2,0,Math.PI*2);ctx.fill();
-    }
-  }
-
-  if(stripMode==='rect'){
-    drawStripLine(ix,iy,ix+iw,iy);
-    drawStripLine(ix+iw,iy,ix+iw,iy+ih);
-    drawStripLine(ix+iw,iy+ih,ix,iy+ih);
-    drawStripLine(ix,iy+ih,ix,iy);
-  } else if(stripMode==='line'){
-    if(lineSide==='top') drawStripLine(ix,iy,ix+iw,iy);
-    else if(lineSide==='bottom') drawStripLine(ix,iy+ih,ix+iw,iy+ih);
-    else if(lineSide==='left') drawStripLine(ix,iy,ix,iy+ih);
-    else drawStripLine(ix+iw,iy,ix+iw,iy+ih);
-  } else {
-    if(freeSides.has('top')) drawStripLine(ix,iy,ix+iw,iy);
-    if(freeSides.has('bottom')) drawStripLine(ix,iy+ih,ix+iw,iy+ih);
-    if(freeSides.has('left')) drawStripLine(ix,iy,ix,iy+ih);
-    if(freeSides.has('right')) drawStripLine(ix+iw,iy,ix+iw,iy+ih);
-  }
-
-  // Legend
-  ctx.lineWidth=1;
-  ctx.fillStyle='#8a8780';
-  ctx.font='11px Noto Sans TC,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText((L/100).toFixed(1)+' m', CW/2, oy-14);
-  ctx.save();ctx.translate(ox-18,CH/2);ctx.rotate(-Math.PI/2);
-  ctx.fillText((W/100).toFixed(1)+' m',0,0);ctx.restore();
-
-  // inset label
-  ctx.fillStyle='rgba(200,180,100,.7)';
-  ctx.font='10px sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('▸ 凹槽線槽（內退 30 cm）', ix+4, iy-6);
-
-  document.getElementById('strip-plan-note').textContent =
-    {rect:'口字型：四面天花線槽，均勻環繞',line:'偏邊一字型：單側重點打光，適合電視牆、床頭主牆',free:'自由型：依勾選面鋪設'}[stripMode];
-}
-
-// ══════════════════════════════════════════════════
-// FIXTURE DATABASE
-// ══════════════════════════════════════════════════
-const FIXTURES = [
-  {id:'wide',name:'廣角崁燈',spec:'9W · 120° · Ra≥80',lm:800,angle:120,w:9,cri:80,type:'point',desc:'均勻基礎照明\n適合客廳、走廊通用照明'},
-  {id:'anti',name:'防眩崁燈',spec:'12W · 36° · Ra≥90',lm:1000,angle:36,w:12,cri:90,type:'point',desc:'高演色、低眩光\n適合展示、洗牆、精品陳列'},
-  {id:'track',name:'軌道投射燈',spec:'7W · 24° · Ra≥90',lm:600,angle:24,w:7,cri:90,type:'point',desc:'重點照明、聚焦效果\n適合畫作、展品、餐桌聚光'},
-  {id:'strip',name:'LED 燈帶',spec:'每公尺 · Ra≥80',lm:1000,angle:120,w:12,cri:80,type:'strip',desc:'間接照明、氣氛層次\n適合層板底、天花線槽'},
-];
-
-// ══════════════════════════════════════════════════
-// SCENE CONFIG
-// ══════════════════════════════════════════════════
-const SCENES = {
-  '100':{label:'溫馨臥室',ct:2700,ctName:'2700K 燭光暖白',ctColor:'#ffcf7a',ctDesc:'接近燭光的極暖色溫，讓空間充滿溫暖放鬆感，適合睡前情境，有助褪黑激素分泌。',cri:'建議選用 CRI ≥ 80 的燈具，臥室無需過高演色性，重點在氛圍層次。色溫建議搭配調光迴路，睡前可降至 10% 亮度。',layers:[{n:'基礎照明',b:'badge-g',ratio:'40%',fixture:'廣角崁燈（天花）',lux:'40 Lux'},{n:'情境照明',b:'badge-b',ratio:'40%',fixture:'燈帶（床頭板後 / 層板）',lux:'40 Lux'},{n:'重點照明',b:'badge-a',ratio:'20%',fixture:'床頭壁燈 / 閱讀燈',lux:'20 Lux'}]},
-  '150':{label:'休閒客廳',ct:3000,ctName:'3000K 暖白光',ctColor:'#ffd580',ctDesc:'暖黃色調，創造輕鬆愉快的社交氛圍，適合家庭聚會與日常休閒，比純暖白更明亮。',cri:'建議選用 CRI ≥ 80，客廳以氛圍為主。若有藝術品或精品傢具，局部重點燈可選 CRI ≥ 90 的防眩崁燈加強質感呈現。',layers:[{n:'基礎照明',b:'badge-g',ratio:'50%',fixture:'廣角崁燈（均勻分佈）',lux:'75 Lux'},{n:'情境照明',b:'badge-b',ratio:'30%',fixture:'燈帶（天花間接）',lux:'45 Lux'},{n:'重點照明',b:'badge-a',ratio:'20%',fixture:'軌道燈（沙發背牆 / 畫作）',lux:'30 Lux'}]},
-  '300':{label:'走廊 / 過渡空間',ct:3000,ctName:'3000K 暖白光',ctColor:'#ffd580',ctDesc:'走廊以安全與引導為主，建議使用暖白光讓空間有延伸感，避免過強白光造成不舒適感。',cri:'CRI ≥ 80 即可。可搭配感應開關與小夜燈設計，兼顧節能與安全引導。',layers:[{n:'基礎照明',b:'badge-g',ratio:'70%',fixture:'廣角崁燈（沿走廊均布）',lux:'210 Lux'},{n:'情境照明',b:'badge-b',ratio:'20%',fixture:'燈帶（踢腳線 / 間接）',lux:'60 Lux'},{n:'重點照明',b:'badge-a',ratio:'10%',fixture:'端景牆投射燈',lux:'30 Lux'}]},
-  '400':{label:'餐廳桌面',ct:2700,ctName:'2700K 燭光暖白',ctColor:'#ffcf7a',ctDesc:'餐廳最能展現食物色彩的色溫，暖光讓食物看起來更美味可口，也讓用餐氣氛更溫馨。',cri:'強烈建議 CRI ≥ 90，高演色性讓食物色彩真實呈現，提升用餐體驗。餐桌上方建議單獨迴路，可獨立調光。',layers:[{n:'基礎照明',b:'badge-g',ratio:'30%',fixture:'廣角崁燈（周邊）',lux:'120 Lux'},{n:'重點照明',b:'badge-a',ratio:'50%',fixture:'吊燈 / 軌道燈（桌面聚焦）',lux:'200 Lux'},{n:'情境照明',b:'badge-b',ratio:'20%',fixture:'燈帶（層板 / 酒櫃）',lux:'80 Lux'}]},
-  '500':{label:'閱讀 / 工作區',ct:4000,ctName:'4000K 中性自然光',ctColor:'#f5f0d0',ctDesc:'接近日光的中性色溫，讓眼睛長時間閱讀不疲勞，提升專注力與工作效率，色彩辨識度佳。',cri:'建議 CRI ≥ 90，精確的色彩辨識對設計、繪圖類工作至關重要。避免使用過暖的色溫，會降低工作效率。',layers:[{n:'基礎照明',b:'badge-g',ratio:'60%',fixture:'防眩崁燈（均勻）',lux:'300 Lux'},{n:'重點照明',b:'badge-a',ratio:'30%',fixture:'桌燈 / 軌道燈（工作面）',lux:'150 Lux'},{n:'情境照明',b:'badge-b',ratio:'10%',fixture:'燈帶（書架底部）',lux:'50 Lux'}]},
-  '750':{label:'廚房操作台',ct:4000,ctName:'4000K 中性自然光',ctColor:'#f5f0d0',ctDesc:'廚房需要高亮度與準確色彩辨識，4000K自然光讓食材顏色真實，操作安全，眼睛不疲勞。',cri:'強烈建議 CRI ≥ 90，食材新鮮度的辨識依賴高演色性光源。操作台下方需設置獨立的工作照明。',layers:[{n:'基礎照明',b:'badge-g',ratio:'40%',fixture:'廣角崁燈（均勻）',lux:'300 Lux'},{n:'重點照明',b:'badge-a',ratio:'45%',fixture:'防眩崁燈 / 吊櫃底燈（操作台）',lux:'337 Lux'},{n:'情境照明',b:'badge-b',ratio:'15%',fixture:'燈帶（吊櫃頂間接）',lux:'113 Lux'}]},
-};
-
-// ══════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════
-let selectedFixture = FIXTURES[0];
-
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function init(){
-  // Render fixture cards
-  const grid = document.getElementById('fixtureGrid');
-  FIXTURES.forEach(f=>{
+  renderFxGrid();
+  renderDraftList();
+  calc();
+}
+
+function renderFxGrid(){
+  const grid = document.getElementById('fxGrid');
+  grid.innerHTML = '';
+  FX_DB.forEach(f=>{
     const card = document.createElement('div');
-    card.className = 'fixture-card'+(f.id===selectedFixture.id?' selected':'');
-    card.dataset.id = f.id;
+    card.className = 'fx-card' + (selectedFx.has(f.id)?' selected':'');
     card.innerHTML =
-      '<div class="fixture-name">'+f.name+'</div>'+
-      '<div class="fixture-specs">'+f.spec+'<br>CRI Ra≥'+f.cri+'<br><span class="fixture-lm">'+f.lm+' lm'+(f.type==='strip'?'/m':'')+'</span></div>'+
-      '<div style="font-size:10px;color:var(--ink-f);margin-top:5px;line-height:1.5;white-space:pre-line">'+f.desc+'</div>';
+      '<div class="fx-check">'+(selectedFx.has(f.id)?'✓':'')+'</div>'+
+      '<div class="fx-name">'+f.name+'</div>'+
+      '<div class="fx-spec">'+f.spec+'<br>CRI Ra≥'+f.cri+'</div>'+
+      '<div class="fx-lm">'+f.lm+(f.type==='strip'?' lm/m':' lm')+'</div>';
     card.addEventListener('click',()=>{
-      selectedFixture = f;
-      document.querySelectorAll('.fixture-card').forEach(c=>c.classList.remove('selected'));
-      card.classList.add('selected');
+      if(selectedFx.has(f.id)){
+        if(selectedFx.size===1) return; // keep at least one
+        selectedFx.delete(f.id);
+      } else {
+        selectedFx.add(f.id);
+      }
+      renderFxGrid();
+      updateMixPanel();
+      updateStripPanel();
       calc();
     });
     grid.appendChild(card);
   });
+}
+
+function updateMixPanel(){
+  const sel = getSelectedFx();
+  const nonStrip = sel.filter(f=>f.type!=='point'||true).filter(f=>f.type==='point');
+  const hasStrip = sel.some(f=>f.type==='strip');
+  const hasPoint = sel.some(f=>f.type==='point');
+  const mixPanel = document.getElementById('mixPanel');
+
+  // init missing ratios equally
+  const total = sel.length;
+  sel.forEach(f=>{ if(mixRatios[f.id]===undefined) mixRatios[f.id]=Math.round(100/total); });
+
+  if(sel.length>1){
+    mixPanel.classList.add('show');
+    renderMixSliders(sel);
+  } else {
+    mixPanel.classList.remove('show');
+  }
+}
+
+function renderMixSliders(sel){
+  const wrap = document.getElementById('mixSliders');
+  wrap.innerHTML='';
+  sel.forEach(f=>{
+    const pct = mixRatios[f.id]||Math.round(100/sel.length);
+    const div = document.createElement('div');
+    div.className='mix-item';
+    div.innerHTML=
+      '<div class="mix-label"><span>'+f.name+'</span><span class="mix-pct" id="mp-'+f.id+'">'+pct+'%</span></div>'+
+      '<input type="range" min="10" max="90" value="'+pct+'" oninput="onMixSlide(\''+f.id+'\',this.value)">';
+    wrap.appendChild(div);
+  });
+}
+
+function onMixSlide(id, val){
+  mixRatios[id] = parseInt(val);
+  document.getElementById('mp-'+id).textContent = val+'%';
   calc();
 }
 
-// ══════════════════════════════════════════════════
+function updateStripPanel(){
+  const hasStrip = getSelectedFx().some(f=>f.type==='strip');
+  document.getElementById('stripModeWrap').style.display = hasStrip?'':'none';
+}
+
+function getSelectedFx(){ return FX_DB.filter(f=>selectedFx.has(f.id)); }
+
+// ══════════════════════════════════════════════
+// STRIP MODE
+// ══════════════════════════════════════════════
+function setStripMode(mode){
+  stripMode=mode;
+  document.querySelectorAll('.sm-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  document.getElementById('stripSidesWrap').style.display=mode==='free'?'':'none';
+  document.getElementById('stripLineWrap').style.display=mode==='line'?'':'none';
+  calc();
+}
+function toggleFreeSide(el){
+  const s=el.dataset.side;
+  if(freeSides.has(s)) freeSides.delete(s); else freeSides.add(s);
+  el.classList.toggle('active',freeSides.has(s));
+  calc();
+}
+function setLineSide(el){
+  document.querySelectorAll('#stripLineWrap .side-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); lineSide=el.dataset.side; calc();
+}
+function getStripMeters(L,W){
+  const lm=L/100,wm=W/100;
+  if(stripMode==='rect') return 2*(lm+wm);
+  if(stripMode==='line') return (lineSide==='top'||lineSide==='bottom')?lm:wm;
+  let t=0;
+  if(freeSides.has('top')) t+=lm; if(freeSides.has('bottom')) t+=lm;
+  if(freeSides.has('left')) t+=wm; if(freeSides.has('right')) t+=wm;
+  return t;
+}
+
+// ══════════════════════════════════════════════
 // SCENE CHANGE
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function onSceneChange(){
-  const lux = document.getElementById('scene').value;
-  document.getElementById('targetLux').value = lux;
+  document.getElementById('targetLux').value=document.getElementById('scene').value;
   calc();
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // MAIN CALC
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function calc(){
-  const L = parseFloat(document.getElementById('roomL').value)||0;
-  const W = parseFloat(document.getElementById('roomW').value)||0;
-  const H = parseFloat(document.getElementById('roomH').value)||0;
-  const U = parseFloat(document.getElementById('uVal').value)||0.4;
-  const E = parseFloat(document.getElementById('targetLux').value)||150;
-  const M = 0.8;
+  const L=parseFloat(document.getElementById('roomL').value)||0;
+  const W=parseFloat(document.getElementById('roomW').value)||0;
+  const H=parseFloat(document.getElementById('roomH').value)||0;
+  const U=parseFloat(document.getElementById('uVal').value)||0.4;
+  const E=parseFloat(document.getElementById('targetLux').value)||150;
+  const M=0.8;
+  const area=(L*W)/10000;
+  const ping=area/3.30579;
+  const rcr=(L>0&&W>0&&H>0)?(5*(H/100)*((L+W)/100))/((L/100)*(W/100)):0;
 
-  // Area
-  const area = (L*W)/10000; // m²
-  const ping = area/3.30579;
-  document.getElementById('disp-area').textContent = area.toFixed(2)+' m²';
-  document.getElementById('disp-ping').textContent = ping.toFixed(2)+' 坪';
+  document.getElementById('d-area').textContent=area.toFixed(2)+' m²';
+  document.getElementById('d-ping').textContent=ping.toFixed(2)+' 坪';
+  document.getElementById('d-rcr').textContent=rcr.toFixed(2);
+  document.getElementById('warnHigh').classList.toggle('show',H>300);
 
-  // RCR (Room Cavity Ratio) = 5 * H * (L+W) / (L*W)  — in cm units
-  const rcr = (L>0&&W>0&&H>0) ? (5*(H/100)*((L+W)/100))/((L/100)*(W/100)) : 0;
-  document.getElementById('disp-rcr').textContent = rcr.toFixed(2);
+  // RCR correction
+  let Ueff=U, uNote='';
+  if(rcr>6){Ueff=U*0.75;uNote='RCR='+rcr.toFixed(1)+'＞6，U值下修至'+Ueff.toFixed(2);}
+  else if(rcr>4){Ueff=U*0.88;uNote='RCR='+rcr.toFixed(1)+'介於4~6，U值下修至'+Ueff.toFixed(2);}
 
-  // Warning
-  document.getElementById('warningBox').classList.toggle('show', H>300);
+  const totalLm=(E*area)/(Ueff*M);
+  document.getElementById('r-lm').innerHTML=Math.round(totalLm).toLocaleString()+'<span>lm</span>';
+  document.getElementById('r-formula').textContent='( '+E+' lux × '+area.toFixed(2)+' m² ) ÷ ( U'+Ueff.toFixed(2)+' × M'+M+' )';
 
-  // Lumens
-  const totalLm = (E * area) / (U * M);
-  document.getElementById('r-lumens').innerHTML = Math.round(totalLm).toLocaleString()+'<span>lm</span>';
-  document.getElementById('r-formula').textContent =
-    '( '+E+' lux × '+area.toFixed(2)+' m² ) ÷ ( U'+U+' × M'+M+' )';
+  const sel=getSelectedFx();
+  const hasStrip=sel.some(f=>f.type==='strip');
+  const pointFx=sel.filter(f=>f.type==='point');
+  const corrections=[];
+  if(uNote) corrections.push({tag:'RCR校正',text:uNote});
 
-  // Count
-  const f = selectedFixture;
-  // toggle cards
-  document.getElementById('planCard').style.display = f.type==='strip'?'none':'';
-  document.getElementById('sectionCard').style.display = f.type==='strip'?'':'none';
-  document.getElementById('stripPanel').classList.toggle('show', f.type==='strip');
+  // ── Mix ratio normalise ───────────────────────────────
+  let totalRatio=0;
+  sel.forEach(f=>{ mixRatios[f.id]=mixRatios[f.id]||Math.round(100/sel.length); totalRatio+=mixRatios[f.id]; });
 
-  if(f.type==='strip'){
-    calcStrip(L,W,H,f);
-    document.getElementById('correctionBox').classList.remove('show');
-    document.getElementById('r-detail').style.display='none';
-  } else {
-    calcPointFixture(L,W,H,area,ping,E,U,M,totalLm,f);
-  }
+  const results=[]; // {fx, count/meters, totalW, note}
 
-  // Beam table
-  renderBeamTable(H);
+  sel.forEach(f=>{
+    const ratio = sel.length===1 ? 1 : (mixRatios[f.id]||50)/totalRatio;
+    const fxLm = totalLm * ratio;
 
-  // Scene info
-  const sceneKey = document.getElementById('scene').value;
-  const sc = SCENES[sceneKey];
-  if(sc){
-    renderLayers(sc);
-    renderCT(sc);
-  }
-}
-
-// ══════════════════════════════════════════════════
-// BEAM TABLE
-// ══════════════════════════════════════════════════
-function renderBeamTable(H){
-  const angles = [24,36,60,90,120];
-  const tbody = document.getElementById('beamTable');
-  tbody.innerHTML = '';
-  const hm = H/100;
-  angles.forEach(a=>{
-    const r = Math.round(hm * Math.tan((a/2)*Math.PI/180) * 100); // cm
-    const dia = r*2;
-    const maxSpacing = Math.round(dia*0.7);
-    const tr = document.createElement('tr');
-    const isSelected = Math.abs(a - selectedFixture.angle) < 5;
-    tr.style.background = isSelected?'var(--sage-lt)':'';
-    tr.innerHTML =
-      '<td>'+(isSelected?'<strong>':'')+'光束角 '+a+'°'+(isSelected?'（目前選用）</strong>':'')+'</td>'+
-      '<td>'+H+' cm</td>'+
-      '<td>Ø '+dia+' cm</td>'+
-      '<td>≤ '+maxSpacing+' cm</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-// ══════════════════════════════════════════════════
-// LAYER TABLE
-// ══════════════════════════════════════════════════
-function renderLayers(sc){
-  const tbody = document.getElementById('layerTable');
-  tbody.innerHTML = '';
-  sc.layers.forEach(l=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td><span class="layer-badge '+l.b+'">'+l.n+'</span></td>'+
-      '<td>'+({badge_g:'整體均勻照明',badge_a:'局部重點強調',badge_b:'氣氛情境渲染'}[l.b]||'—')+'</td>'+
-      '<td>'+l.ratio+'</td>'+
-      '<td style="color:var(--ink-m)">'+l.fixture+'</td>'+
-      '<td style="color:var(--sage-dk);font-family:var(--serif)">'+l.lux+'</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-// ══════════════════════════════════════════════════
-// COLOR TEMP
-// ══════════════════════════════════════════════════
-function renderCT(sc){
-  document.getElementById('ct-swatch').style.background = sc.ctColor;
-  document.getElementById('ct-val').textContent = sc.ctName;
-  document.getElementById('ct-desc').textContent = sc.ctDesc;
-  document.getElementById('ct-cri').innerHTML =
-    '<strong style="color:var(--ink-m);letter-spacing:1px;">CRI 建議：</strong> '+sc.cri;
-}
-
-
-// ══════════════════════════════════════════════════
-// SMART POINT FIXTURE CALC
-// ══════════════════════════════════════════════════
-function calcPointFixture(L,W,H,area,ping,E,U,M,totalLm,f){
-  const corrections = [];
-
-  // ── Step 1: RCR-based U correction ──────────────────
-  const rcr = (5*(H/100)*((L+W)/100))/((L/100)*(W/100));
-  let Ueff = U;
-  let uCorrected = false;
-  if(rcr > 6){ Ueff = U * 0.75; uCorrected = true;
-    corrections.push({tag:'RCR校正', text:'空間指數 RCR='+rcr.toFixed(1)+' > 6（空間較窄或偏低矮），有效照明率下修至 '+Ueff.toFixed(2)});
-  } else if(rcr > 4){ Ueff = U * 0.88; uCorrected = true;
-    corrections.push({tag:'RCR校正', text:'空間指數 RCR='+rcr.toFixed(1)+' 介於 4~6，有效照明率下修至 '+Ueff.toFixed(2)});
-  }
-
-  // ── Step 2: Lumen method with corrected U ───────────
-  const totalLmCorr = (E * area) / (Ueff * M);
-
-  // ── Step 3: Coverage method ──────────────────────────
-  // Beam radius at floor: r = H * tan(angle/2)
-  const beamR_cm = (H/100) * Math.tan((f.angle/2) * Math.PI/180) * 100;
-  const singleCoverage_m2 = Math.PI * (beamR_cm/100) ** 2;
-  // Effective coverage with 30% overlap factor
-  const OVERLAP = 0.70; // effective non-overlap ratio
-  const effectiveCoverage = singleCoverage_m2 * OVERLAP;
-  const countByCoverage = Math.ceil(area / effectiveCoverage);
-
-  // ── Step 4: Experience rule (per-ping) ───────────────
-  // Industry norm: ~1~2 fixtures per ping for most fixtures
-  // Narrow beam (<=36°): up to 3/ping okay for accent
-  const maxPerPing = f.angle <= 36 ? 3 : (f.angle <= 60 ? 2 : 1.5);
-  const expMax = Math.ceil(ping * maxPerPing);
-  const expMin = Math.max(1, Math.floor(ping * 0.6));
-
-  // ── Step 5: Lumen method count ───────────────────────
-  const countByLumen = Math.ceil(totalLmCorr / f.lm);
-
-  // ── Step 6: Final count = smart blend ────────────────
-  // If coverage method gives much fewer, coverage dominates
-  // If lumen method is within 30% of coverage, take lumen
-  let finalCount;
-  let method;
-  if(f.angle >= 90){
-    // Wide beam: coverage often over-counts due to overlap; trust lumen but cap by experience
-    finalCount = Math.min(countByLumen, expMax);
-    method = '光通量法（廣角燈以經驗值上限校正）';
-    if(countByLumen > expMax){
-      corrections.push({tag:'廣角校正', text:'廣角燈('+f.angle+'°)覆蓋大幅重疊，光通量法算出 '+countByLumen+' 顆偏高，依每坪'+maxPerPing+'顆上限修正為 '+finalCount+' 顆'});
+    if(f.type==='strip'){
+      const meters=getStripMeters(L,W);
+      const drivers=Math.ceil(meters/5);
+      results.push({fx:f, meters, drivers, totalW:meters*f.w, lmProvided:meters*f.lm, ratio});
+    } else {
+      // smart count
+      const beamR=(H/100)*Math.tan((f.angle/2)*Math.PI/180)*100;
+      const singleCov=Math.PI*(beamR/100)**2;
+      const countByCov=Math.ceil(area/(singleCov*0.70));
+      const countByLm=Math.ceil(fxLm/f.lm);
+      const maxPerPing=f.angle<=36?3:(f.angle<=60?2.5:(f.angle<=90?2:1.5));
+      const expMax=Math.ceil(ping*maxPerPing);
+      let count;
+      if(f.angle>=120){
+        count=Math.min(countByLm,expMax);
+        if(countByLm>expMax) corrections.push({tag:f.name,text:'廣角燈光束重疊，由'+countByLm+'顆修正為'+count+'顆（上限'+maxPerPing+'/坪）'});
+      } else if(f.angle<=36){ count=countByLm; }
+      else { count=Math.min(Math.round((countByLm+countByCov)/2),expMax); }
+      count=Math.max(1,count);
+      // beam warning
+      const beamDia=beamR*2;
+      if(beamDia>Math.min(L,W)*0.8) corrections.push({tag:'光束過廣',text:f.name+' 在 '+H+'cm 高度光圈達 '+Math.round(beamDia)+'cm，建議改用較窄角燈具'});
+      results.push({fx:f, count, totalW:count*f.w, lmProvided:count*f.lm, ratio});
     }
-  } else if(f.angle <= 36){
-    // Narrow beam: trust lumen method, coverage method is reference
-    finalCount = countByLumen;
-    method = '光通量法（窄角燈聚光效率高）';
-  } else {
-    // Mid beam (60°): take average, cap by experience
-    const avg = Math.round((countByLumen + countByCoverage) / 2);
-    finalCount = Math.min(avg, expMax);
-    method = '光通量法 + 覆蓋法平均';
-    if(avg !== finalCount){
-      corrections.push({tag:'數量校正', text:'平均值 '+avg+' 超過經驗上限 '+expMax+'，修正為 '+finalCount+' 顆'});
-    }
-  }
+  });
 
-  // ensure at least 1
-  finalCount = Math.max(1, finalCount);
+  // ── Correction box ────────────────────────────────────
+  const corrBox=document.getElementById('warnCorrection');
+  const corrContent=document.getElementById('warnCorrContent');
+  if(corrections.length>0){
+    corrBox.classList.add('show');
+    corrContent.innerHTML=corrections.map(c=>'<div class="correction-row"><span class="correction-tag">'+c.tag+'</span>'+c.text+'</div>').join('');
+  } else corrBox.classList.remove('show');
 
-  // ── Warn if beam diameter > room dimension ────────────
-  const beamDia_cm = beamR_cm * 2;
-  const shortSide = Math.min(L,W);
-  if(beamDia_cm > shortSide * 0.8){
-    corrections.push({tag:'光束過廣', text:'此燈具在 '+H+' cm 高度的光圈直徑達 '+Math.round(beamDia_cm)+' cm，接近或超過空間短邊（'+shortSide+' cm）。光源大量重疊，建議改用 36°～60° 燈具'});
-  }
-
-  // ── Warn if out of experience range ──────────────────
-  const ping_count = finalCount / ping;
-  let countState = 'ok';
-  if(ping_count > maxPerPing){ countState = 'bad'; }
-  else if(ping_count > maxPerPing * 0.85){ countState = 'warn'; }
-
-  // ── Show correction box ───────────────────────────────
-  const box = document.getElementById('correctionBox');
-  const content = document.getElementById('correctionContent');
-  if(corrections.length > 0){
-    box.classList.add('show');
-    content.innerHTML = corrections.map(c=>
-      '<div class="correction-row"><span class="correction-tag">'+c.tag+'</span> '+c.text+'</div>'
-    ).join('');
-  } else {
-    box.classList.remove('show');
-    content.innerHTML='';
-  }
-
-  // ── Show calc detail ──────────────────────────────────
-  const detail = document.getElementById('r-detail');
+  // ── Detail ───────────────────────────────────────────
+  const detail=document.getElementById('r-detail');
   detail.style.display='block';
-  detail.innerHTML =
-    '<b>有效 U 值：</b>'+Ueff.toFixed(2)+(uCorrected?' (RCR 修正)':' (原值)')+
-    '　<b>計算方法：</b>'+method+'<br>'+
-    '<b>光通量法：</b>'+countByLumen+' 顆　'+
-    '<b>覆蓋法：</b>'+countByCoverage+' 顆　'+
-    '<b>每坪上限：</b>'+expMax+' 顆（'+maxPerPing+'/坪）';
+  detail.innerHTML='<b>有效U值：</b>'+Ueff.toFixed(2)+(uNote?' ('+uNote+')':'')+'　<b>維護率：</b>'+M;
 
-  // ── Update UI ─────────────────────────────────────────
-  const countEl = document.getElementById('r-count');
-  countEl.className = 'result-value '+countState;
-  countEl.innerHTML = finalCount+'<span> 顆</span>';
-  document.getElementById('r-count-sub').textContent =
-    '每顆 '+f.lm+' lm，共 '+(finalCount*f.w)+' W，約 '+(finalCount/ping).toFixed(1)+' 顆/坪';
+  // ── Summary count ─────────────────────────────────────
+  const pointResults=results.filter(r=>r.fx.type==='point');
+  const totalPoints=pointResults.reduce((s,r)=>s+r.count,0);
+  const totalW=results.reduce((s,r)=>s+r.totalW,0);
+  const perPing=ping>0?(totalPoints/ping).toFixed(1):0;
 
-  // Update lumens display with corrected value
-  document.getElementById('r-lumens').innerHTML = Math.round(totalLmCorr).toLocaleString()+'<span>lm</span>';
-  document.getElementById('r-formula').textContent =
-    '( '+E+' lux × '+area.toFixed(2)+' m² ) ÷ ( U'+Ueff.toFixed(2)+' × M'+M+' )';
+  if(pointResults.length>0){
+    const stateClass=perPing>2.5?'bad':(perPing>2?'warn':'ok');
+    document.getElementById('r-count').innerHTML='<span class="rc-val '+stateClass+'">'+totalPoints+'</span><span> 顆</span>';
+    document.getElementById('r-count-sub').textContent='共 '+totalW+'W，約 '+perPing+' 顆/坪';
+  } else {
+    document.getElementById('r-count').innerHTML='— <span>（燈帶）</span>';
+    document.getElementById('r-count-sub').textContent='';
+  }
 
-  // ── Array layout ─────────────────────────────────────
-  const ratio = L/W;
-  let cols = Math.max(1, Math.round(Math.sqrt(finalCount*ratio)));
-  let rows = Math.max(1, Math.ceil(finalCount/cols));
-  while(rows*cols < finalCount){ cols++; }
-  document.getElementById('r-array').textContent = rows+' × '+cols;
-  document.getElementById('r-array-sub').textContent =
-    '共 '+rows*cols+' 顆'+(rows*cols-finalCount>0?' （含 '+(rows*cols-finalCount)+' 顆餘量）':'');
+  // ── Array (primary point fixture) ────────────────────
+  const primary=pointResults[0];
+  if(primary){
+    const ratio2=primary.fx.id&&(L>0&&W>0)?L/W:1;
+    let cols=Math.max(1,Math.round(Math.sqrt(primary.count*ratio2)));
+    let rows=Math.max(1,Math.ceil(primary.count/cols));
+    while(rows*cols<primary.count) cols++;
+    document.getElementById('r-array').textContent=rows+' × '+cols;
+    document.getElementById('r-array-sub').textContent='（主燈具）共 '+rows*cols+' 顆';
+    const sx=cols>1?Math.round(L/cols):Math.round(L/2);
+    const sy=rows>1?Math.round(W/rows):Math.round(W/2);
+    document.getElementById('r-spacing').innerHTML=sx+'<span> × </span>'+sy+'<span> cm</span>';
+    document.getElementById('r-spacing-sub').textContent='X '+sx+' cm　Y '+sy+' cm';
+    drawPlan(L,W,H,rows,cols,f,results);
+    document.getElementById('planCard').style.display='';
+  } else {
+    document.getElementById('r-array').textContent='—';
+    document.getElementById('r-array-sub').textContent='';
+    document.getElementById('r-spacing').textContent='—';
+    document.getElementById('r-spacing-sub').textContent='';
+    document.getElementById('planCard').style.display='none';
+  }
 
-  // ── Spacing ──────────────────────────────────────────
-  const spaceX = cols>1 ? Math.round(L/cols) : Math.round(L/2);
-  const spaceY = rows>1 ? Math.round(W/rows) : Math.round(W/2);
-  document.getElementById('r-spacing').innerHTML =
-    spaceX+'<span> × </span>'+spaceY+'<span> cm</span>';
-  document.getElementById('r-spacing-sub').textContent =
-    'X軸間距 '+spaceX+' cm　Y軸間距 '+spaceY+' cm';
+  // ── Mix result list ───────────────────────────────────
+  const mixCard=document.getElementById('mixResultCard');
+  const mixList=document.getElementById('mixResultList');
+  if(sel.length>1){
+    mixCard.style.display='';
+    mixList.innerHTML=results.map(r=>{
+      const detail2=r.fx.type==='strip'
+        ? r.meters.toFixed(1)+' m　'+r.drivers+' 個驅動器　'+r.totalW.toFixed(0)+' W'
+        : r.count+' 顆　'+r.totalW+' W　提供 '+Math.round(r.lmProvided)+' lm';
+      return '<div class="mix-result-row">'+
+        '<div class="cv-leg-dot" style="background:'+r.fx.color+';width:10px;height:10px;border-radius:50%;flex-shrink:0;"></div>'+
+        '<div class="mix-result-name">'+r.fx.name+'</div>'+
+        '<div style="text-align:right;"><div class="mix-result-count">'+(r.fx.type==='strip'?r.meters.toFixed(1)+' m':r.count+' 顆')+'</div>'+
+        '<div class="mix-result-detail">'+detail2+'</div></div></div>';
+    }).join('');
+  } else mixCard.style.display='none';
 
-  // ── Draw plan ────────────────────────────────────────
-  drawPlan(L,W,H,rows,cols,spaceX,spaceY,f);
+  // ── Strip section ─────────────────────────────────────
+  const stripResult=results.find(r=>r.fx.type==='strip');
+  if(stripResult){
+    document.getElementById('sectionCard').style.display='';
+    const s=stripResult;
+    document.getElementById('stripStats').innerHTML=
+      '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px;text-align:center;"><div style="font-family:var(--serif);font-size:18px;color:var(--sage-dk);">'+s.meters.toFixed(1)+'</div><div style="font-size:10px;color:var(--ink-l);">總長度 m</div></div>'+
+      '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px;text-align:center;"><div style="font-family:var(--serif);font-size:18px;color:var(--sage-dk);">'+s.drivers+'</div><div style="font-size:10px;color:var(--ink-l);">驅動器數量</div></div>'+
+      '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px;text-align:center;"><div style="font-family:var(--serif);font-size:18px;color:var(--sage-dk);">'+Math.round(s.lmProvided)+'</div><div style="font-size:10px;color:var(--ink-l);">光通量 lm</div></div>';
+    drawSectionCanvas(L,W,H);
+    drawStripPlan(L,W);
+    document.getElementById('strip-note').textContent=
+      {rect:'口字型：四面天花線槽均勻環繞',line:'偏邊一字型：單側重點照明',free:'自由型：依勾選面鋪設'}[stripMode];
+  } else document.getElementById('sectionCard').style.display='none';
+
+  // ── Beam table ────────────────────────────────────────
+  const tbody=document.getElementById('beamTbl');
+  tbody.innerHTML='';
+  [24,36,60,90,120,150].forEach(a=>{
+    const r2=(H/100)*Math.tan((a/2)*Math.PI/180)*100;
+    const dia=Math.round(r2*2), sp=Math.round(dia*0.7);
+    const isUsed=getSelectedFx().some(f=>Math.abs(f.angle-a)<5);
+    const tr=document.createElement('tr');
+    if(isUsed) tr.className='hl';
+    tr.innerHTML='<td>'+(isUsed?'<strong>':'')+'光束角 '+a+'°'+(isUsed?' ★</strong>':'')+'</td><td>'+H+' cm</td><td>Ø '+dia+' cm</td><td>≤ '+sp+' cm</td>';
+    tbody.appendChild(tr);
+  });
+
+  // ── Scene ─────────────────────────────────────────────
+  const sc=SCENES[document.getElementById('scene').value];
+  if(sc){
+    document.getElementById('layerTbl').innerHTML=sc.layers.map(l=>
+      '<tr><td><span class="badge '+l.b+'">'+l.n+'</span></td><td>—</td><td>'+l.r+'</td><td>'+l.f+'</td><td style="color:var(--sage-dk);font-family:var(--serif)">'+l.l+'</td></tr>'
+    ).join('');
+    document.getElementById('ct-swatch').style.background=sc.ctColor;
+    document.getElementById('ct-val').textContent=sc.ctName;
+    document.getElementById('ct-desc').textContent=sc.ctDesc;
+    document.getElementById('ct-cri').innerHTML='<b>CRI 建議：</b>'+sc.cri;
+  }
 }
 
-// ══════════════════════════════════════════════════
-// 2D PLAN CANVAS
-// ══════════════════════════════════════════════════
-function drawPlan(L,W,H,rows,cols,spaceX,spaceY,fixture){
-  const canvas = document.getElementById('planCanvas');
-  const ctx = canvas.getContext('2d');
-  const CW = canvas.width;
-  const CH = canvas.height;
+// ══════════════════════════════════════════════
+// CANVAS: 2D PLAN
+// ══════════════════════════════════════════════
+function drawPlan(L,W,H,rows,cols,f,results){
+  const cv=document.getElementById('planCanvas');
+  const ctx=cv.getContext('2d');
+  const CW=cv.width,CH=cv.height;
   ctx.clearRect(0,0,CW,CH);
-
-  const PAD = 50;
-  const scaleX = (CW-PAD*2)/L;
-  const scaleY = (CH-PAD*2)/W;
-  const scale = Math.min(scaleX,scaleY);
-  const drawW = L*scale;
-  const drawH = W*scale;
-  const ox = (CW-drawW)/2;
-  const oy = (CH-drawH)/2;
-
-  // Room
-  ctx.fillStyle='#f0efe9';
-  ctx.fillRect(ox,oy,drawW,drawH);
-  ctx.strokeStyle='#c8c0b0';
-  ctx.lineWidth=2;
-  ctx.strokeRect(ox,oy,drawW,drawH);
-
-  // Grid lines (faint)
-  ctx.strokeStyle='rgba(180,175,165,.3)';
-  ctx.lineWidth=0.5;
-  ctx.setLineDash([4,6]);
-  for(let r=0;r<=rows;r++){
-    const y = oy+(r*(drawH/rows));
-    ctx.beginPath();ctx.moveTo(ox,y);ctx.lineTo(ox+drawW,y);ctx.stroke();
-  }
-  for(let c=0;c<=cols;c++){
-    const x = ox+(c*(drawW/cols));
-    ctx.beginPath();ctx.moveTo(x,oy);ctx.lineTo(x,oy+drawH);ctx.stroke();
-  }
+  const PAD=48;
+  const scale=Math.min((CW-PAD*2)/L,(CH-PAD*2)/W);
+  const dw=L*scale,dh=W*scale;
+  const ox=(CW-dw)/2,oy=(CH-dh)/2;
+  ctx.fillStyle='#f0efe9';ctx.fillRect(ox,oy,dw,dh);
+  ctx.strokeStyle='#c8c0b0';ctx.lineWidth=2;ctx.strokeRect(ox,oy,dw,dh);
+  // grid lines
+  ctx.strokeStyle='rgba(180,175,165,.25)';ctx.lineWidth=0.5;ctx.setLineDash([3,5]);
+  for(let r=0;r<=rows;r++){const y=oy+r*(dh/rows);ctx.beginPath();ctx.moveTo(ox,y);ctx.lineTo(ox+dw,y);ctx.stroke();}
+  for(let c=0;c<=cols;c++){const x=ox+c*(dw/cols);ctx.beginPath();ctx.moveTo(x,oy);ctx.lineTo(x,oy+dh);ctx.stroke();}
   ctx.setLineDash([]);
-
-  // Beam radius
-  const hm = H/100;
-  const beamR = hm * Math.tan((fixture.angle/2)*Math.PI/180) * 100 * scale;
-
-  // Lights
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const cx = ox + (c+0.5)*(drawW/cols);
-      const cy = oy + (r+0.5)*(drawH/rows);
-
-      // Beam circle
-      if(fixture.type!=='strip'){
-        ctx.beginPath();
-        ctx.arc(cx,cy,beamR,0,Math.PI*2);
-        ctx.fillStyle='rgba(200,180,100,.15)';
-        ctx.fill();
-        ctx.strokeStyle='rgba(200,180,100,.4)';
-        ctx.lineWidth=1;
-        ctx.stroke();
-      }
-
-      // Fixture dot
-      ctx.beginPath();
-      ctx.arc(cx,cy,5,0,Math.PI*2);
-      ctx.fillStyle='#8a9082';
-      ctx.fill();
-      ctx.strokeStyle='#5a6a58';
-      ctx.lineWidth=1.5;
-      ctx.stroke();
-    }
+  // primary point fixture
+  const pr=results.find(r=>r.fx.type==='point');
+  if(pr){
+    const beamR=(H/100)*Math.tan((pr.fx.angle/2)*Math.PI/180)*100*scale;
+    for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+      const cx=ox+(c+0.5)*(dw/cols),cy=oy+(r+0.5)*(dh/rows);
+      ctx.beginPath();ctx.arc(cx,cy,beamR,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,180,100,.12)';ctx.fill();
+      ctx.strokeStyle='rgba(200,180,100,.35)';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);
+      ctx.fillStyle=pr.fx.color;ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=1;ctx.stroke();
+    }}
   }
-
-  // Dimensions
-  ctx.fillStyle='#8a8780';
-  ctx.font='11px Noto Sans TC, sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText((L/100).toFixed(1)+' m',CW/2,oy-12);
-  ctx.save();
-  ctx.translate(ox-14,CH/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText((W/100).toFixed(1)+' m',0,0);
-  ctx.restore();
-
-  // Scale bar
-  const barLen = 100*scale; // 1m
-  ctx.strokeStyle='#8a8780';
-  ctx.lineWidth=1.5;
-  const bx = ox+drawW-barLen-10, by=oy+drawH+18;
+  // strip overlay on plan
+  const sr=results.find(r=>r.fx.type==='strip');
+  if(sr){
+    const inset=30*scale;
+    ctx.strokeStyle='#f5c842';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.shadowColor='#f5c842';ctx.shadowBlur=8;
+    const ix=ox+inset,iy=oy+inset,iw=dw-inset*2,ih=dh-inset*2;
+    if(stripMode==='rect'){
+      ctx.strokeRect(ix,iy,iw,ih);
+    } else if(stripMode==='line'){
+      ctx.beginPath();
+      if(lineSide==='top'){ctx.moveTo(ix,iy);ctx.lineTo(ix+iw,iy);}
+      else if(lineSide==='bottom'){ctx.moveTo(ix,iy+ih);ctx.lineTo(ix+iw,iy+ih);}
+      else if(lineSide==='left'){ctx.moveTo(ix,iy);ctx.lineTo(ix,iy+ih);}
+      else{ctx.moveTo(ix+iw,iy);ctx.lineTo(ix+iw,iy+ih);}
+      ctx.stroke();
+    } else {
+      if(freeSides.has('top')){ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ix+iw,iy);ctx.stroke();}
+      if(freeSides.has('bottom')){ctx.beginPath();ctx.moveTo(ix,iy+ih);ctx.lineTo(ix+iw,iy+ih);ctx.stroke();}
+      if(freeSides.has('left')){ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ix,iy+ih);ctx.stroke();}
+      if(freeSides.has('right')){ctx.beginPath();ctx.moveTo(ix+iw,iy);ctx.lineTo(ix+iw,iy+ih);ctx.stroke();}
+    }
+    ctx.shadowBlur=0;
+  }
+  // labels
+  ctx.fillStyle='#8a8780';ctx.font='11px sans-serif';ctx.textAlign='center';
+  ctx.fillText((L/100).toFixed(1)+' m',CW/2,oy-14);
+  ctx.save();ctx.translate(ox-16,CH/2);ctx.rotate(-Math.PI/2);ctx.fillText((W/100).toFixed(1)+' m',0,0);ctx.restore();
+  // scale bar
+  const barLen=100*scale,bx=ox+dw-barLen-10,by=oy+dh+18;
+  ctx.strokeStyle='#8a8780';ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx+barLen,by);ctx.stroke();
   ctx.beginPath();ctx.moveTo(bx,by-3);ctx.lineTo(bx,by+3);ctx.stroke();
   ctx.beginPath();ctx.moveTo(bx+barLen,by-3);ctx.lineTo(bx+barLen,by+3);ctx.stroke();
-  ctx.textAlign='center';ctx.fillStyle='#8a8780';
-  ctx.fillText('1 m',bx+barLen/2,by+11);
+  ctx.textAlign='center';ctx.fillText('1 m',bx+barLen/2,by+12);
+  document.getElementById('plan-note').textContent=(pr?'主燈具：'+pr.fx.name+' '+rows+'×'+cols+'='+rows*cols+'顆':'')+(sr?'　燈帶：'+getStripMeters(L,W).toFixed(1)+'m':'');
+}
 
-  // Note
-  document.getElementById('canvas-note').textContent =
-    '空間 '+( L/100).toFixed(1)+' × '+(W/100).toFixed(1)+' m　配置 '+rows+'×'+cols+' = '+rows*cols+' 顆　光束角 '+fixture.angle+'°　地面光圈 Ø '+Math.round(hm*Math.tan((fixture.angle/2)*Math.PI/180)*200)+' cm';
+// ══════════════════════════════════════════════
+// CANVAS: SECTION
+// ══════════════════════════════════════════════
+function drawSectionCanvas(L,W,H){
+  const cv=document.getElementById('sectionCanvas');
+  const ctx=cv.getContext('2d');
+  const CW=cv.width,CH=cv.height;
+  ctx.clearRect(0,0,CW,CH);
+  ctx.fillStyle='#12121e';ctx.fillRect(0,0,CW,CH);
+  const PAD={t:28,b:44,l:52,r:52};
+  const rw=CW-PAD.l-PAD.r,rh=CH-PAD.t-PAD.b;
+  const ox=PAD.l,oy=PAD.t;
+  ctx.fillStyle='#2a2a3e';ctx.fillRect(ox,oy,rw,16);
+  ctx.fillStyle='#1e1e2e';ctx.fillRect(ox,oy+rh-10,rw,10);
+  ctx.fillStyle='#1e1e2e';ctx.fillRect(ox,oy,10,rh);ctx.fillRect(ox+rw-10,oy,10,rh);
+  ctx.strokeStyle='rgba(180,175,165,.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(ox+10,oy+16);ctx.lineTo(ox+rw-10,oy+16);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox+10,oy+rh-10);ctx.lineTo(ox+rw-10,oy+rh-10);ctx.stroke();
+  const sides=stripMode==='rect'?['left','right']:stripMode==='line'?(lineSide==='left'||lineSide==='right'?[lineSide]:['left','right']):[...freeSides].filter(s=>s==='left'||s==='right');
+  const activeSides=sides.length?sides:['left','right'];
+  const grooveY=oy+16+(30/H)*rh;
+  activeSides.forEach(side=>{
+    const gx=side==='left'?ox+10:ox+rw-20;
+    const ledX=gx+5,ledY=grooveY+5;
+    ctx.fillStyle='#0a0a18';ctx.fillRect(gx,grooveY,12,12);
+    const ug=ctx.createRadialGradient(ledX,ledY,0,ledX,ledY,rh*0.65);
+    ug.addColorStop(0,'rgba(255,220,120,.55)');ug.addColorStop(0.2,'rgba(255,200,80,.2)');ug.addColorStop(0.5,'rgba(255,180,60,.07)');ug.addColorStop(1,'rgba(255,160,40,0)');
+    ctx.fillStyle=ug;ctx.beginPath();ctx.arc(ledX,ledY,rh*0.65,0,Math.PI*2);ctx.fill();
+    const cg=ctx.createLinearGradient(ox,oy+16,ox,oy+16+rh*0.45);
+    cg.addColorStop(0,'rgba(255,230,150,.18)');cg.addColorStop(1,'rgba(255,200,100,0)');
+    const ww=rw*(side==='left'?0.65:0.65);
+    const wx=side==='left'?ox+10:ox+rw-10-ww;
+    ctx.fillStyle=cg;ctx.fillRect(wx,oy+16,ww,rh*0.45);
+    const dg=ctx.createRadialGradient(ledX,oy+rh-10,0,ledX,oy+rh-10,rw*0.5);
+    dg.addColorStop(0,'rgba(255,200,100,.1)');dg.addColorStop(1,'rgba(255,180,60,0)');
+    ctx.fillStyle=dg;ctx.beginPath();ctx.arc(ledX,oy+rh-10,rw*0.5,0,Math.PI*2);ctx.fill();
+    const lg=ctx.createRadialGradient(ledX,ledY,0,ledX,ledY,7);
+    lg.addColorStop(0,'#fffde7');lg.addColorStop(0.4,'#ffe082');lg.addColorStop(1,'rgba(255,200,80,0)');
+    ctx.fillStyle=lg;ctx.beginPath();ctx.arc(ledX,ledY,7,0,Math.PI*2);ctx.fill();
+  });
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('天 花 板',(ox+ox+rw)/2,oy+10);
+  ctx.fillText('地 板',(ox+ox+rw)/2,oy+rh+14);
+}
+
+// ══════════════════════════════════════════════
+// CANVAS: STRIP PLAN
+// ══════════════════════════════════════════════
+function drawStripPlan(L,W){
+  const cv=document.getElementById('stripPlanCanvas');
+  const ctx=cv.getContext('2d');
+  const CW=cv.width,CH=cv.height;
+  ctx.clearRect(0,0,CW,CH);
+  const PAD=48;
+  const scale=Math.min((CW-PAD*2)/L,(CH-PAD*2)/W);
+  const dw=L*scale,dh=W*scale;
+  const ox=(CW-dw)/2,oy=(CH-dh)/2;
+  ctx.fillStyle='#f0efe9';ctx.fillRect(ox,oy,dw,dh);
+  ctx.strokeStyle='#c8c0b0';ctx.lineWidth=2;ctx.strokeRect(ox,oy,dw,dh);
+  const inset=30*scale;
+  const ix=ox+inset,iy=oy+inset,iw=dw-inset*2,ih=dh-inset*2;
+  function drawLine(x1,y1,x2,y2){
+    ctx.shadowColor='#f5c842';ctx.shadowBlur=10;
+    ctx.strokeStyle='#f5c842';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.shadowBlur=0;
+    const d=Math.sqrt((x2-x1)**2+(y2-y1)**2);
+    const steps=Math.floor(d/18);
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      ctx.fillStyle='#fff9e6';ctx.beginPath();ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,2,0,Math.PI*2);ctx.fill();
+    }
+  }
+  if(stripMode==='rect'){drawLine(ix,iy,ix+iw,iy);drawLine(ix+iw,iy,ix+iw,iy+ih);drawLine(ix+iw,iy+ih,ix,iy+ih);drawLine(ix,iy+ih,ix,iy);}
+  else if(stripMode==='line'){
+    if(lineSide==='top')drawLine(ix,iy,ix+iw,iy);else if(lineSide==='bottom')drawLine(ix,iy+ih,ix+iw,iy+ih);
+    else if(lineSide==='left')drawLine(ix,iy,ix,iy+ih);else drawLine(ix+iw,iy,ix+iw,iy+ih);
+  } else {
+    if(freeSides.has('top'))drawLine(ix,iy,ix+iw,iy);if(freeSides.has('bottom'))drawLine(ix,iy+ih,ix+iw,iy+ih);
+    if(freeSides.has('left'))drawLine(ix,iy,ix,iy+ih);if(freeSides.has('right'))drawLine(ix+iw,iy,ix+iw,iy+ih);
+  }
+  ctx.fillStyle='#8a8780';ctx.font='11px sans-serif';ctx.textAlign='center';
+  ctx.fillText((L/100).toFixed(1)+' m',CW/2,oy-14);
+  ctx.save();ctx.translate(ox-16,CH/2);ctx.rotate(-Math.PI/2);ctx.fillText((W/100).toFixed(1)+' m',0,0);ctx.restore();
+}
+
+// ══════════════════════════════════════════════
+// DRAFT
+// ══════════════════════════════════════════════
+function getState(){
+  return {
+    project:document.getElementById('f-project').value,
+    space:document.getElementById('f-space').value,
+    L:document.getElementById('roomL').value,
+    W:document.getElementById('roomW').value,
+    H:document.getElementById('roomH').value,
+    uVal:document.getElementById('uVal').value,
+    scene:document.getElementById('scene').value,
+    lux:document.getElementById('targetLux').value,
+    selectedFx:[...selectedFx],
+    mixRatios:{...mixRatios},
+    stripMode,
+    freeSides:[...freeSides],
+    lineSide,
+  };
+}
+function loadState(s){
+  document.getElementById('f-project').value=s.project||'';
+  document.getElementById('f-space').value=s.space||'';
+  document.getElementById('roomL').value=s.L||500;
+  document.getElementById('roomW').value=s.W||400;
+  document.getElementById('roomH').value=s.H||270;
+  document.getElementById('uVal').value=s.uVal||'0.4';
+  document.getElementById('scene').value=s.scene||'150';
+  document.getElementById('targetLux').value=s.lux||150;
+  selectedFx=new Set(s.selectedFx||['wide']);
+  mixRatios=s.mixRatios||{};
+  stripMode=s.stripMode||'rect';
+  freeSides=new Set(s.freeSides||['top','bottom','left','right']);
+  lineSide=s.lineSide||'top';
+  renderFxGrid();updateMixPanel();updateStripPanel();
+  document.querySelectorAll('.sm-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===stripMode));
+  document.querySelectorAll('#stripSidesWrap .side-chip').forEach(c=>c.classList.toggle('active',freeSides.has(c.dataset.side)));
+  document.querySelectorAll('#stripLineWrap .side-chip').forEach(c=>c.classList.toggle('active',c.dataset.side===lineSide));
+  calc();
+}
+function getDrafts(){try{return JSON.parse(localStorage.getItem('lighting_drafts')||'[]');}catch{return[];}}
+function saveDraftsLS(arr){localStorage.setItem('lighting_drafts',JSON.stringify(arr));}
+function openDrawer(){
+  const proj=document.getElementById('f-project').value.trim()||'';
+  const sp=document.getElementById('f-space').value.trim()||'';
+  document.getElementById('draftNameInput').value=(proj+(sp?' · '+sp:'')||'未命名');
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('backdrop').classList.add('open');
+  renderDraftList();
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('backdrop').classList.remove('open');}
+function saveDraft(){
+  const name=document.getElementById('draftNameInput').value.trim();
+  if(!name){showToast('請輸入草稿名稱');return;}
+  const drafts=getDrafts();
+  drafts.unshift({id:Date.now(),name,savedAt:new Date().toLocaleDateString('zh-TW'),state:getState()});
+  saveDraftsLS(drafts);renderDraftList();showToast('草稿「'+name+'」已儲存');
+}
+function loadDraft(id){
+  const d=getDrafts().find(d=>d.id===id);if(!d)return;
+  loadState(d.state);closeDrawer();showToast('已載入「'+d.name+'」');
+}
+function deleteDraft(id){
+  saveDraftsLS(getDrafts().filter(d=>d.id!==id));renderDraftList();showToast('已刪除');
+}
+function renderDraftList(){
+  const drafts=getDrafts();
+  const wrap=document.getElementById('draftList');
+  if(!drafts.length){wrap.innerHTML='<div class="drawer-empty">尚無草稿<br>填寫後點擊「儲存」</div>';return;}
+  wrap.innerHTML='';
+  drafts.forEach(d=>{
+    const card=document.createElement('div');card.className='draft-card';
+    card.innerHTML='<div class="draft-name">'+d.name+'</div><div class="draft-meta">'+d.savedAt+'</div>'+
+      '<div class="draft-acts"><button class="d-btn d-btn-load" onclick="loadDraft('+d.id+')">載入</button><button class="d-btn d-btn-del" onclick="deleteDraft('+d.id+')">刪除</button></div>';
+    wrap.appendChild(card);
+  });
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+// ══════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════
+async function exportJPG(){
+  const proj=document.getElementById('f-project').value.trim();
+  const sp=document.getElementById('f-space').value.trim();
+  const titleEl=document.getElementById('export-title');
+  titleEl.textContent=(proj?proj+' · ':'')+sp+' 燈光照度配置';
+  titleEl.style.display='block';
+  if(typeof html2canvas==='undefined'){
+    await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  }
+  const target=document.getElementById('exportTarget');
+  const canvas=await html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#f4f3f0'});
+  const link=document.createElement('a');
+  link.download='燈光配置_'+(proj||sp||'報告')+'.jpg';
+  link.href=canvas.toDataURL('image/jpeg',0.92);link.click();
+  titleEl.style.display='none';
+  showToast('JPG 已下載');
+}
+function exportPDF(){
+  const proj=document.getElementById('f-project').value.trim();
+  const sp=document.getElementById('f-space').value.trim();
+  const titleEl=document.getElementById('export-title');
+  titleEl.textContent=(proj?proj+' · ':'')+sp+' 燈光照度配置';
+  titleEl.style.display='block';
+  window.print();
+  setTimeout(()=>titleEl.style.display='none',1500);
 }
 
 init();
