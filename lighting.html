@@ -132,6 +132,21 @@ input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--
 /* SECTION CANVAS */
 #sectionCanvas{display:block;width:100%;height:auto;border-radius:var(--r);}
 
+
+/* CORRECTION BOX */
+.correction-box{display:none;background:#fff8e1;border:1px solid #f0c040;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#6b4c00;line-height:1.8;margin-bottom:14px;}
+.correction-box.show{display:block;}
+.correction-box strong{color:#8a5e00;}
+.correction-row{display:flex;gap:6px;align-items:baseline;margin-top:3px;}
+.correction-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;letter-spacing:.5px;background:#f5c842;color:#5a3d00;font-weight:600;}
+/* count color states */
+.result-value.ok{color:#2e7d32;}
+.result-value.warn{color:#c8960a;}
+.result-value.bad{color:#c0392b;}
+/* correction detail */
+.calc-detail{margin-top:8px;padding:8px 10px;background:var(--surface3);border-radius:var(--r);font-size:11px;color:var(--ink-l);line-height:1.9;}
+.calc-detail b{color:var(--ink-m);}
+
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -278,12 +293,18 @@ input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--
       ⚠️ <strong>挑高空間提醒：</strong>空間高度超過 300 cm，光衰明顯。建議將目標照度提高 15%，或改用光束角 36° 以下的聚光燈具（防眩崁燈 / 軌道投射燈）以集中光通量，避免大量光源浪費在牆面與天花。
     </div>
 
+    <div class="correction-box" id="correctionBox">
+      <strong>🔧 自動合理性校正</strong>
+      <div id="correctionContent"></div>
+    </div>
+
     <!-- 核心數值 -->
     <div class="result-grid">
       <div class="result-card">
         <div class="result-label">總光通量需求</div>
         <div class="result-value" id="r-lumens">—<span>lm</span></div>
         <div class="result-sub" id="r-formula">—</div>
+        <div class="calc-detail" id="r-detail" style="display:none;"></div>
       </div>
       <div class="result-card">
         <div class="result-label">建議燈具數量</div>
@@ -767,31 +788,10 @@ function calc(){
 
   if(f.type==='strip'){
     calcStrip(L,W,H,f);
+    document.getElementById('correctionBox').classList.remove('show');
+    document.getElementById('r-detail').style.display='none';
   } else {
-    const count = Math.ceil(totalLm / f.lm);
-    document.getElementById('r-count').innerHTML = count+'<span> 顆</span>';
-    document.getElementById('r-count-sub').textContent =
-      '每顆 '+f.lm+' lm，共需 '+(count*f.w)+' W';
-
-    // Array
-    const ratio = L/W;
-    let cols = Math.max(1,Math.round(Math.sqrt(count*ratio)));
-    let rows = Math.max(1,Math.ceil(count/cols));
-    while(rows*cols < count){ cols++; }
-    document.getElementById('r-array').textContent = rows+' × '+cols;
-    document.getElementById('r-array-sub').textContent =
-      '共 '+rows*cols+' 顆（含 '+(rows*cols-count)+' 顆餘量）';
-
-    // Spacing
-    const spaceX = cols>1 ? Math.round((L/100)/(cols)*100) : Math.round(L/100);
-    const spaceY = rows>1 ? Math.round((W/100)/(rows)*100) : Math.round(W/100);
-    document.getElementById('r-spacing').innerHTML =
-      spaceX+'<span> × </span>'+spaceY+'<span> cm</span>';
-    document.getElementById('r-spacing-sub').textContent =
-      'X軸間距 '+spaceX+' cm　Y軸間距 '+spaceY+' cm';
-
-    // Draw plan
-    drawPlan(L,W,H,rows,cols,spaceX,spaceY,f);
+    calcPointFixture(L,W,H,area,ping,E,U,M,totalLm,f);
   }
 
   // Beam table
@@ -857,6 +857,143 @@ function renderCT(sc){
   document.getElementById('ct-desc').textContent = sc.ctDesc;
   document.getElementById('ct-cri').innerHTML =
     '<strong style="color:var(--ink-m);letter-spacing:1px;">CRI 建議：</strong> '+sc.cri;
+}
+
+
+// ══════════════════════════════════════════════════
+// SMART POINT FIXTURE CALC
+// ══════════════════════════════════════════════════
+function calcPointFixture(L,W,H,area,ping,E,U,M,totalLm,f){
+  const corrections = [];
+
+  // ── Step 1: RCR-based U correction ──────────────────
+  const rcr = (5*(H/100)*((L+W)/100))/((L/100)*(W/100));
+  let Ueff = U;
+  let uCorrected = false;
+  if(rcr > 6){ Ueff = U * 0.75; uCorrected = true;
+    corrections.push({tag:'RCR校正', text:'空間指數 RCR='+rcr.toFixed(1)+' > 6（空間較窄或偏低矮），有效照明率下修至 '+Ueff.toFixed(2)});
+  } else if(rcr > 4){ Ueff = U * 0.88; uCorrected = true;
+    corrections.push({tag:'RCR校正', text:'空間指數 RCR='+rcr.toFixed(1)+' 介於 4~6，有效照明率下修至 '+Ueff.toFixed(2)});
+  }
+
+  // ── Step 2: Lumen method with corrected U ───────────
+  const totalLmCorr = (E * area) / (Ueff * M);
+
+  // ── Step 3: Coverage method ──────────────────────────
+  // Beam radius at floor: r = H * tan(angle/2)
+  const beamR_cm = (H/100) * Math.tan((f.angle/2) * Math.PI/180) * 100;
+  const singleCoverage_m2 = Math.PI * (beamR_cm/100) ** 2;
+  // Effective coverage with 30% overlap factor
+  const OVERLAP = 0.70; // effective non-overlap ratio
+  const effectiveCoverage = singleCoverage_m2 * OVERLAP;
+  const countByCoverage = Math.ceil(area / effectiveCoverage);
+
+  // ── Step 4: Experience rule (per-ping) ───────────────
+  // Industry norm: ~1~2 fixtures per ping for most fixtures
+  // Narrow beam (<=36°): up to 3/ping okay for accent
+  const maxPerPing = f.angle <= 36 ? 3 : (f.angle <= 60 ? 2 : 1.5);
+  const expMax = Math.ceil(ping * maxPerPing);
+  const expMin = Math.max(1, Math.floor(ping * 0.6));
+
+  // ── Step 5: Lumen method count ───────────────────────
+  const countByLumen = Math.ceil(totalLmCorr / f.lm);
+
+  // ── Step 6: Final count = smart blend ────────────────
+  // If coverage method gives much fewer, coverage dominates
+  // If lumen method is within 30% of coverage, take lumen
+  let finalCount;
+  let method;
+  if(f.angle >= 90){
+    // Wide beam: coverage often over-counts due to overlap; trust lumen but cap by experience
+    finalCount = Math.min(countByLumen, expMax);
+    method = '光通量法（廣角燈以經驗值上限校正）';
+    if(countByLumen > expMax){
+      corrections.push({tag:'廣角校正', text:'廣角燈('+f.angle+'°)覆蓋大幅重疊，光通量法算出 '+countByLumen+' 顆偏高，依每坪'+maxPerPing+'顆上限修正為 '+finalCount+' 顆'});
+    }
+  } else if(f.angle <= 36){
+    // Narrow beam: trust lumen method, coverage method is reference
+    finalCount = countByLumen;
+    method = '光通量法（窄角燈聚光效率高）';
+  } else {
+    // Mid beam (60°): take average, cap by experience
+    const avg = Math.round((countByLumen + countByCoverage) / 2);
+    finalCount = Math.min(avg, expMax);
+    method = '光通量法 + 覆蓋法平均';
+    if(avg !== finalCount){
+      corrections.push({tag:'數量校正', text:'平均值 '+avg+' 超過經驗上限 '+expMax+'，修正為 '+finalCount+' 顆'});
+    }
+  }
+
+  // ensure at least 1
+  finalCount = Math.max(1, finalCount);
+
+  // ── Warn if beam diameter > room dimension ────────────
+  const beamDia_cm = beamR_cm * 2;
+  const shortSide = Math.min(L,W);
+  if(beamDia_cm > shortSide * 0.8){
+    corrections.push({tag:'光束過廣', text:'此燈具在 '+H+' cm 高度的光圈直徑達 '+Math.round(beamDia_cm)+' cm，接近或超過空間短邊（'+shortSide+' cm）。光源大量重疊，建議改用 36°～60° 燈具'});
+  }
+
+  // ── Warn if out of experience range ──────────────────
+  const ping_count = finalCount / ping;
+  let countState = 'ok';
+  if(ping_count > maxPerPing){ countState = 'bad'; }
+  else if(ping_count > maxPerPing * 0.85){ countState = 'warn'; }
+
+  // ── Show correction box ───────────────────────────────
+  const box = document.getElementById('correctionBox');
+  const content = document.getElementById('correctionContent');
+  if(corrections.length > 0){
+    box.classList.add('show');
+    content.innerHTML = corrections.map(c=>
+      '<div class="correction-row"><span class="correction-tag">'+c.tag+'</span> '+c.text+'</div>'
+    ).join('');
+  } else {
+    box.classList.remove('show');
+    content.innerHTML='';
+  }
+
+  // ── Show calc detail ──────────────────────────────────
+  const detail = document.getElementById('r-detail');
+  detail.style.display='block';
+  detail.innerHTML =
+    '<b>有效 U 值：</b>'+Ueff.toFixed(2)+(uCorrected?' (RCR 修正)':' (原值)')+
+    '　<b>計算方法：</b>'+method+'<br>'+
+    '<b>光通量法：</b>'+countByLumen+' 顆　'+
+    '<b>覆蓋法：</b>'+countByCoverage+' 顆　'+
+    '<b>每坪上限：</b>'+expMax+' 顆（'+maxPerPing+'/坪）';
+
+  // ── Update UI ─────────────────────────────────────────
+  const countEl = document.getElementById('r-count');
+  countEl.className = 'result-value '+countState;
+  countEl.innerHTML = finalCount+'<span> 顆</span>';
+  document.getElementById('r-count-sub').textContent =
+    '每顆 '+f.lm+' lm，共 '+(finalCount*f.w)+' W，約 '+(finalCount/ping).toFixed(1)+' 顆/坪';
+
+  // Update lumens display with corrected value
+  document.getElementById('r-lumens').innerHTML = Math.round(totalLmCorr).toLocaleString()+'<span>lm</span>';
+  document.getElementById('r-formula').textContent =
+    '( '+E+' lux × '+area.toFixed(2)+' m² ) ÷ ( U'+Ueff.toFixed(2)+' × M'+M+' )';
+
+  // ── Array layout ─────────────────────────────────────
+  const ratio = L/W;
+  let cols = Math.max(1, Math.round(Math.sqrt(finalCount*ratio)));
+  let rows = Math.max(1, Math.ceil(finalCount/cols));
+  while(rows*cols < finalCount){ cols++; }
+  document.getElementById('r-array').textContent = rows+' × '+cols;
+  document.getElementById('r-array-sub').textContent =
+    '共 '+rows*cols+' 顆'+(rows*cols-finalCount>0?' （含 '+(rows*cols-finalCount)+' 顆餘量）':'');
+
+  // ── Spacing ──────────────────────────────────────────
+  const spaceX = cols>1 ? Math.round(L/cols) : Math.round(L/2);
+  const spaceY = rows>1 ? Math.round(W/rows) : Math.round(W/2);
+  document.getElementById('r-spacing').innerHTML =
+    spaceX+'<span> × </span>'+spaceY+'<span> cm</span>';
+  document.getElementById('r-spacing-sub').textContent =
+    'X軸間距 '+spaceX+' cm　Y軸間距 '+spaceY+' cm';
+
+  // ── Draw plan ────────────────────────────────────────
+  drawPlan(L,W,H,rows,cols,spaceX,spaceY,f);
 }
 
 // ══════════════════════════════════════════════════
