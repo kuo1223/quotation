@@ -263,6 +263,7 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:0
           <div class="font-ctrl"><label>施工項目</label><input type="range" min="9" max="18" value="12" id="fs-item" oninput="applyFS()"><span id="fs-item-v">12px</span></div>
           <div class="font-ctrl"><label>注意事項</label><input type="range" min="9" max="18" value="12" id="fs-notice" oninput="applyFS()"><span id="fs-notice-v">12px</span></div>
           <div class="font-ctrl"><label>聯絡資訊</label><input type="range" min="10" max="20" value="14" id="fs-contact" oninput="applyFS()"><span id="fs-contact-v">14px</span></div>
+          <div class="font-ctrl"><label>禮貌說明</label><input type="range" min="9" max="16" value="11" id="fs-polite" oninput="applyFS()"><span id="fs-polite-v">11px</span></div>
         </div>
       </div>
     </div>
@@ -449,9 +450,11 @@ function applyFS(){
   document.querySelectorAll('.n-notice-num,.n-notice-text').forEach(e=>e.style.fontSize=nt+'px');
   const ct=g('fs-contact'); sv('fs-contact',ct);
   document.querySelectorAll('.n-contact-name,.n-contact-tel').forEach(e=>e.style.fontSize=ct+'px');
+  const pl=g('fs-polite'); sv('fs-polite',pl);
+  document.querySelectorAll('.n-polite').forEach(e=>e.style.fontSize=pl+'px');
 }
 function getFSState(){
-  return ['fs-title','fs-sub','fs-info-lbl','fs-info-val','fs-period','fs-day','fs-sec','fs-item','fs-notice','fs-contact']
+  return ['fs-title','fs-sub','fs-info-lbl','fs-info-val','fs-period','fs-day','fs-sec','fs-item','fs-notice','fs-contact','fs-polite']
     .reduce((o,id)=>{o[id]=document.getElementById(id).value;return o;},{});
 }
 function setFSState(state){
