@@ -413,6 +413,8 @@ function calcSpace(sp){
   const wallGross=2*(Lm+Wm)*Hm;
   const openAreaM2=sp.openings.reduce((s,o)=>s+(o.w/100)*(o.h/100),0);
   const wallNet=Math.max(0,wallGross-openAreaM2);
+  const totalSurface=wallNet+area; // 牆面淨面積 + 天花板面積
+  const totalSurfacePing=totalSurface/3.30579;
   const ratio=Lm>Wm?Lm/Wm:Wm/Lm;
   const rcr=(5*Hm*(Lm+Wm))/(Lm*Wm);
 
@@ -452,7 +454,7 @@ function calcSpace(sp){
   const rcrLabel=rcr<2?'低（大空間效率佳）':rcr<4?'中（一般空間）':rcr<7?'偏高（注意光衰）':'高（燈具效率降低）';
   const hLabel=Hcm<240?'偏低':Hcm<280?'標準淨高':Hcm<320?'舒適高度':Hcm<400?'高挑空間':'挑高空間';
 
-  return {Lm,Wm,Hm,Lcm,Wcm,Hcm,area,ping,ft2,vol,wallNet,wallGross,openAreaM2,
+  return {Lm,Wm,Hm,Lcm,Wcm,Hcm,area,ping,ft2,vol,wallNet,wallGross,openAreaM2,totalSurface,totalSurfacePing,
     ratio,ratioLabel,rcr,rcrLabel,hLabel,
     Ueff,U,targetLux,totalLm,ping1,lamp2,stripM,ct,useLabel,cfg,
     baseKcal,adjKcal,adj,kw,model,tons,ach,cmh,fanSpec};
@@ -492,7 +494,7 @@ function renderSpaceResult(sp,r,idx,total){
     </div>
     <div class="metric-grid-3">
       ${mc('平方英尺',Math.round(r.ft2),'ft²','')}
-      ${mc('牆面淨面積',f2(r.wallNet),'m²',sp.openings.length?'已扣除 '+sp.openings.length+' 個開口 ('+f2(r.openAreaM2)+' m²)':'')}
+      ${mc('牆面面積（天花板＋牆）',f2(r.totalSurface)+' m²（'+f2(r.totalSurfacePing)+' 坪）','',sp.openings.length?'牆面已扣除 '+sp.openings.length+' 個開口':'' )}
       ${mc('空間容積',f2(r.vol),'m³','')}
     </div>`;
   }
@@ -585,7 +587,7 @@ function buildPrintHTML(){
       rows+=row('平方公尺',calcs.map(({r})=>f2(r.area)+' m²'),true);
       rows+=row('台灣坪',calcs.map(({r})=>f2(r.ping)+' 坪'),true);
       rows+=row('平方英尺',calcs.map(({r})=>Math.round(r.ft2)+' ft²'));
-      rows+=row('牆面淨面積',calcs.map(({r})=>f2(r.wallNet)+' m²'));
+      rows+=row('牆面面積（天花板＋牆）',calcs.map(({r})=>f2(r.totalSurface)+' m²（'+f2(r.totalSurfacePing)+' 坪）'));
       rows+=row('空間容積',calcs.map(({r})=>f2(r.vol)+' m³'));
     } else if(key==='index'){
       rows+=row('長寬比',calcs.map(({r})=>r.ratio.toFixed(2)+':1'));
