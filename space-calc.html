@@ -427,7 +427,7 @@ let openingCounter = 0;
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
-calc();
+document.addEventListener('DOMContentLoaded', function(){ calc(); });
 
 // ══════════════════════════════════════════════
 // UNIT SWITCH
@@ -600,7 +600,17 @@ function calc(){
   document.getElementById('export-hd').textContent=(name?name+' — ':'')+cfg.label+'　空間基本條件換算';
 }
 
-function sv(id,v){ const e=document.getElementById(id); if(e) e.childNodes[0].nodeValue=String(v); }
+function sv(id,v){
+  const e=document.getElementById(id);
+  if(!e) return;
+  const t=e.childNodes[0];
+  if(t && t.nodeType===3) t.nodeValue=String(v);
+  else { /* fallback: set only the text part, preserve child elements */
+    const span=e.querySelector('span');
+    if(span){ e.childNodes[0]&&e.childNodes[0].nodeType===3 ? e.childNodes[0].nodeValue=String(v) : e.insertBefore(document.createTextNode(String(v)),span); }
+    else e.textContent=String(v);
+  }
+}
 function f2(v){ return Math.round(v*100)/100; }
 
 function luxColorTemp(use){
