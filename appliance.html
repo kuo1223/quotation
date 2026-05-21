@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>居家電器功率需求單</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f3f0;--surface:#fff;--s2:#f9f8f6;--s3:#f0efe9;
+  --border:#e2e0da;--border2:#d4d1c9;
+  --ink:#2b2926;--ink-m:#4a4742;--ink-l:#8a8780;--ink-f:#c8c4be;
+  --sage:#8a9082;--sage-lt:#eef0ea;--sage-dk:#6e7a6a;--sage-pa:#d8dcd4;
+  --amber:#c8960a;--amber-lt:#fef9e7;
+  --red:#c0392b;--red-lt:#fdecea;
+  --green:#2e7d32;--green-lt:#f0f7f0;
+  --blue:#3a6ea8;
+  --serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;
+  --r:8px;--rl:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:13px;height:100%;}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hd-left{display:flex;align-items:center;gap:12px;}
+.hd-logo{height:32px;}
+.hd-info{border-left:1px solid var(--border);padding-left:12px;}
+.hd-brand{font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:2px;}
+.hd-tool{font-family:var(--serif);font-size:14px;color:var(--ink);letter-spacing:3px;}
+
+/* OWNER BAR */
+.owner-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.owner-field{display:flex;flex-direction:column;gap:3px;}
+.owner-label{font-size:10px;color:var(--ink-l);letter-spacing:.8px;}
+.owner-input{border:1px solid var(--border2);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;}
+.owner-input:focus{border-color:var(--sage);}
+.owner-input.req{border-left:3px solid var(--sage-dk);width:180px;}
+.owner-input.md{width:180px;}
+.owner-input.lg{width:260px;}
+.send-btn{margin-left:auto;padding:8px 22px;background:var(--sage-dk);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-family:var(--serif);letter-spacing:2px;cursor:pointer;white-space:nowrap;}
+.send-btn:hover{background:#5a6a58;}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 106px);overflow:hidden;}
+.left{overflow-y:auto;display:flex;flex-direction:column;}
+.right{overflow-y:auto;background:var(--s2);border-left:1px solid var(--border);padding:14px;}
+
+/* SPACE TABS */
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
+.sp-tab{display:flex;align-items:center;gap:3px;padding:5px 11px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--ink-m);transition:all .15s;white-space:nowrap;user-select:none;}
+.sp-tab:hover{border-color:var(--sage);}
+.sp-tab.active{background:var(--sage-dk);border-color:var(--sage-dk);color:#fff;}
+.sp-tab .cnt{background:var(--sage-lt);color:var(--sage-dk);border-radius:10px;padding:0 5px;font-size:10px;}
+.sp-tab.active .cnt{background:rgba(255,255,255,.25);color:#fff;}
+.sp-tab .del-tab{font-size:13px;line-height:1;opacity:.7;margin-left:1px;}
+.sp-tab .del-tab:hover{opacity:1;}
+.tab-add-group{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.tab-sep{width:1px;height:18px;background:var(--border2);margin:0 4px;}
+.add-tab-btn{padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px dashed var(--border2);background:transparent;color:var(--ink-l);transition:all .15s;white-space:nowrap;}
+.add-tab-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);background:var(--sage-lt);}
+
+/* CONTENT */
+.ap-content{flex:1;padding:14px 16px;overflow-y:auto;}
+
+/* APPLIANCE TABLE */
+.ap-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--rl);overflow:hidden;border:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.04);}
+.ap-table thead tr{background:var(--s2);}
+.ap-table th{padding:8px 9px;text-align:left;font-size:10px;color:var(--ink-l);font-weight:400;letter-spacing:.8px;border-bottom:1px solid var(--border);}
+.ap-table th.c{text-align:center;}
+.ap-table td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.ap-table tr:last-child td{border-bottom:none;}
+.ap-table tr.owned{background:var(--green-lt);}
+.ap-table tr.plan{background:var(--amber-lt);}
+.ap-table tr.both{background:linear-gradient(90deg,var(--green-lt),var(--amber-lt));}
+.group-hd{padding:7px 10px;background:var(--s3);font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:2px;border-bottom:1px solid var(--border);}
+.ap-name{font-weight:500;color:var(--ink-m);}
+.ap-spec{font-size:10px;color:var(--ink-f);margin-top:1px;}
+.v220{color:var(--red);font-weight:600;font-size:11px;}
+.v110{color:var(--blue);font-size:11px;}
+.qty-wrap{display:flex;align-items:center;gap:3px;justify-content:center;}
+.qty-btn{width:20px;height:20px;border:1px solid var(--border2);border-radius:4px;background:var(--s2);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;color:var(--ink-m);}
+.qty-btn:hover{background:var(--sage-lt);border-color:var(--sage);}
+.qty-num{width:28px;text-align:center;font-size:12px;color:var(--ink);}
+.chk{width:15px;height:15px;accent-color:var(--sage-dk);cursor:pointer;}
+.badge{display:inline-block;padding:2px 6px;border-radius:8px;font-size:10px;}
+.badge-ded{background:var(--red-lt);color:var(--red);}
+.badge-nor{background:var(--sage-lt);color:var(--sage-dk);}
+
+/* RIGHT */
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:11px 13px;margin-bottom:10px;}
+.r-title{font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:2px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.r-sp-block{margin-bottom:8px;}
+.r-sp-name{font-size:11px;font-weight:600;color:var(--ink-m);display:flex;justify-content:space-between;margin-bottom:3px;}
+.r-bar-wrap{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:2px;}
+.r-bar{height:100%;border-radius:4px;transition:width .3s,background .3s;}
+.r-bar.ok{background:var(--sage-dk);}
+.r-bar.warn{background:var(--amber);}
+.r-bar.over{background:var(--red);}
+.r-amp{font-size:10px;color:var(--ink-l);}
+.r-amp b{color:var(--ink);}
+.r-warn{font-size:10px;padding:3px 7px;border-radius:var(--r);margin-top:2px;}
+.r-warn.warn{background:var(--amber-lt);color:#7a5200;}
+.r-warn.over{background:var(--red-lt);color:var(--red);}
+.ded-item{display:flex;justify-content:space-between;padding:4px 8px;border-radius:var(--r);font-size:11px;background:var(--red-lt);color:var(--red);margin-bottom:4px;}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.sum-cell{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px;text-align:center;}
+.sum-val{font-family:var(--serif);font-size:18px;color:var(--sage-dk);}
+.sum-lbl{font-size:10px;color:var(--ink-l);margin-top:1px;}
+.wire-tbl{width:100%;border-collapse:collapse;font-size:10px;}
+.wire-tbl th,.wire-tbl td{padding:4px 7px;border:1px solid var(--border);}
+.wire-tbl th{background:var(--s2);color:var(--ink-l);font-weight:400;}
+.legend{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink-l);}
+.leg-row{display:flex;align-items:center;gap:6px;}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.empty-note{font-size:11px;color:var(--ink-f);text-align:center;padding:8px 0;}
+
+/* CUSTOM NAME INPUT (for other spaces) */
+.custom-name-bar{background:var(--sage-lt);border-bottom:1px solid var(--sage-pa);padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sage-dk);}
+.custom-name-input{border:1px solid var(--sage-pa);border-radius:var(--r);padding:5px 10px;font-size:12px;font-family:var(--sans);color:var(--ink);background:var(--surface);outline:none;width:200px;}
+.custom-name-input:focus{border-color:var(--sage-dk);}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:9px 20px;border-radius:24px;font-size:12px;opacity:0;transition:all .28s;z-index:300;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="hd-left">
+    <img class="hd-logo" src="data:image/jpeg;base64,/9j/4QE4RXhpZgAATU0AKgAAAAgACAESAAMAAAABAAEAAAEaAAUAAAABAAAAbgEbAAUAAAABAAAAdgEoAAMAAAABAAIAAAExAAIAAAAhAAAAfgEyAAIAAAAUAAAAoAITAAMAAAABAAEAAIdpAAQAAAABAAAAtAAAAAAAAAEsAAAAAQAAASwAAAABQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkAADIwMTk6MTA6MjkgMTQ6MjE6NTAAAAiQAAAHAAAABDAyMjGQBAACAAAAFAAAARqRAQAHAAAABAECAwCgAAAHAAAABDAxMDCgAQADAAAAAQABAACgAgAEAAAAAQAAA4egAwAEAAAAAQAAAIWkBgADAAAAAQAAAAAAAAAAMjAxOToxMDoyOSAyMjoyMTo0NwAAAP/hNBRodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcEdJbWc9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9nL2ltZy8iIHhtbG5zOnBkZj0iaHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczppbGx1c3RyYXRvcj0iaHR0cDovL25zLmFkb2JlLmNvbS9pbGx1c3RyYXRvci8xLjAvIiBkYzpmb3JtYXQ9ImltYWdlL2pwZWciIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgSWxsdXN0cmF0b3IgQ0MgKE1hY2ludG9zaCkiIHhtcDpNZXRhZGF0YURhdGU9IjIwMTktMTAtMjlUMjI6MjE6NDcrMDg6MDAiIHhtcDpDcmVhdGVEYXRlPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAxOS0xMC0yOVQxNDoyMTo1MFoiIHBkZjpQcm9kdWNlcj0iQWRvYmUgUERGIGxpYnJhcnkgMTAuMDEiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0idXVpZDo1RDIwODkyNDkzQkZEQjExOTE0QTg1OTBEMzE1MDhDOCIgeG1wTU06UmVuZGl0aW9uQ2xhc3M9InByb29mOnBkZiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1Zjk3MjFjOS1hM2JmLTRiZjEtYjVjMC02MTQ5ZThkMTE5ZmEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NWY5NzIxYzktYTNiZi00YmYxLWI1YzAtNjE0OWU4ZDExOWZhIiBpbGx1c3RyYXRvcjpTdGFydHVwUHJvZmlsZT0iUHJpbnQiPiA8ZGM6dGl0bGU+IDxyZGY6QWx0PiA8cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPuW+l+ajru+8v+WQjeeJh0HvvL/osaHniZnljaHvvL/nh5nph5HvvL/pm5npnaI155uSdzwvcmRmOmxpPiA8L3JkZjpBbHQ+IDwvZGM6dGl0bGU+IDx4bXA6VGh1bWJuYWlscz4gPHJkZjpBbHQ+IDxyZGY6bGkgeG1wR0ltZzpmb3JtYXQ9IkpQRUciIHhtcEdJbWc6aW1hZ2U9Ii85ai80QUFRU2taSlJnQUJBZ0VCTEFFc0FBRC83UUFzVUdodmRHOXphRzl3SURNdU1BQTRRa2xOQSswQUFBQUFBQkFCTEFBQUFBRUEmI3hBO0FRRXNBQUFBQVFBQi8rNEFEa0ZrYjJKbEFHVEFBQUFBQWYvYkFJUUFCZ1FFQkFVRUJnVUZCZ2tHQlFZSkN3Z0dCZ2dMREFvS0N3b0smI3hBO0RCQU1EQXdNREF3UURBNFBFQThPREJNVEZCUVRFeHdiR3hzY0h4OGZIeDhmSHg4Zkh3RUhCd2NOREEwWUVCQVlHaFVSRlJvZkh4OGYmI3hBO0h4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zkh4OGZIeDhmSHg4Zi84QUFFUWdBbUFFQUF3RVImI3hBO0FBSVJBUU1SQWYvRUFhSUFBQUFIQVFFQkFRRUFBQUFBQUFBQUFBUUZBd0lHQVFBSENBa0tDd0VBQWdJREFRRUJBUUVBQUFBQUFBQUEmI3hBO0FRQUNBd1FGQmdjSUNRb0xFQUFDQVFNREFnUUNCZ2NEQkFJR0FuTUJBZ01SQkFBRklSSXhRVkVHRTJFaWNZRVVNcEdoQnhXeFFpUEImI3hBO1V0SGhNeFppOENSeWd2RWxRelJUa3FLeVkzUENOVVFuazZPek5oZFVaSFREMHVJSUpvTUpDaGdaaEpSRlJxUzBWdE5WS0JyeTQvUEUmI3hBOzFPVDBaWFdGbGFXMXhkWGw5V1oyaHBhbXRzYlc1dlkzUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8rQ2s1U1ZscGVZbVomI3hBO3FibkoyZW41S2pwS1dtcDZpcHFxdXNyYTZ2b1JBQUlDQVFJREJRVUVCUVlFQ0FNRGJRRUFBaEVEQkNFU01VRUZVUk5oSWdaeGdaRXkmI3hBO29iSHdGTUhSNFNOQ0ZWSmljdkV6SkRSRGdoYVNVeVdpWTdMQ0IzUFNOZUpFZ3hkVWt3Z0pDaGdaSmpaRkdpZGtkRlUzOHFPend5Z3AmI3hBOzArUHpoSlNrdE1UVTVQUmxkWVdWcGJYRjFlWDFSbFptZG9hV3ByYkcxdWIyUjFkbmQ0ZVhwN2ZIMStmM09FaFlhSGlJbUtpNHlOam8mI3hBOytEbEpXV2w1aVptcHVjblo2ZmtxT2twYWFucUttcXE2eXRycSt2L2FBQXdEQVFBQ0VRTVJBRDhBOVAyOXJiT2pNOFNNeGtrcXhVRS8mI3hBOzNqZU9WeGlEMDcyNmM1QTdFOGg5eXA5U3MvOEFmRWYvQUFDLzB5WEJIdVllTEx2THZxVm4vdmlQL2dGL3Bqd1I3bDhXWGVYZlVyUC8mI3hBO0FIeEgvd0FBdjlNZUNQY3ZpeTd5NzZsWi93QytJLzhBZ0YvcGp3UjdsOFdYZVhmVXJQOEEzeEgvQU1BdjlNZUNQY3ZpeTd5NzZsWi8mI3hBOzc0ai9BT0FYK21QQkh1WHhaZDVkOVNzLzk4Ui84QXY5TWVDUGN2aXk3eTc2bFovNzRqLzRCZjZZOEVlNWZGbDNsMzFLei8zeEgvd0MmI3hBOy93Qk1lQ1Bjdml5N3kxWnFxd2xWQUNpU1FBRFlBQ1JzRU9YelRsTy93SDNLK1RhM1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlZHMC91bS80eVMvOG5HeU1PWHorOW5rNS9BZmNyWkpnN0ZYWXE3RlhZcTdGWFlxN0ZYWXFvMm4mI3hBOzkwMy9BQmtsL3dDVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWVWJUKzZiL0FJeVMvd0RKeHNqRGw4L3ZaNU9md0gzSWE0MVJsbGxndGJkN2lXQTBtWS91NGtKVU9PVWpkZmhZZllESEpNRVomI3hBO0RJSllZNUJRaDFEQWlwRzRydFVERlYrS3V4VjJLdXhWMkt1eFYyS3FOcC9kTi94a2wvNU9Oa1ljdm45N1BKeitBKzVXeVRCMkt1eFYmI3hBOzJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VlJ0UDdwditNa3YvQUNjYkl3NWZQNzJlVG44Qjl5V1gmI3hBO0ZocW91cnA0SWJXV09XWDFvSG1kMWRHTUN3SFlSc09pbnYwT1NZSmpZMmkyOXZHcktvbkVjYVRPdjdSUmFkZGlmYkZVUmlyc1ZkaXImI3hBO3NWZGlyc1ZkaXFqYWYzVGY4WkpmK1RqWkdITDUvZXp5Yy9nUHVWc2t3ZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZkaXJzVlViVCs2Yi9qSkwveWNiSXc1ZlA3MmVUbjhCOXl0a21Ec1ZkaXJzVmRpcnNWZGlyc1ZkaXFqYWYzVGY4WkomI3hBO2YrVGpaR0hMNS9lenljL2dQdVZza3dkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcnNWZGlyc1ZkaXJzVlE2TGMmI3hBO3hCbFJFZFN6TUdMbFQ4VEZ1bkZ2SHh5QUJEWVRFODcvQUI4VjNPOC8zMUgvQU1qRy93Q2FNTnk3dng4a1ZIdlB5L2E3bmVmNzZqLzUmI3hBO0dOL3pSamN1NzhmSmFqM241ZnRkenZQOTlSLzhqRy81b3h1WGQrUGt0Ujd6OHYydTUzbisrby8rUmpmODBZM0x1L0h5V285NStYN1gmI3hBO2M3ei9BSDFIL3dBakcvNW94dVhkK1BrdFI3ejh2MnU1M24rK28vOEFrWTMvQURSamN1NzhmSmFqM241ZnRkenZQOTlSL3dESXh2OEEmI3hBO21qRzVkMzQrUzFIdlB5L2E3bmVmNzZqL0FPUmpmODBZM0x1L0h5V285NStYN1hjN3ovZlVmL0l4dithTWJsM2ZqNUxVZTgvTDlxNkMmI3hBO05vNDZOVGtXWmpUb09URnFmampFVUVUTmxVeVRGMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3UmI3hBO3hWMkt1eFZLN0ZOU3ViU0tiNjh5OGh1REhHVFViRTFBWHJUd3lBSkxZUkVjNy9Id1YvcW1wZjhBTGVmK1JTWWFsMy9qNW91UGNmbismI3hBO3gzMVRVdjhBbHZQL0FDS1RHcGQvNCthM0h1UHovWTc2cHFYL0FDM24va1VtTlM3L0FNZk5iajNINS9zZDlVMUwvbHZQL0lwTWFsMy8mI3hBO0FJK2EzSHVQei9ZNzZwcVgvTGVmK1JTWTFMdi9BQjgxdVBjZm4reDMxVFV2K1c4Lzhpa3hxWGYrUG10eDdqOC8yTytxYWwveTNuL2smI3hBO1VtTlM3L3g4MXVQY2ZuK3gzMVRVditXOC93RElwTWFsMy9qNXJjZTQvUDhBWTc2cHFYL0xlZjhBa1VtTlM3L3g4MXVQY2ZuK3hKTmYmI3hBOzFmVTdEUmJtZUc1SW5qdWhDc2pMR2R1SUZLY2FidHY0NE9MMDJ5RUJ4QWQ5ZmF4ZTU4eitjdUpNV29CQ3BITC9BRWVJMUZkd0FRTzMmI3hBO2ZHcGQvd0NQbWk0ZHgrZjdFUEw1MDgyaU5ndW9xamtFSTVoaElEYml0S2I0K3J2L0FCODF1SGNmbit4UVBucnplMjZhaFVIcFNDSHcmI3hBOzkweDlYZjhBajVyY080L1A5aUFuL01uempFd1VYNVoyK3lub1ExQTdsdmdydGo2dS93REh6VzRkeCtmN0hTZm1GNTNWdVExUGtwR3kmI3hBO3JCQit2aGo2dTliaDNINS9zV2Y4ckc4N01DVjFQWUE5YmVEL0FKbzdlR1BxNzF1SGNmbit4MHY1a2VjVFFRNnB5cUtsaEJBYWY4azkmI3hBOzhmVjMvajVyY080L1A5amNINWgrZTNERWFoelZCdXdoZzY5YVU0WStydlc0ZHgrZjdFeGc4NytjVysxcVlKSUhTQ0dsVDJCNGl1R3AmI3hBO2QvNCthM0R1UHovWXJyNXg4M282TytwQ1NJMERLSUlRYXNSdlVMMndHd2tDSjVBL1A5ajFhSmkwU01keVZCUDNaTnFYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZVRm92L0hNZytUZjhTT1JoeStmM3M4blA0RDdrYmttRHNWZGlxVGVidGV2OUQwVjlRc05JdU5idVZkRVcmI3hBO3d0UDcxZzVvVzZIWmVwMnhWSjlUODk2elpSNmt5ZVZkU3Vtc0pMZU9KWVVMZldST3dWbmhvcEpFVmF0dDB4VmtGdnJjY3VwZm84MmwmI3hBOzNIS0VEbVo3ZVFXLzJGZmlKNmVtVDhkT3ZVRWRzVlRIRlhZcTdGV0grYVFEb1Y3VVZBdmlmK0Z5by9TZmkzais4SCtiK2hpYzlUdjAmI3hBO0hqMXkxb1MyZEZyOWl2VWdmUlVZRlFGemNOSEdSQ3ZxU0hjS093TzFUVEZVdlcwa2U1QUJEdExTUVQrKzNnZGdOdW5YRlhKcWVsUlcmI3hBOzZTSnpsZ2trOUFYS1J5TW5ObTQxNUJhY0NmMi9zKzlNVXRwZFdWNURKTll1c2tTczBieUlOZ3lIaWFkaWNVTGhGYlNKNmNSQlZSOGYmI3hBO0hxZDl3RGlxL1RxVFJ2d05Ja2NnOWlRUGhvRFhDcWFJdEZGRXAzQXIzNllxdmIrNURBY1R5VTllL0tudGtaOHZsOTdaajUvQS9jOXQmI3hBO2cvdUkvd0RWSDZzazFyOFZkaXJzVmRpcnNWZGlyc1ZkaXJzVmRpcUMwWC9qbVFmSnYrSkhJdzVmUDcyZVRuOEI5eU55VEJ3SUlxT20mI3hBO0t1eFYyS3V4VjJLdXhWMkt1eFZodm0yditINzdhdjhBcDM4TXFQMG40dDQvdkIvbS9vWXBLZ0I1QVZyU29yMjJIVExXaExiMmVqQkkmI3hBO1J5bU80clhpQUsvYU5Odm93S2xaaWxqa1pxY3BmMnBUMFlEZXJmS3VLdFNXYlBheUloY0pNcFNTbXpLU0tjaDFwOUdLc2Rpc1BNUysmI3hBO1dyRFJvb0h0cnV5K3EyNzMwRTZDSjQ0V1ZaR1VncTlHaURmQ3lWREgvWllwVXZMY0VqUXVzVU53aXdYZDRwbjlXa1VpUVhMeFJ4Y08mI3hBO1JyKzdGS2xCOW5ydmlwWksxdWdVeklBQWFWWG9DUGw0NG9YV0laWXpKRjlwcER6V3UxSys0NjRWVENKbEtDUnFMeEJOU2FVN2Q4VmEmI3hBOzRTVGNYZXF4aGw5TkNhTjlvVVp2Znd5TStYeSs5c3g4L2dmdWU1UWYzRWYrcVAxWkpyWDRxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlUmI3hBO0Zvdi9BQnpJUGszL0FCSTVHSEw1L2V6eWMvZ1B1UzY1aWl1cnUrK3RNczBVRXZwaTNsa0t4ckg5V1NTb2lBNFNFeU4rMzIrN0pNRnUmI3hBO3JSMzEzNWZpVkdSQzMxVjFjTng1RGtyT0NCeFZSMzc3ZHNWU0NLejF1Mjh2M2tNTWxMaWFlRllvMGxSSkJHaUtrakYxa1hadVBhaDcmI3hBOzk5bFV1MU9mek5wUGxJK2hZeWF0ZkpxQ20zc1Z2bmlZUUtySUc5YUl1NVg0QWVMZkR2dDJYRlc5WDF6ekphMjBrMWg1Y252YmtUQkkmI3hBO1lScWpvR2dQcUQxR3FRcXNYaEJDOWxkYWtiNHFnYjdYUE9hdmYrajVabWtqaHYxdDdTVWFySVBXdG1Fckc1NGdoeHg0UmluK1YxMk8mI3hBO0tzaGJ6VjV1c3RNbmEzMEtLWVd0MUxEYncvWGZWbm10WXpMd25IcUttNzhFK0V0V2plSW9WVnllZVBOUmt2bzVkQ0VKdDV3bG8vcWUmI3hBO3FzOFhHWnVRNGZaTGVuR056dHovQU1rakZVODBUWE5TdWIvVTROVGhpdFlMYVFMWXlobC9mUmt2OGRSSkl2UlYyMkk3Z1lxbEhtNjQmI3hBO2pYeTVleUJnVU44YU1OeDltdVZINlQ4VytQMWovTi9RdzlwMUZ1MDY3by94R1Rmb05xOVBBWlkwSUxrb1pwSTNMaVNqRVZydFNtMkYmI3hBO1VEUGRjWXhNZzV4cU5vUVBqTk45dCt1M1RBcVYzT3MzRnpwaXMyanp6ck9XaXViRStpeGFJMURCdVVpSVZZZHVYZmNkY1VvQmRKMHEmI3hBOzIxK0F3NlRQR3RzbjdyVS9WcWxDcCtCZ1plYmtWNC9FcEF4VlVzTlMrbzZQUzIwaTdSNVo1R2UyWjRtbFV5bHBIbDVOSzY4UzdkT1YmI3hBO2FucFRGVXgrdXpHNEFTM2NLRVZ1YkZTckZ3MVYyWW1xY1FEdDMyNzRVTzA2NjRRenlWQVVPVElwNjdiZmZ0aXFLaGxrbGYxSk5vNjgmI3hBO2tqSklKcDBaaC9ERlVXMHpzYTdVcXA3ZnpaR2ZMNWZlMlkrZndQM0Y3dGIvQU54SC9xcitySk5hL0ZYWXE3RlhZcTdGWFlxN0ZYWXEmI3hBOzdGWFlxZ3RGL3dDT1pCOG0vd0NKSEl3NWZQNzJlVG44Qjl5dEpZV01yczhsdkU3dDlwbVJTVFFVM0pIaGttQ3I2Y2ZBSnhIQmRsV2cmI3hBO29BUEFZcTcwWXY1Ris0WXF4VDh4OVJmUzlEZ250N2krczNlNmpReWFYWUxxTTdEaTdtTXhGSDRxL0duT214cHZ2aXJBdE44OVhFWVQmI3hBO25jK2E5UWYwVEZ3T2d4Z2wvd0IzU1drY2EvNzdJcC9sNzlzVTBnb2Z6QWx0NyszTW1wZWFyaUdFeEM0Z2JRNEZFZ0VrY2JsbjRMNlkmI3hBO1BFbGo0TTFOK0l4V21UYS9lNnBiWCtyOE5aMXBFMGowZWNOdnBVRXlQeWhqbC9jdHdCbXI2TFZvZGpJUjJIRlFvUmVZcm1mVEFWMUgmI3hBO3pLajJNVHl5WGFhTkNEZGd3TGMwQWUza2pxaXhNbTNFRm5JcWRpRldZK1NkSjFXR3krdmFsckZ6cTBlb1FXOHR2QmUyc0Z0SmIvQVcmI3hBO2VxeEtwNVB6SEpXcnhJMnhWS3ZQand4ZVdMdm5zcDFFS1BtVnBsUitrL0Z2SDF4L3pmME1JZDlMa2g5TndDcG9XV2dvU054c2ZEcmwmI3hBO2pRc0V1amlvTUtGZUpCQlVIcnRpcVhUeWFYRTMraWowZHhYZ3EwOTZiZGZuaXFsUGYyTDdSc09KQjNCQXhWRHZjYVVLT3dCZWxBV0MmI3hBO3Nmb0pHS3JJYnV3RHNRS0wxb0tmUGZZZDhWVkpiL1RCRTFRUFRJK0k5cUg2TVZTNnh1Yk5uZVNST01TeU1ZSWUzMmpRa2VJd3FuQ2EmI3hBO2xaTUtFRGlPMWVveFZTbjFEVDBibXFJWktCUXhwMHJYSXo1ZkpzeDgvZ2Z1ZlJscWEyc0pIZEZQNERKTmFyaXJzVmRpcnNWZGlyc1YmI3hBO2RpcnNWZGlyc1ZTM1NMcTJUVG9WZVZGWUExVXNBZnRIeHl1TWdPdmUzVGhJbllIa1B1U0xXOVUxR1B6Rkd1blRKS2ZRWXcyOHM3UlcmI3hBO3p5OFg0aVJsRW5FRnFWUEUvTE5UbXp5R3NpQkwwMTM3ZFdneGx4VTErbS96RE5yY3NkTzBPTzZVeC9WSXhxYzhrYmd0Kzg5UnphUmwmI3hBO2FMOW1pbXB6YjhZN3cyK0ZMdVB5UTdhMSthUDFhQmtzUEwvMWdqL1NJbTFHNENnODJGRVlXemZzY1R1T3BQaHU4WTd3dmhTN2o4bXQmI3hBO2FnOHc2NXBUV2VxNmZwTTFMY1NvaWFsY3hLYnhrWkdqTFJSSS9wY1dJNVYzcjluYkhqajNyNFV1NC9KaVY5K1hWeEZLWTdIUWRHdWImI3hBO2FUN1puMXJVMFllb3JpV245NVRlVjZVOXZBVWVPUGV2aHk3ajhtUXdhSHFrSzZmSEhwV2xLaE1ZMUJqckY2UkduR01TZWloaVBxSDQmI3hBO1dDaGl2UWVKeDR4M2hmQ2wzSDVLZjZHMTJEVTExTzAwalNFdnJKM05oY1ByRjdLR1YrY2Y3eUV4SWkxaWtQZC9pN2RHRHh4N3d2aFMmI3hBOzdqOGsxdGRlL01oL3F5ejZYb2tkVC9wa28xT1dpL3ZHQjlKQmJOei9BSFFVamt5N21tUEdPOEw0VXU0L0pPdEMxWFdaa25PdXcyRmsmI3hBOzZ2UzJGbmVOZEJrOFhNa052eFBzSzRlT1BldmhTN2o4bUMvbkZkbUh5WEpKR2FoOVlqQUk3Z294d1IzaWZpbWRpY2Y4MzduaXlhNWQmI3hBO3NwcUdJOXdjdjlQZTRaRSs0dHZyVjF4T3pFSHJVZFJqNmU5SHI3aWo5TDFUUlpMU2R0V2x2WTdsU1JBbHVpTWhIQTBMRnpVZkhTdnQmI3hBO1hJbXU4Tmc0dTQvSlkxMTVXVzZRSmMzeTIvQmpKKzRRc0pQajRoZmlXbyt4VSs1MndiZDRaZXJ1UHlRK29YdmwxclZQcTF4ZXlUVWImI3hBO2tIZ1JWRERseG9ROWZEOGNkdTlhbDNINUl4YnZ5S2xEOWUxUVJrc1c1VzBXd3ExTnhKMXB4cnQ0NDdkNFR2M0g1SVN5dXZLYzBVVW0mI3hBO29YT3BKSjFlT0tDTmtCNWdjdmlkYW5oVS9QSGJ2V3BkeCtTVzMxL2F4WGtxYVcwOHRsVUZKSjBDU0VrQXZ5VmFqWjZnYjlNUlhlZ2kmI3hBO1hjVmk2dGRiVVZ0dlk1TDA5NlBYM0g1T2ZWYmsvYURBQUd2VWRzakt1OW5qTWdkd2VSKzU5aWFjYTZmYW54aGovd0NJakFVQkVZcGQmI3hBO2lyc1ZkaXJzVmRpcnNWZGlyc1ZkaXFIVFQ3ZEVWRk1vVlFBbzlhWFlEYitiRlZOdEgwOXAxdUdqTFRxS0xNWGN1QjdOeXIzeUJ4Uk0mI3hBO3VJZ2NYZjFXbFg2bEQvTkwvd0FqcGY4QW1ySnE3NmxEL05ML0FNanBmK2FzVmQ5U2gvbWwvd0NSMHY4QXpWaXJ2cVVQODB2L0FDT2wmI3hBOy93Q2FzVmQ5U2gvbWwvNUhTLzhBTldLdStwUS96Uy84anBmK2FzVmQ5U2gvbWwvNUhTLzgxWXE3NmxEL0FEUy84anBmK2FzVlFHcysmI3hBO1ZOQjFxeE5ocWxyOWJ0VEt0d1k1SkpQN3hGNHEzSU1HMkhhdE1JTklJQjVwSVB5Zy9MZ2RORlQvQUpHei93RFZURHhsaDRVZTV2OEEmI3hBOzVWRCtYUDhBMVprLzVHei9BUFZUSGpLK0ZIdWEvd0NWUWZseC93QldWUDhBa2JQL0FOVk1lTXI0VVd2K1ZPL2x0LzFaRS81R3ovOEEmI3hBO1ZUSGlLZkRpMS95cHY4dFArckpIL3dBalovOEFxcGp4RmZERGgrVG41YWovQUtVa2YvSTJmL3FwanhGZkRpNy9BSlU1K1d2L0FGWkkmI3hBOy93RGtiUDhBOVZNZUlyNGNXaCtUUDVaaXRORVRjMS92cmp2L0FNOU1lSXJ3QnY4QTVVMytXbi9Wa1Qva2JjZjlWTWVJcjRZYWI4bXYmI3hBO3kwTks2S20zU2sxd1AxU1k4Ulh3d3pLT05JNDFqUVVSQUZVZUFBb01pelhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTcmI3hBO0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1hZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlgmI3hBO1lxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcWdOY251SU5OZDdlUXhTbVNHTVMmI3hBO0FLeFVTU29oSURCbHJSdTR4VkRSUnlXbW9JRWplYWVXRzRaakxKemQvU2tpVk9MRThVREI2OFZBR0twRnJObjVvZlc1cHJTUzQ5SXomI3hBO3hSUVJCcEJEUW1CaTc4UnNvQWF2YllqN1IzVlU5V2Z6V2ZNSmt0clc2TnJIT3FJeXlFUW1MNFdZOEsxLzNYVHJUNzZGVkJ5ZWF2TWMmI3hBO3V0NnZhdzZEcS9HeXVoRkJLWGVLQ2VQNGkwa1RTVzRRcUZRa0JHWWswSFVpcXFYYWg1OTgwV2R2Y3l4ZVZ0ZXVmcTl6RGJRUm96RnAmI3hBO3d3WW1VRDZ1ZmhIQlExSzd0MnBYRlZlMzgrZVk0YjY1L3dDZFkxMmI2cGZteFJaVCs1bWk0VEg2MnBNSzFqQmlIUS90TDhzVlRIV2YmI3hBO3pLOHc2YzE4c1hrelU3MDJ0MkxhSDZ1Q3duaWIxZjMwWkNGZjkwaXExMjVMVTRxbTE1NXgxU0piazJ2bDIrdW10cGxpSzhXajVJV2wmI3hBO1V5cnpYNHdQU0IrRGw5b2ZTcXlqRlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0ZYWXE3RlhZcTdGWFlxN0YmI3hBO1ZPNHRyZTVoYUc0aVNhRnFjbzVGREthR29xRFViRVZ4VlN0dE0wMjFrTXR0YVF3U0VGUzhjYW8zRWtFaXFnYmJERlZ6NmZZTzVkN2EmI3hBO0puWTFaaWlrays1SXhWYitqTk4vNVpJZitSYS8weFY1ejVoMGJ6WmIrY0k3ZXdpMUM3MGU5WlpIdWJlUFRWdHJSWlpBcFFpUlBYZjAmI3hBO2hIeTI3T2Q5dGxXUHlYSDVudEZadC9oclVva3M0ZjhBVFpHazBaUFZLaU9zamwxNyttK3lnZmFPdytFaFN0MERXZk9Wd0VzcjdTNzYmI3hBO3pNOTNGYnlhbE0yalA5WFFNbnFPWTBUa1J4aWZuOEpweU5DS2JLcTl2TjUxMDJhU2Q3Ty8xbTNzN2lhMkVaL1F5cGNoQ3NRbTVLRWsmI3hBO1VmQ1pBb1d0VFR4NHFFTlBiL21GSHBOeGN2RnFrTXl5S3NNY3I2QVN5TTBxQitTeDBRcUdVbGFIb3UvMnNVdmM4VU94VjJLdXhWMksmI3hBO3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMkt1eFYyS3V4VjJLdXhWMktvRFdvTmNtc3VHaTNkdlpYbklIMXImI3hBO3FCN21QalExSHBwTGJtdlRmbGlyRnRmMGY4ekpkRGhoZzFtd3ViZ3JKSHFVWDZMRHBjTE5JRkFXT1c3VlZXT05pR3F4NWZoaWxnUysmI3hBO1ZmUHYxQ1hVSlBMZHFkU2t1SmtFSTByVHZVQ01QVVdhbjZUSzA1U3pwdktTZWRhVXJ5Q3BscU5oNXdpdjViU1B5aGF5YWVkUm52UHImI3hBO0VlbTJVd2UybzA2d01rbDRoOWVTVFl6YkRsdlR1U3FCbDBMOHhyeUhoY2VXN2N4UzNFWWlpbDBuU1hhSll5cGFXWGpxQVVnbjdQRTgmI3hBO2hUNVZDdjhBLzlrPSIgeG1wR0ltZzp3aWR0aD0iMjU2IiB4bXBHSW1nOmhlaWdodD0iMTUyIi8+IDwvcmRmOkFsdD4gPC94bXA6VGh1bWJuYWlscz4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENTNiAoTWFjaW50b3NoKSIgc3RFdnQ6Y2hhbmdlZD0iLyIgc3RFdnQ6d2hlbj0iMjAxNi0wOS0xM1QxMToyNjo1OSswODowMCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowNzgwMTE3NDA3MjA2ODExODIyQUJFRjE0ODg5RUJGRiIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8cmRmOmxpIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIElsbHVzdHJhdG9yIENDIChNYWNpbnRvc2gpIiBzdEV2dDpjaGFuZ2VkPSIvIiBzdEV2dDp3aGVuPSIyMDE5LTEwLTI5VDIyOjIxOjQ3KzA4OjAwIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjVmOTcyMWM5LWEzYmYtNGJmMS1iNWMwLTYxNDllOGQxMTlmYSIgc3RFdnQ6YWN0aW9uPSJzYXZlZCIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOnJlbmRpdGlvbkNsYXNzPSJwcm9vZjpwZGYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Mjk2Yzg5MzMtYjZmYy00M2U5LThiZDctZWMyODA1N2NiMWRmIiBzdFJlZjppbnN0YW5jZUlEPSJ1dWlkOjgzOTg0Y2U3LTZiNjQtOTk0NS05ZWZlLWE3Y2ZkNmUwMjNlZSIgc3RSZWY6b3JpZ2luYWxEb2N1bWVudElEPSJ1dWlkOjVEMjA4OTI0OTNCRkRCMTE5MTRBODU5MEQzMTUwOEM4Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg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" alt="得森設計">
+    <div class="hd-info">
+      <div class="hd-brand">得森室內裝修設計有限公司</div>
+      <div class="hd-tool">居 家 電 器 功 率 需 求 單</div>
+    </div>
+  </div>
+</header>
+
+<div class="owner-bar">
+  <div class="owner-field"><div class="owner-label">屋主姓名 <span style="color:var(--red)">*</span></div>
+    <input class="owner-input req" id="f-name" placeholder="請填寫姓名" oninput="updateSendBtn()"></div>
+  <div class="owner-field"><div class="owner-label">聯絡電話</div>
+    <input class="owner-input md" id="f-phone" placeholder="選填"></div>
+  <div class="owner-field"><div class="owner-label">案件地址</div>
+    <input class="owner-input lg" id="f-addr" placeholder="選填"></div>
+  <button class="send-btn" id="sendBtn" onclick="sendEmail()" disabled>✉ 送出給設計師</button>
+</div>
+
+<div class="layout">
+  <div class="left">
+    <div class="tab-bar" id="tabBar"></div>
+    <div id="customNameBar" style="display:none;" class="custom-name-bar">
+      空間名稱：<input class="custom-name-input" id="customNameInput" placeholder="請輸入空間名稱" oninput="updateCustomName()">
+    </div>
+    <div class="ap-content" id="apContent"></div>
+  </div>
+  <div class="right">
+    <div class="r-card"><div class="r-title">迴 路 負 載 總 覽</div><div id="r-spaces"><div class="empty-note">請勾選電器後顯示</div></div></div>
+    <div class="r-card"><div class="r-title">220V 專 用 迴 路</div><div id="r-dedicated"><div class="empty-note">尚無 220V 專用迴路</div></div></div>
+    <div class="r-card"><div class="r-title">全 屋 彙 整</div><div class="sum-grid" id="r-summary"></div></div>
+    <div class="r-card"><div class="r-title">建 議 線 徑 參 考</div>
+      <table class="wire-tbl">
+        <tr><th>用途</th><th>線徑</th><th>最大負載</th></tr>
+        <tr><td>一般插座 110V</td><td>2.0 mm²</td><td>1,650W / 15A</td></tr>
+        <tr><td>大功率 110V</td><td>3.5 mm²</td><td>2,200W / 20A</td></tr>
+        <tr><td>220V 專用</td><td>5.5 mm²</td><td>3,520W / 16A</td></tr>
+        <tr><td>220V 大功率</td><td>8.0 mm²</td><td>5,500W / 25A</td></tr>
+      </table>
+    </div>
+    <div class="r-card"><div class="r-title">圖 例</div>
+      <div class="legend">
+        <div class="leg-row"><div class="leg-dot" style="background:var(--green-lt);border:1px solid var(--green);"></div>已擁有</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--amber-lt);border:1px solid var(--amber);"></div>計畫購買</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--sage-dk);"></div>安全範圍（≤16A）</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--amber);"></div>接近上限（16~20A）</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--red);"></div>超載（>20A）</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// APPLIANCE DATABASE
+// ══════════════════════════════════════════════
+const AP_DB = {
+  outdoor:[
+    {g:'照明/安全',items:[
+      {id:'o1',name:'戶外燈/景觀燈（每組）',spec:'',v:110,w:60},
+      {id:'o2',name:'門柱燈/壁燈',spec:'',v:110,w:30},
+      {id:'o3',name:'監視器（戶外型）',spec:'每支',v:110,w:15},
+      {id:'o4',name:'感應探照燈',spec:'',v:110,w:150},
+    ]},
+    {g:'電動設備',items:[
+      {id:'o5',name:'電動大門（馬達）',spec:'',v:110,w:300},
+      {id:'o6',name:'電動鐵捲門',spec:'',v:110,w:300},
+      {id:'o7',name:'對講機主機',spec:'',v:110,w:20},
+      {id:'o8',name:'門禁/讀卡機',spec:'',v:110,w:10},
+    ]},
+    {g:'電動車充電',items:[
+      {id:'o9',name:'家用充電樁（7kW）',spec:'需獨立專用迴路',v:220,w:7000,circuit:'dedicated'},
+      {id:'o10',name:'慢速充電插座',spec:'一般插座型',v:110,w:1100},
+    ]},
+    {g:'水電設備',items:[
+      {id:'o11',name:'庭院灑水系統（控制器）',spec:'',v:110,w:30},
+      {id:'o12',name:'水池/噴泉幫浦',spec:'',v:110,w:200},
+    ]},
+  ],
+  garage:[
+    {g:'照明/安全',items:[
+      {id:'ga1',name:'車庫燈',spec:'',v:110,w:60},
+      {id:'ga2',name:'監視器',spec:'',v:110,w:15},
+    ]},
+    {g:'電動設備',items:[
+      {id:'ga3',name:'電動車庫門（馬達）',spec:'',v:110,w:400},
+      {id:'ga4',name:'電動鐵捲門',spec:'',v:110,w:300},
+    ]},
+    {g:'電動車充電',items:[
+      {id:'ga5',name:'家用充電樁（7kW）',spec:'需獨立專用迴路',v:220,w:7000,circuit:'dedicated'},
+      {id:'ga6',name:'充電插座（慢充）',spec:'',v:110,w:1100},
+    ]},
+    {g:'其他',items:[
+      {id:'ga7',name:'空氣壓縮機',spec:'',v:110,w:750},
+      {id:'ga8',name:'工作燈/投射燈',spec:'',v:110,w:100},
+    ]},
+  ],
+  entry:[
+    {g:'門禁安全',items:[
+      {id:'en1',name:'智能電子門鎖',spec:'含指紋/臉辨',v:110,w:15},
+      {id:'en2',name:'視訊對講機（室內機）',spec:'',v:110,w:15},
+      {id:'en3',name:'感應燈',spec:'',v:110,w:20},
+    ]},
+    {g:'生活',items:[
+      {id:'en4',name:'鞋櫃除臭/UV燈',spec:'',v:110,w:10},
+      {id:'en5',name:'充電插座（傘/手機）',spec:'',v:110,w:50},
+    ]},
+  ],
+  living:[
+    {g:'空調',items:[
+      {id:'l1',name:'冷氣（1噸 變頻）',spec:'適合4~6坪',v:220,w:900,circuit:'dedicated'},
+      {id:'l2',name:'冷氣（1.5噸 變頻）',spec:'適合7~10坪',v:220,w:1400,circuit:'dedicated'},
+      {id:'l3',name:'冷氣（2噸 變頻）',spec:'適合11~14坪',v:220,w:1800,circuit:'dedicated'},
+      {id:'l4',name:'冷氣（2.5噸 變頻）',spec:'適合15~18坪',v:220,w:2200,circuit:'dedicated'},
+    ]},
+    {g:'影音娛樂',items:[
+      {id:'l5',name:'液晶電視（55吋）',spec:'',v:110,w:150},
+      {id:'l6',name:'液晶電視（65吋）',spec:'',v:110,w:200},
+      {id:'l7',name:'液晶電視（75吋以上）',spec:'',v:110,w:280},
+      {id:'l8',name:'投影機',spec:'家用型',v:110,w:300},
+      {id:'l9',name:'音響系統（擴大機+喇叭）',spec:'',v:110,w:200},
+      {id:'l10',name:'機上盒/電視盒',spec:'',v:110,w:15},
+      {id:'l11',name:'電視遊樂器',spec:'PS5/Xbox等',v:110,w:200},
+    ]},
+    {g:'空氣品質',items:[
+      {id:'l12',name:'電風扇',spec:'直立/桌扇',v:110,w:50},
+      {id:'l13',name:'循環扇',spec:'',v:110,w:35},
+      {id:'l14',name:'空氣清淨機',spec:'',v:110,w:60},
+      {id:'l15',name:'除濕機',spec:'',v:110,w:285},
+      {id:'l16',name:'電暖器',spec:'',v:110,w:700},
+      {id:'l17',name:'加濕器',spec:'',v:110,w:30},
+    ]},
+    {g:'其他',items:[
+      {id:'l18',name:'電動窗簾/捲簾（每組）',spec:'',v:110,w:100},
+      {id:'l19',name:'掃地機器人充電座',spec:'',v:110,w:30},
+      {id:'l20',name:'智能音箱/顯示器',spec:'',v:110,w:30},
+    ]},
+  ],
+  master:[
+    {g:'空調',items:[
+      {id:'ma1',name:'冷氣（1噸 變頻）',spec:'適合4~6坪',v:220,w:900,circuit:'dedicated'},
+      {id:'ma2',name:'冷氣（1.5噸 變頻）',spec:'適合7~10坪',v:220,w:1400,circuit:'dedicated'},
+    ]},
+    {g:'娛樂/生活',items:[
+      {id:'ma3',name:'液晶電視（42~50吋）',spec:'',v:110,w:120},
+      {id:'ma4',name:'電風扇',spec:'',v:110,w:50},
+      {id:'ma5',name:'除濕機',spec:'',v:110,w:285},
+      {id:'ma6',name:'電暖器',spec:'',v:110,w:700},
+      {id:'ma7',name:'空氣清淨機',spec:'',v:110,w:60},
+    ]},
+    {g:'床具/梳妝',items:[
+      {id:'ma8',name:'電動床（馬達）',spec:'單邊',v:110,w:150},
+      {id:'ma9',name:'床頭燈/閱讀燈',spec:'',v:110,w:20},
+      {id:'ma10',name:'吹風機',spec:'',v:110,w:1200},
+      {id:'ma11',name:'直髮/捲髮器',spec:'',v:110,w:150},
+      {id:'ma12',name:'按摩椅',spec:'',v:110,w:200},
+    ]},
+  ],
+  master_bath:[
+    {g:'熱水設備',items:[
+      {id:'mb1',name:'電熱水器（儲熱 220V）',spec:'需專用迴路',v:220,w:3000,circuit:'dedicated'},
+      {id:'mb2',name:'熱泵熱水器',spec:'需專用迴路',v:220,w:1200,circuit:'dedicated'},
+    ]},
+    {g:'衛浴設備',items:[
+      {id:'mb3',name:'浴室暖風機（乾燥機）',spec:'需專用迴路',v:220,w:1400,circuit:'dedicated'},
+      {id:'mb4',name:'浴室排風扇',spec:'',v:110,w:30},
+      {id:'mb5',name:'免治馬桶座',spec:'',v:110,w:500},
+      {id:'mb6',name:'吹風機',spec:'',v:110,w:1200},
+    ]},
+  ],
+  bedroom:[
+    {g:'空調',items:[
+      {id:'bd1',name:'冷氣（1噸 變頻）',spec:'適合4~6坪',v:220,w:900,circuit:'dedicated'},
+      {id:'bd2',name:'冷氣（1.5噸 變頻）',spec:'',v:220,w:1400,circuit:'dedicated'},
+    ]},
+    {g:'生活電器',items:[
+      {id:'bd3',name:'電視（32~42吋）',spec:'',v:110,w:80},
+      {id:'bd4',name:'電風扇',spec:'',v:110,w:50},
+      {id:'bd5',name:'電暖器',spec:'',v:110,w:700},
+      {id:'bd6',name:'除濕機',spec:'',v:110,w:285},
+      {id:'bd7',name:'空氣清淨機',spec:'',v:110,w:60},
+      {id:'bd8',name:'床頭燈',spec:'',v:110,w:20},
+      {id:'bd9',name:'電動床（馬達）',spec:'',v:110,w:150},
+    ]},
+  ],
+  kitchen:[
+    {g:'冰箱/保鮮',items:[
+      {id:'k1',name:'冰箱（雙門 400L）',spec:'24H運作',v:110,w:130},
+      {id:'k2',name:'冰箱（三門/對開 600L+）',spec:'24H運作',v:110,w:200},
+      {id:'k3',name:'冷凍櫃（獨立）',spec:'',v:110,w:150},
+    ]},
+    {g:'烹飪設備',items:[
+      {id:'k4',name:'大同電鍋（10人份）',spec:'800W',v:110,w:800},
+      {id:'k5',name:'大同電鍋（20人份）',spec:'1200W',v:110,w:1200},
+      {id:'k6',name:'電子鍋/電飯鍋',spec:'',v:110,w:700},
+      {id:'k7',name:'IH電磁爐（單口）',spec:'需專用迴路',v:220,w:1400,circuit:'dedicated'},
+      {id:'k8',name:'IH電磁爐（雙口）',spec:'需專用迴路',v:220,w:2800,circuit:'dedicated'},
+      {id:'k9',name:'電磁爐（110V 單口）',spec:'',v:110,w:1300},
+      {id:'k10',name:'微波爐',spec:'',v:110,w:1000},
+      {id:'k11',name:'烤箱（桌上型）',spec:'',v:110,w:1200},
+      {id:'k12',name:'氣炸鍋',spec:'',v:110,w:1500},
+      {id:'k13',name:'電陶爐',spec:'',v:110,w:1500},
+      {id:'k14',name:'抽油煙機',spec:'',v:110,w:200},
+    ]},
+    {g:'清潔設備',items:[
+      {id:'k15',name:'洗碗機',spec:'',v:110,w:1200},
+      {id:'k16',name:'烘碗機',spec:'',v:110,w:800},
+    ]},
+    {g:'飲水設備',items:[
+      {id:'k17',name:'電熱水瓶/快煮壺',spec:'',v:110,w:1000},
+      {id:'k18',name:'冷熱開飲機（桌上型）',spec:'',v:110,w:800},
+      {id:'k19',name:'廚下型冷熱飲水機',spec:'',v:110,w:600},
+      {id:'k20',name:'廚下型RO淨水器',spec:'馬達用電',v:110,w:50},
+      {id:'k21',name:'全戶式淨水/軟水機',spec:'',v:110,w:80},
+    ]},
+    {g:'小家電',items:[
+      {id:'k22',name:'咖啡機（膠囊型）',spec:'',v:110,w:1300},
+      {id:'k23',name:'咖啡機（全自動研磨）',spec:'',v:110,w:1500},
+      {id:'k24',name:'果汁機/調理機',spec:'',v:110,w:800},
+      {id:'k25',name:'麵包機',spec:'',v:110,w:550},
+    ]},
+    {g:'洗衣設備',items:[
+      {id:'k26',name:'洗衣機（直立式 110V）',spec:'',v:110,w:500},
+      {id:'k27',name:'滾筒洗衣機（220V）',spec:'需專用迴路',v:220,w:2000,circuit:'dedicated'},
+    ]},
+  ],
+  bath:[
+    {g:'熱水設備',items:[
+      {id:'ba1',name:'電熱水器（瞬熱 110V）',spec:'4~5kW',v:110,w:4500,circuit:'dedicated'},
+      {id:'ba2',name:'電熱水器（儲熱 220V）',spec:'需專用迴路',v:220,w:3000,circuit:'dedicated'},
+      {id:'ba3',name:'熱泵熱水器',spec:'需專用迴路',v:220,w:1200,circuit:'dedicated'},
+    ]},
+    {g:'衛浴設備',items:[
+      {id:'ba4',name:'浴室暖風機（乾燥機）',spec:'需專用迴路',v:220,w:1400,circuit:'dedicated'},
+      {id:'ba5',name:'浴室排風扇',spec:'',v:110,w:30},
+      {id:'ba6',name:'免治馬桶座',spec:'',v:110,w:500},
+    ]},
+    {g:'洗衣烘衣',items:[
+      {id:'ba7',name:'烘衣機（220V 熱泵）',spec:'需專用迴路',v:220,w:1500,circuit:'dedicated'},
+      {id:'ba8',name:'烘衣機（110V）',spec:'',v:110,w:1200},
+      {id:'ba9',name:'除濕機',spec:'',v:110,w:285},
+    ]},
+    {g:'個人護理',items:[
+      {id:'ba10',name:'吹風機',spec:'',v:110,w:1200},
+      {id:'ba11',name:'直髮/離子夾',spec:'',v:110,w:150},
+    ]},
+  ],
+  study:[
+    {g:'電腦設備',items:[
+      {id:'st1',name:'桌上型電腦主機（一般）',spec:'',v:110,w:400},
+      {id:'st2',name:'電競主機',spec:'高功率',v:110,w:700},
+      {id:'st3',name:'螢幕（27吋）',spec:'',v:110,w:30},
+      {id:'st4',name:'筆記型電腦（充電器）',spec:'',v:110,w:65},
+      {id:'st5',name:'印表機（雷射）',spec:'',v:110,w:400},
+      {id:'st6',name:'印表機（噴墨）',spec:'',v:110,w:20},
+      {id:'st7',name:'NAS 網路儲存',spec:'',v:110,w:50},
+    ]},
+    {g:'空調',items:[
+      {id:'st8',name:'冷氣（1噸 變頻）',spec:'',v:220,w:900,circuit:'dedicated'},
+      {id:'st9',name:'電風扇',spec:'',v:110,w:50},
+    ]},
+  ],
+  corridor:[
+    {g:'照明/安全',items:[
+      {id:'co1',name:'走道燈（感應型）',spec:'',v:110,w:20},
+      {id:'co2',name:'緊急照明燈',spec:'',v:110,w:10},
+      {id:'co3',name:'監視器',spec:'',v:110,w:15},
+    ]},
+    {g:'其他',items:[
+      {id:'co4',name:'全熱交換機',spec:'',v:110,w:150},
+    ]},
+  ],
+  balcony:[
+    {g:'洗衣',items:[
+      {id:'bl1',name:'洗衣機（直立式）',spec:'',v:110,w:500},
+      {id:'bl2',name:'烘衣機（110V）',spec:'',v:110,w:1200},
+      {id:'bl3',name:'烘衣機（220V）',spec:'需專用迴路',v:220,w:1500,circuit:'dedicated'},
+    ]},
+    {g:'其他',items:[
+      {id:'bl4',name:'除濕機',spec:'',v:110,w:285},
+      {id:'bl5',name:'陽台燈',spec:'',v:110,w:30},
+    ]},
+  ],
+  work_balcony:[
+    {g:'洗衣/烘衣',items:[
+      {id:'wb1',name:'洗衣機（直立式）',spec:'',v:110,w:500},
+      {id:'wb2',name:'滾筒洗衣機（220V）',spec:'需專用迴路',v:220,w:2000,circuit:'dedicated'},
+      {id:'wb3',name:'烘衣機（110V）',spec:'',v:110,w:1200},
+      {id:'wb4',name:'烘衣機（220V）',spec:'需專用迴路',v:220,w:1500,circuit:'dedicated'},
+    ]},
+    {g:'水電設備',items:[
+      {id:'wb5',name:'熱水器（瞬熱 110V）',spec:'',v:110,w:4500,circuit:'dedicated'},
+      {id:'wb6',name:'熱水器（儲熱 220V）',spec:'需專用迴路',v:220,w:3000,circuit:'dedicated'},
+    ]},
+    {g:'其他',items:[
+      {id:'wb7',name:'除濕機',spec:'',v:110,w:285},
+      {id:'wb8',name:'工作台燈',spec:'',v:110,w:30},
+    ]},
+  ],
+  pet:[
+    {g:'寵物日常',items:[
+      {id:'p1',name:'自動餵食機',spec:'',v:110,w:15},
+      {id:'p2',name:'寵物飲水循環機',spec:'',v:110,w:5},
+      {id:'p3',name:'寵物烘毛機',spec:'',v:110,w:1200},
+      {id:'p4',name:'寵物保暖墊/電熱毯',spec:'',v:110,w:50},
+      {id:'p5',name:'自動清潔貓砂盆',spec:'',v:110,w:30},
+    ]},
+    {g:'水族/爬蟲',items:[
+      {id:'p6',name:'水族缸（打氣+燈+加熱）',spec:'依缸體大小',v:110,w:200},
+      {id:'p7',name:'爬蟲保溫燈',spec:'',v:110,w:100},
+    ]},
+  ],
+  smart:[
+    {g:'網路/監控',items:[
+      {id:'sm1',name:'無線AP（每台）',spec:'',v:110,w:15},
+      {id:'sm2',name:'網路路由器',spec:'',v:110,w:20},
+      {id:'sm3',name:'監視器NVR主機',spec:'',v:110,w:30},
+      {id:'sm4',name:'監視器（室內/每支）',spec:'',v:110,w:10},
+      {id:'sm5',name:'智能家電控制主機',spec:'',v:110,w:20},
+      {id:'sm6',name:'智能音箱',spec:'',v:110,w:30},
+    ]},
+    {g:'空調/空氣',items:[
+      {id:'sm7',name:'中央空調主機',spec:'需獨立迴路',v:220,w:5000,circuit:'dedicated'},
+      {id:'sm8',name:'全熱交換機（全屋型）',spec:'',v:110,w:200},
+      {id:'sm9',name:'地暖系統（每10m²）',spec:'需專用迴路',v:220,w:1000,circuit:'dedicated'},
+    ]},
+    {g:'能源設備',items:[
+      {id:'sm10',name:'太陽能逆變器',spec:'需獨立迴路',v:220,w:3000,circuit:'dedicated'},
+      {id:'sm11',name:'家用儲能系統（ESS）',spec:'需獨立迴路',v:220,w:5000,circuit:'dedicated'},
+      {id:'sm12',name:'UPS不斷電系統',spec:'',v:110,w:300},
+    ]},
+    {g:'其他智能',items:[
+      {id:'sm13',name:'電動玻璃/智能窗（每片）',spec:'',v:110,w:100},
+      {id:'sm14',name:'家用電梯',spec:'需獨立迴路',v:220,w:2000,circuit:'dedicated'},
+    ]},
+  ],
+  other:[],
+};
+
+// ══════════════════════════════════════════════
+// SPACE DEFINITIONS
+// ══════════════════════════════════════════════
+// Fixed spaces (cannot delete)
+const FIXED_SPACES = [
+  {id:'outdoor', label:'戶外', dbKey:'outdoor', fixed:true},
+  {id:'garage',  label:'車庫', dbKey:'garage',  fixed:true},
+  {id:'entry',   label:'玄關', dbKey:'entry',   fixed:true},
+  {id:'living',  label:'客廳', dbKey:'living',  fixed:true},
+  {id:'master',  label:'主臥', dbKey:'master',  fixed:true},
+  {id:'master_bath', label:'主臥衛浴', dbKey:'master_bath', fixed:true},
+  {id:'bedroom', label:'臥室', dbKey:'bedroom', fixed:true},
+  {id:'kitchen', label:'廚房', dbKey:'kitchen', fixed:true},
+  {id:'bath',    label:'衛浴', dbKey:'bath',    fixed:true},
+  {id:'study',   label:'書房', dbKey:'study',   fixed:true},
+  {id:'corridor',label:'走道', dbKey:'corridor',fixed:true},
+  {id:'pet',     label:'寵物區',dbKey:'pet',    fixed:true},
+  {id:'smart',   label:'智能設備',dbKey:'smart',fixed:true},
+];
+
+// Addable types
+const ADDABLE = [
+  {type:'bedroom',   label:'臥室',   dbKey:'bedroom',      prefix:'臥室'},
+  {type:'bath',      label:'衛浴',   dbKey:'bath',         prefix:'衛浴'},
+  {type:'balcony',   label:'陽台',   dbKey:'balcony',      prefix:'陽台'},
+  {type:'work_balcony',label:'工作陽台',dbKey:'work_balcony',prefix:'工作陽台'},
+  {type:'other',     label:'其他',   dbKey:'other',        prefix:'空間',custom:true},
+];
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let spaces = FIXED_SPACES.map(s=>({...s}));
+let spCounter = 100;
+let activeSpId = 'outdoor';
+// state[instanceId][apId] = {owned, plan, qty}
+const spState = {};
+
+function initSpState(spId, dbKey){
+  if(spState[spId]) return;
+  spState[spId]={};
+  const groups = AP_DB[dbKey]||[];
+  groups.forEach(g=>g.items.forEach(ap=>{
+    spState[spId][ap.id]={owned:false,plan:false,qty:1};
+  }));
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  spaces.forEach(sp=>initSpState(sp.id, sp.dbKey));
+  renderTabs();
+  renderSpace(activeSpId);
+  renderResults();
+});
+
+// ══════════════════════════════════════════════
+// ADD SPACE
+// ══════════════════════════════════════════════
+function addSpace(type){
+  spCounter++;
+  const def = ADDABLE.find(a=>a.type===type);
+  if(!def) return;
+  // Count existing of same type for numbering
+  const existing = spaces.filter(s=>s.type===type).length;
+  const num = existing+2; // starts at 2 since first is fixed
+  const label = def.custom ? def.prefix+' '+num : def.prefix+(existing>0?' '+num:'');
+  const newSp = {
+    id:'sp'+spCounter,
+    label,
+    dbKey:def.dbKey,
+    type,
+    fixed:false,
+    custom:def.custom||false,
+  };
+  spaces.push(newSp);
+  initSpState(newSp.id, newSp.dbKey);
+  activeSpId = newSp.id;
+  renderTabs();
+  renderSpace(newSp.id);
+  renderResults();
+}
+
+function removeSpace(id){
+  spaces = spaces.filter(s=>s.id!==id);
+  if(activeSpId===id) activeSpId=spaces[spaces.length-1].id;
+  renderTabs();
+  renderSpace(activeSpId);
+  renderResults();
+}
+
+function updateCustomName(){
+  const val = document.getElementById('customNameInput').value.trim();
+  const sp = spaces.find(s=>s.id===activeSpId);
+  if(sp){ sp.label=val||'自訂空間'; renderTabs(); }
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function renderTabs(){
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML='';
+  spaces.forEach(sp=>{
+    const cnt=countSel(sp.id, sp.dbKey);
+    const btn=document.createElement('div');
+    btn.className='sp-tab'+(sp.id===activeSpId?' active':'');
+    btn.innerHTML=sp.label+(cnt>0?`<span class="cnt">${cnt}</span>`:'')+
+      (!sp.fixed?` <span class="del-tab" onclick="event.stopPropagation();removeSpace('${sp.id}')">×</span>`:'');
+    btn.onclick=()=>{ activeSpId=sp.id; renderTabs(); renderSpace(sp.id); };
+    bar.appendChild(btn);
+  });
+  // Separator + add buttons
+  bar.appendChild(Object.assign(document.createElement('div'),{className:'tab-sep'}));
+  const addGroup=document.createElement('div');
+  addGroup.className='tab-add-group';
+  ADDABLE.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.className='add-tab-btn';
+    btn.textContent='＋ '+a.label;
+    btn.onclick=()=>addSpace(a.type);
+    addGroup.appendChild(btn);
+  });
+  bar.appendChild(addGroup);
+}
+
+function countSel(spId, dbKey){
+  if(!spState[spId]) return 0;
+  const groups=AP_DB[dbKey]||[];
+  let n=0;
+  groups.forEach(g=>g.items.forEach(ap=>{
+    const s=spState[spId][ap.id];
+    if(s&&(s.owned||s.plan)) n++;
+  }));
+  return n;
+}
+
+// ══════════════════════════════════════════════
+// RENDER SPACE CONTENT
+// ══════════════════════════════════════════════
+function renderSpace(spId){
+  const sp=spaces.find(s=>s.id===spId);
+  if(!sp) return;
+  const customBar=document.getElementById('customNameBar');
+  const customInput=document.getElementById('customNameInput');
+  if(sp.custom){
+    customBar.style.display='flex';
+    customInput.value=sp.label;
+  } else {
+    customBar.style.display='none';
+  }
+  const groups=AP_DB[sp.dbKey]||[];
+  const wrap=document.getElementById('apContent');
+  if(!groups.length){
+    wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--ink-f);font-size:12px;">此空間無預設電器清單，可自行新增空間名稱</div>';
+    return;
+  }
+  let html=`<table class="ap-table"><thead><tr>
+    <th style="width:32%;">電器名稱</th>
+    <th class="c">電壓</th><th class="c">功率</th><th class="c">安培</th>
+    <th class="c">數量</th><th class="c">已擁有</th><th class="c">計畫購買</th><th>迴路</th>
+  </tr></thead><tbody>`;
+  groups.forEach(g=>{
+    html+=`<tr><td colspan="8" class="group-hd">▸ ${g.label}</td></tr>`;
+    g.items.forEach(ap=>{
+      const s=(spState[spId]&&spState[spId][ap.id])||{owned:false,plan:false,qty:1};
+      const amp=(ap.w/ap.v).toFixed(1);
+      const isDed=ap.circuit==='dedicated';
+      const rowCls=s.owned&&s.plan?'both':s.owned?'owned':s.plan?'plan':'';
+      const dis=(!s.owned&&!s.plan)?'disabled':'';
+      html+=`<tr class="${rowCls}" id="row-${spId}-${ap.id}">
+        <td><div class="ap-name">${ap.name}</div>${ap.spec?`<div class="ap-spec">${ap.spec}</div>`:''}</td>
+        <td class="c"><span class="${ap.v===220?'v220':'v110'}">${ap.v}V</span></td>
+        <td class="c">${ap.w}W</td>
+        <td class="c">${amp}A</td>
+        <td class="c">
+          <div class="qty-wrap">
+            <div class="qty-btn" onclick="adjQty('${spId}','${ap.id}',-1)">−</div>
+            <span class="qty-num" id="qn-${spId}-${ap.id}">${s.qty}</span>
+            <div class="qty-btn" onclick="adjQty('${spId}','${ap.id}',1)">＋</div>
+          </div>
+        </td>
+        <td class="c"><input type="checkbox" class="chk" ${s.owned?'checked':''} onchange="setOwned('${spId}','${ap.id}',this.checked)"></td>
+        <td class="c"><input type="checkbox" class="chk" ${s.plan?'checked':''} onchange="setPlan('${spId}','${ap.id}',this.checked)"></td>
+        <td><span class="badge ${isDed?'badge-ded':'badge-nor'}">${isDed?'專用迴路':'一般插座'}</span></td>
+      </tr>`;
+    });
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+function setOwned(spId,apId,val){
+  if(!spState[spId]) spState[spId]={};
+  if(!spState[spId][apId]) spState[spId][apId]={owned:false,plan:false,qty:1};
+  spState[spId][apId].owned=val;
+  updateRow(spId,apId); renderTabs(); renderResults();
+}
+function setPlan(spId,apId,val){
+  if(!spState[spId]) spState[spId]={};
+  if(!spState[spId][apId]) spState[spId][apId]={owned:false,plan:false,qty:1};
+  spState[spId][apId].plan=val;
+  updateRow(spId,apId); renderTabs(); renderResults();
+}
+function adjQty(spId,apId,delta){
+  if(!spState[spId]||!spState[spId][apId]) return;
+  const s=spState[spId][apId];
+  if(!s.owned&&!s.plan) return;
+  s.qty=Math.max(1,Math.min(20,s.qty+delta));
+  const el=document.getElementById('qn-'+spId+'-'+apId);
+  if(el) el.textContent=s.qty;
+  renderResults();
+}
+function updateRow(spId,apId){
+  const s=(spState[spId]&&spState[spId][apId])||{owned:false,plan:false};
+  const row=document.getElementById('row-'+spId+'-'+apId);
+  if(!row) return;
+  row.className=s.owned&&s.plan?'both':s.owned?'owned':s.plan?'plan':'';
+}
+
+// ══════════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════════
+function renderResults(){
+  let spacesHtml='', dedHtml='';
+  let total110Circuits=0, totalDedicated=0, totalW=0, totalItems=0;
+
+  spaces.forEach(sp=>{
+    const groups=AP_DB[sp.dbKey]||[];
+    let amp110=0;
+    const deds=[];
+    groups.forEach(g=>g.items.forEach(ap=>{
+      const s=spState[sp.id]&&spState[sp.id][ap.id];
+      if(!s||(!s.owned&&!s.plan)) return;
+      const qty=s.qty||1;
+      totalItems++;
+      totalW+=ap.w*qty;
+      if(ap.v===220||ap.circuit==='dedicated'){
+        deds.push({name:ap.name,w:ap.w,v:ap.v,qty});
+      } else {
+        amp110+=(ap.w/ap.v)*qty;
+      }
+    }));
+    if(amp110===0&&deds.length===0) return;
+    const pct=Math.min(100,amp110/20*100);
+    const barCls=amp110>20?'over':amp110>16?'warn':'ok';
+    const circuits=amp110>0?Math.ceil(amp110/16):0;
+    total110Circuits+=circuits;
+    spacesHtml+=`<div class="r-sp-block">
+      <div class="r-sp-name"><span>${sp.label}</span><span>${amp110.toFixed(1)}A</span></div>
+      <div class="r-bar-wrap"><div class="r-bar ${barCls}" style="width:${pct}%;"></div></div>
+      <div class="r-amp">110V <b>${amp110.toFixed(1)}A</b>　建議 ${circuits} 迴路</div>
+      ${amp110>20?'<div class="r-warn over">⚠ 超載，請增加迴路</div>':amp110>16?'<div class="r-warn warn">⚡ 接近上限，建議分迴路</div>':''}
+    </div>`;
+    deds.forEach(d=>{
+      totalDedicated++;
+      totalW+=0; // already counted above
+      dedHtml+=`<div class="ded-item"><span>${sp.label}｜${d.name}${d.qty>1?' ×'+d.qty:''}</span><span>${d.w*d.qty}W/${d.v}V</span></div>`;
+    });
+  });
+
+  document.getElementById('r-spaces').innerHTML=spacesHtml||'<div class="empty-note">請勾選電器後顯示</div>';
+  document.getElementById('r-dedicated').innerHTML=dedHtml||'<div class="empty-note">尚無 220V 專用迴路</div>';
+  document.getElementById('r-summary').innerHTML=
+    `<div class="sum-cell"><div class="sum-val">${total110Circuits}</div><div class="sum-lbl">110V 迴路數</div></div>`+
+    `<div class="sum-cell"><div class="sum-val">${totalDedicated}</div><div class="sum-lbl">220V 專用迴路</div></div>`+
+    `<div class="sum-cell"><div class="sum-val">${totalW.toLocaleString()}</div><div class="sum-lbl">總功率 W</div></div>`+
+    `<div class="sum-cell"><div class="sum-val">${totalItems}</div><div class="sum-lbl">已選項目數</div></div>`;
+}
+
+// ══════════════════════════════════════════════
+// EMAIL
+// ══════════════════════════════════════════════
+function updateSendBtn(){
+  document.getElementById('sendBtn').disabled=!document.getElementById('f-name').value.trim();
+}
+
+function sendEmail(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('請填寫屋主姓名');return;}
+  const phone=document.getElementById('f-phone').value.trim();
+  const addr=document.getElementById('f-addr').value.trim();
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('zh-TW')+' '+now.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+
+  let hasAny=false;
+  spaces.forEach(sp=>{
+    const groups=AP_DB[sp.dbKey]||[];
+    groups.forEach(g=>g.items.forEach(ap=>{
+      const s=spState[sp.id]&&spState[sp.id][ap.id];
+      if(s&&(s.owned||s.plan)) hasAny=true;
+    }));
+  });
+  if(!hasAny){showToast('請先勾選電器項目');return;}
+
+  let body='屋主姓名：'+name+'\n';
+  if(phone) body+='聯絡電話：'+phone+'\n';
+  if(addr)  body+='案件地址：'+addr+'\n';
+  body+='填寫時間：'+dateStr+'\n';
+  body+='\n========================================\n';
+
+  spaces.forEach(sp=>{
+    const groups=AP_DB[sp.dbKey]||[];
+    const rows=[];
+    let amp110=0; const deds=[];
+    groups.forEach(g=>g.items.forEach(ap=>{
+      const s=spState[sp.id]&&spState[sp.id][ap.id];
+      if(!s||(!s.owned&&!s.plan)) return;
+      const qty=s.qty||1;
+      const amp=(ap.w/ap.v*qty).toFixed(1);
+      const status=s.owned&&s.plan?'擁有+計畫':s.owned?'已擁有':'計畫購買';
+      const ded=ap.circuit==='dedicated'||ap.v===220;
+      rows.push({name:ap.name,v:ap.v,w:ap.w,amp,qty,status,ded});
+      if(ded) deds.push(ap.name);
+      else amp110+=(ap.w/ap.v)*qty;
+    }));
+    if(!rows.length) return;
+    body+='\n【'+sp.label+'】\n';
+    body+='電器名稱                電壓    功率    安培  數量  狀態      迴路\n';
+    body+='─'.repeat(76)+'\n';
+    rows.forEach(r=>{
+      body+=pR(r.name,22)+' '+pL(r.v+'V',6)+' '+pL(r.w+'W',7)+' '+pL(r.amp+'A',6)+' '+pL('×'+r.qty,5)+' '+pR(r.status,10)+' '+(r.ded?'220V專用迴路':'一般插座')+'\n';
+    });
+    body+='\n  110V 總計：'+amp110.toFixed(1)+'A　建議 '+Math.ceil(amp110/16)+' 條迴路\n';
+    if(deds.length) body+='  220V 專用迴路：'+deds.join('、')+'\n';
+  });
+
+  body+='\n========================================\n';
+  body+='※ 本表格由得森設計居家電器功率需求工具產生\n';
+  body+='※ 若有修改，請重新填寫送出，以最新時間之版本為準\n';
+
+  const subj=encodeURIComponent(name+'｜電器功率需求單｜'+dateStr);
+  window.location.href='mailto:kuo1223@gmail.com?subject='+subj+'&body='+encodeURIComponent(body);
+  showToast('正在開啟郵件客戶端…');
+}
+
+function pR(s,n){s=String(s);return s.length>=n?s.substring(0,n):s+' '.repeat(n-s.length);}
+function pL(s,n){s=String(s);return s.length>=n?s.substring(0,n):' '.repeat(n-s.length)+s;}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
