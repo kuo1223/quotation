@@ -124,6 +124,55 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:9px 20px;border-radius:24px;font-size:12px;opacity:0;transition:all .28s;z-index:300;pointer-events:none;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* REPORT MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(43,41,38,.55);z-index:400;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:#fff;border-radius:14px;width:100%;max-width:860px;box-shadow:0 12px 48px rgba(0,0,0,.18);display:flex;flex-direction:column;margin:auto;}
+.modal-hd{padding:16px 22px;border-bottom:1px solid #e2e0da;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:400;color:#2b2926;letter-spacing:2px;}
+.modal-actions{display:flex;gap:8px;flex-shrink:0;}
+.m-btn{padding:7px 15px;border-radius:8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:none;white-space:nowrap;transition:all .15s;}
+.m-btn-ghost{background:#f5f2ee;color:#4a4742;border:1px solid #dddad4;}
+.m-btn-ghost:hover{border-color:#6e7a6a;color:#6e7a6a;}
+.m-btn-sage{background:#6e7a6a;color:#fff;}
+.m-btn-sage:hover{background:#5a6a58;}
+.m-btn-close{background:none;border:none;font-size:20px;color:#8a8780;cursor:pointer;padding:2px 6px;border-radius:4px;}
+.m-btn-close:hover{color:#2b2926;background:#f0efe9;}
+.modal-body{padding:20px 22px;overflow-y:auto;max-height:70vh;}
+
+/* REPORT TABLE STYLES (inside modal) */
+.rpt-header{margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #6e7a6a;}
+.rpt-title{font-family:'Noto Serif TC',serif;font-size:18px;color:#2b2926;letter-spacing:3px;margin-bottom:4px;}
+.rpt-meta{font-size:11px;color:#8a8780;line-height:1.8;}
+.rpt-section{margin-bottom:18px;}
+.rpt-sp-title{font-family:'Noto Serif TC',serif;font-size:13px;color:#6e7a6a;letter-spacing:2px;padding:6px 10px;background:#eef0ea;border-left:3px solid #6e7a6a;margin-bottom:8px;border-radius:0 6px 6px 0;}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px;}
+.rpt-tbl th{background:#f5f2ee;padding:6px 9px;text-align:left;font-weight:500;color:#4a4742;border:1px solid #dddad4;font-size:11px;letter-spacing:.5px;}
+.rpt-tbl td{padding:6px 9px;border:1px solid #e2e0da;color:#2b2926;vertical-align:middle;}
+.rpt-tbl tr:nth-child(even) td{background:#faf9f6;}
+.rpt-tbl tr.owned td{background:#f0f7f0;}
+.rpt-tbl tr.plan td{background:#fef9e7;}
+.rpt-tbl tr.both td{background:linear-gradient(90deg,#f0f7f0,#fef9e7);}
+.rpt-v220{color:#c0392b;font-weight:600;}
+.rpt-v110{color:#3a6ea8;}
+.rpt-ded{background:#fdecea;color:#c0392b;padding:2px 6px;border-radius:6px;font-size:10px;}
+.rpt-nor{background:#eef0ea;color:#6e7a6a;padding:2px 6px;border-radius:6px;font-size:10px;}
+.rpt-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.rpt-sum-chip{padding:4px 12px;border-radius:20px;font-size:11px;}
+.rpt-sum-ok{background:#eef0ea;color:#6e7a6a;}
+.rpt-sum-warn{background:#fef9e7;color:#c8960a;}
+.rpt-sum-over{background:#fdecea;color:#c0392b;}
+.rpt-ded-list{font-size:11px;color:#c0392b;margin-top:4px;}
+.rpt-divider{border:none;border-top:1px solid #e2e0da;margin:14px 0;}
+.rpt-footer{font-size:10px;color:#b8b5ae;text-align:center;margin-top:16px;padding-top:10px;border-top:1px solid #e2e0da;line-height:1.8;}
+
+@media print{
+  .modal-backdrop,.owner-bar,header,.left,.right,.tab-bar{display:none!important;}
+  .print-rpt{display:block!important;}
+}
+.print-rpt{display:none;}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -147,7 +196,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
     <input class="owner-input md" id="f-phone" placeholder="選填"></div>
   <div class="owner-field"><div class="owner-label">案件地址</div>
     <input class="owner-input lg" id="f-addr" placeholder="選填"></div>
-  <button class="send-btn" id="sendBtn" onclick="sendEmail()" disabled>✉ 送出給設計師</button>
+  <button class="send-btn" id="sendBtn" onclick="showReport()" disabled>📋 產生報表</button>
 </div>
 
 <div class="layout">
@@ -812,5 +861,21 @@ function showToast(msg){
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
 }
 </script>
+
+<!-- REPORT MODAL -->
+<div class="modal-backdrop" id="reportModal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <div class="modal-title">電 器 功 率 需 求 報 表</div>
+      <div class="modal-actions">
+        <button class="m-btn m-btn-ghost" onclick="copyText()">📋 複製內容</button>
+        <button class="m-btn m-btn-ghost" onclick="emailReport()">✉ Email 傳送</button>
+        <button class="m-btn m-btn-sage" onclick="downloadPDF()">↓ 下載 PDF</button>
+        <button class="m-btn-close" onclick="closeModal()">×</button>
+      </div>
+    </div>
+    <div class="modal-body" id="reportBody"></div>
+  </div>
+</div>
 </body>
 </html>
