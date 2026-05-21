@@ -184,6 +184,50 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:0
   .a4{box-shadow:none;width:21cm;min-height:29.7cm;margin:0;}
 }
 .print-area{display:none;position:fixed;top:0;left:0;width:100%;z-index:9999;background:#fff;}
+
+/* ══ MOBILE RWD ══ */
+@media(max-width:768px){
+  header{height:auto;padding:10px 14px;flex-wrap:wrap;gap:8px;}
+  .hd-left{flex-wrap:wrap;gap:6px;}
+  .hd-brand{font-size:10px;letter-spacing:1px;padding-left:8px;}
+  .hd-logo{height:28px;}
+  .hd-right{width:100%;justify-content:flex-end;gap:6px;}
+  .hbtn{padding:6px 10px;font-size:11px;}
+
+  /* 上下單欄 */
+  .workspace{grid-template-columns:1fr !important;height:auto !important;
+    display:flex !important;flex-direction:column;}
+  .editor{height:auto !important;overflow:visible !important;
+    border-right:none;border-bottom:1px solid var(--border);width:100%;}
+  .preview-wrap{height:auto !important;padding:12px 8px;width:100%;}
+
+  /* A4 縮放 */
+  .a4{width:100%;min-height:auto;}
+  .n-head{padding:12px 16px 10px;}
+  .n-logo{height:28px;}
+  .n-head-brand{font-size:10px;letter-spacing:1px;padding-left:8px;}
+  .n-title-wrap{padding:10px 16px 12px;}
+  .n-title{font-size:18px !important;letter-spacing:4px;}
+  .n-subtitle{font-size:9px !important;letter-spacing:2px;}
+  .n-info{grid-template-columns:1fr;}
+  .n-info-item{padding:8px 16px;}
+  .n-info-item:first-child{border-right:none;border-bottom:1px solid var(--border-l);}
+  .n-section{padding:12px 16px;}
+  .n-period{grid-template-columns:1fr 1fr;}
+  .n-item-grid{grid-template-columns:1fr 1fr;}
+  .n-contact-single{flex-wrap:wrap;gap:6px;padding:8px 12px;}
+  .n-footer{padding:10px 16px;flex-wrap:wrap;gap:4px;}
+  .n-footer-brand,.n-footer-reg{font-size:9px;}
+
+  /* 輸出按鈕 */
+  .section-body{padding:10px 12px;}
+  .font-group{padding:7px 9px;}
+
+  /* 草稿抽屜全螢幕 */
+  .drawer{width:100%;right:-100%;}
+  .drawer.open{right:0;}
+  #noticeScrollBtn{display:block !important;}
+}
 </style>
 </head>
 <body>
@@ -321,6 +365,12 @@ header{background:var(--paper-c);border-bottom:1px solid var(--border);padding:0
     </div>
 
   </div><!-- /editor -->
+<div id="noticeScrollBtn" style="display:none;position:sticky;bottom:0;z-index:50;padding:10px 16px;background:var(--paper-w);border-top:1px solid var(--border);">
+  <button onclick="document.querySelector('.preview-wrap').scrollIntoView({behavior:'smooth'})"
+    style="width:100%;padding:10px;background:var(--sage-dk);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-family:var(--serif);letter-spacing:2px;cursor:pointer;">
+    ↓ 查看海報預覽
+  </button>
+</div>
 
   <!-- PREVIEW -->
   <div class="preview-wrap">
@@ -659,6 +709,12 @@ function showToast(msg){
 
 // ── PRINT / EXPORT ────────────────────────────────────────────────
 function doPrint(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    // iOS: use html2canvas to open image for sharing
+    downloadJPG();
+    return;
+  }
   const clone=document.getElementById('a4').cloneNode(true);
   const pa=document.getElementById('printArea');
   pa.innerHTML='';pa.appendChild(clone);pa.style.display='block';
@@ -666,14 +722,36 @@ function doPrint(){
   setTimeout(()=>{pa.style.display='none';pa.innerHTML='';},1200);
 }
 async function downloadJPG(){
+  showToast('圖片產生中，請稍候…');
   if(typeof html2canvas==='undefined'){
     await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
   }
-  const canvas=await html2canvas(document.getElementById('a4'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});
-  const link=document.createElement('a');
-  link.download='施工公告_'+(document.getElementById('f-case').value.trim()||'未命名')+'.jpg';
-  link.href=canvas.toDataURL('image/jpeg',0.93);
-  link.click();
+  const a4=document.getElementById('a4');
+  const canvas=await html2canvas(a4,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+  const name=document.getElementById('f-case').value.trim()||'未命名';
+  const fileName='施工公告_'+name+'.jpg';
+
+  // iOS Safari: open image in new tab (long press to save)
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    const w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><head><title>'+fileName+'</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><div style="text-align:center"><p style="color:#fff;font-size:13px;padding:12px;">長按圖片 → 儲存至相簿 或 分享</p><img src="'+dataUrl+'" style="max-width:100%;display:block;"></div></body></html>');
+      w.document.close();
+    } else {
+      showToast('請允許彈出視窗');
+    }
+  } else {
+    // Desktop
+    const link=document.createElement('a');
+    link.download=fileName;
+    link.href=dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('JPG 已下載');
+  }
 }
 </script>
 </body>

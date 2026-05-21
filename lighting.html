@@ -249,6 +249,77 @@ input[type=range]{width:100%;accent-color:var(--sage-dk);height:4px;cursor:point
 .rv-bk-bar{height:100%;border-radius:3px;}
 .rv-bk-val{min-width:52px;text-align:right;color:var(--sage-dk);font-family:var(--serif);font-size:12px;}
 
+
+/* ══ MOBILE RWD ══ */
+@media(max-width:768px){
+  header{height:auto !important;padding:8px 14px;flex-wrap:wrap;gap:6px;}
+  .hd-left{flex-wrap:wrap;gap:6px;}
+  .hd-brand{font-size:10px;letter-spacing:1px;padding-left:8px;}
+  .hd-title{font-size:12px;letter-spacing:2px;padding-left:8px;}
+  .hd-logo{height:28px;}
+  .hd-right{flex-wrap:wrap;gap:6px;justify-content:flex-end;}
+  .hbtn{padding:5px 10px;font-size:11px;}
+  .back-btn{padding:4px 8px;font-size:11px;}
+
+  .workspace{grid-template-columns:1fr !important;height:auto !important;overflow:visible !important;display:flex !important;flex-direction:column;}
+  .panel-l{height:auto !important;max-height:none !important;overflow-y:visible !important;border-right:none;border-bottom:1px solid var(--border);width:100% !important;}
+  .panel-r{height:auto !important;max-height:none !important;overflow-y:visible !important;width:100% !important;}
+
+  #mobileScrollBtn{display:block !important;}
+
+
+  /* Mode tabs */
+  .mode-tabs{margin-bottom:10px;}
+  .mode-tab{font-size:11px;padding:8px 6px;letter-spacing:1px;}
+  .mode-tab-icon{font-size:13px;}
+
+  /* Fixture grid */
+  .fixture-grid{grid-template-columns:1fr 1fr;}
+  .fx-card{padding:8px 10px;}
+  .fx-name{font-size:11px;}
+  .fx-spec{font-size:9px;}
+  .fx-lm{font-size:11px;}
+
+  /* Mix panel */
+  .mix-panel{margin-top:8px;}
+
+  /* Strip mode */
+  .strip-mode-grid{grid-template-columns:1fr 1fr 1fr;}
+  .side-chips{grid-template-columns:1fr 1fr;}
+
+  /* Results */
+  .result-grid{grid-template-columns:1fr 1fr;}
+  .rc{padding:12px 14px;}
+  .rc-val{font-size:20px;}
+  .rc.full{grid-column:1/-1;}
+
+  /* Canvas */
+  #planCanvas,#sectionCanvas,#stripPlanCanvas{width:100%;height:auto;}
+
+  /* Reverse mode */
+  .rv-item{flex-wrap:wrap;gap:6px;}
+  .rv-name{width:100%;}
+
+  /* Lux meter */
+  .lux-estimated{font-size:26px;}
+
+  /* Beam table */
+  .beam-tbl th,.beam-tbl td{padding:4px 5px;font-size:10px;}
+
+  /* Layer table */
+  .tbl th,.tbl td{padding:5px 6px;font-size:10px;}
+  /* Hide less important cols on mobile */
+  .tbl th:nth-child(2),.tbl td:nth-child(2){display:none;}
+
+  /* Draft drawer */
+  .drawer{width:100%;right:-100%;}
+  .drawer.open{right:0;}
+
+  /* Body scroll */
+  body{overflow-y:auto !important;height:auto !important;}
+  .workspace{overflow:visible !important;}
+}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -434,6 +505,12 @@ input[type=range]{width:100%;accent-color:var(--sage-dk);height:4px;cursor:point
   </div><!-- /rv-panel -->
 
 </div><!-- /panel-l -->
+<div id="mobileScrollBtn" style="display:none;position:sticky;bottom:0;z-index:50;padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);">
+  <button onclick="document.getElementById('exportTarget').scrollIntoView({behavior:'smooth'})" 
+    style="width:100%;padding:10px;background:var(--sage-dk);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-family:var(--serif);letter-spacing:2px;cursor:pointer;">
+    ↓ 查看計算結果
+  </button>
+</div>
 
 <!-- ══ RIGHT ══ -->
 <div class="panel-r" id="exportTarget">
@@ -1414,30 +1491,45 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 // EXPORT
 // ══════════════════════════════════════════════
 async function exportJPG(){
-  const proj=document.getElementById('f-project').value.trim();
-  const sp=document.getElementById('f-space').value.trim();
-  const titleEl=document.getElementById('export-title');
-  titleEl.textContent=(proj?proj+' · ':'')+sp+' 燈光照度配置';
-  titleEl.style.display='block';
+  showToast('圖片產生中，請稍候…');
   if(typeof html2canvas==='undefined'){
     await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
   }
   const target=document.getElementById('exportTarget');
+  const proj=document.getElementById('f-project')?.value.trim()||'燈光配置';
+  const sp=document.getElementById('f-space')?.value.trim()||'';
+  const titleEl=document.getElementById('export-title');
+  if(titleEl){titleEl.textContent=(proj?proj+' · ':'')+sp+' 燈光照度配置';titleEl.style.display='block';}
   const canvas=await html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#f4f3f0'});
-  const link=document.createElement('a');
-  link.download='燈光配置_'+(proj||sp||'報告')+'.jpg';
-  link.href=canvas.toDataURL('image/jpeg',0.92);link.click();
-  titleEl.style.display='none';
-  showToast('JPG 已下載');
+  if(titleEl) titleEl.style.display='none';
+  const dataUrl=canvas.toDataURL('image/jpeg',0.92);
+  const fileName='燈光配置_'+(proj||'報告')+'.jpg';
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    const w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><head><title>'+fileName+'</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;"><p style="color:#fff;font-size:13px;padding:12px;">長按圖片 → 儲存至相簿 或 分享</p><img src="'+dataUrl+'" style="max-width:100%;display:block;"></body></html>');
+      w.document.close();
+    } else { showToast('請允許彈出視窗'); }
+  } else {
+    const link=document.createElement('a');
+    link.download=fileName;link.href=dataUrl;
+    document.body.appendChild(link);link.click();document.body.removeChild(link);
+    showToast('JPG 已下載');
+  }
 }
 function exportPDF(){
-  const proj=document.getElementById('f-project').value.trim();
-  const sp=document.getElementById('f-space').value.trim();
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    exportJPG();
+    return;
+  }
+  const proj=document.getElementById('f-project')?.value.trim()||'燈光配置';
+  const sp=document.getElementById('f-space')?.value.trim()||'';
   const titleEl=document.getElementById('export-title');
-  titleEl.textContent=(proj?proj+' · ':'')+sp+' 燈光照度配置';
-  titleEl.style.display='block';
+  if(titleEl){titleEl.textContent=(proj?proj+' · ':'')+sp+' 燈光照度配置';titleEl.style.display='block';}
   window.print();
-  setTimeout(()=>titleEl.style.display='none',1500);
+  setTimeout(()=>{if(titleEl)titleEl.style.display='none';},1500);
 }
 
 init();

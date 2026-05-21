@@ -128,6 +128,45 @@ input:focus,select:focus,textarea:focus{border-color:var(--sage);}
   body>*{display:none!important;}
   #printFrame{display:block!important;position:fixed;top:0;left:0;width:100%;height:100%;border:none;}
 }
+
+/* ══ MOBILE RWD ══ */
+@media(max-width:768px){
+  header{height:auto;padding:10px 14px;flex-wrap:wrap;gap:8px;}
+  .hd-left{flex-wrap:wrap;gap:6px;}
+  .hd-brand{font-size:10px;letter-spacing:1px;padding-left:8px;}
+  .hd-title{font-size:12px;letter-spacing:2px;padding-left:8px;}
+  .hd-logo{height:28px;}
+  .hd-right{gap:6px;}
+  .hbtn{padding:5px 10px;font-size:11px;}
+  .back-btn{padding:5px 8px;font-size:11px;}
+
+  .workspace{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .panel-l{height:auto;overflow:visible;border-right:none;border-bottom:1px solid var(--border);}
+  .panel-r{height:auto;overflow:visible;}
+
+  .space-tabs{gap:5px;}
+  .sp-tab{padding:4px 10px;font-size:11px;}
+  .sp-tab-add{padding:4px 8px;font-size:11px;}
+
+  .field-row3{grid-template-columns:1fr 1fr 1fr;}
+  .field-row2{grid-template-columns:1fr 1fr;}
+
+  /* Results */
+  .metric-grid-2{grid-template-columns:1fr 1fr;}
+  .metric-grid-3{grid-template-columns:1fr 1fr;}
+  .metric-cell{padding:8px 10px;}
+  .metric-val{font-size:16px;}
+
+  /* Output panel */
+  .output-panel{padding:10px 12px;}
+  .output-btns{flex-direction:column;}
+  .output-btns .hbtn{width:100%;}
+
+  /* Section */
+  .sp-result-hd{font-size:13px;}
+  .section-hd{margin-top:10px;}
+}
+
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
@@ -648,13 +687,12 @@ th span{font-size:10px;color:#8a8780;font-family:'Noto Sans TC',sans-serif;displ
 }
 
 async function exportJPG(){
+  showToast('報表產生中，請稍候…');
   const printHTML=buildPrintHTML();
-  // Create offscreen iframe, render, then html2canvas
   const iframe=document.getElementById('printFrame');
   iframe.style.cssText='position:fixed;top:-9999px;left:0;width:1000px;height:auto;border:none;display:block;';
   iframe.srcdoc=printHTML;
   await new Promise(r=>iframe.onload=r);
-  // Wait for fonts
   await new Promise(r=>setTimeout(r,600));
 
   if(typeof html2canvas==='undefined'){
@@ -663,26 +701,50 @@ async function exportJPG(){
   const target=iframe.contentDocument.body;
   const canvas=await html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#ffffff',
     width:target.scrollWidth,height:target.scrollHeight,windowWidth:1000});
-  const link=document.createElement('a');
-  const proj=document.getElementById('f-project').value.trim()||'空間換算';
-  link.download='空間條件換算_'+proj+'.jpg';
-  link.href=canvas.toDataURL('image/jpeg',0.93);
-  link.click();
   iframe.style.display='none';
-  showToast('JPG 已下載');
+
+  const proj=document.getElementById('f-project').value.trim()||'空間換算';
+  const fileName='空間條件換算_'+proj+'.jpg';
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    const w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><head><title>'+fileName+'</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><div style="text-align:center"><p style="color:#fff;font-size:13px;padding:12px;">長按圖片 → 儲存至相簿 或 分享</p><img src="'+dataUrl+'" style="max-width:100%;display:block;"></div></body></html>');
+      w.document.close();
+    } else { showToast('請允許彈出視窗'); }
+  } else {
+    const link=document.createElement('a');
+    link.download=fileName;
+    link.href=dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('JPG 已下載');
+  }
 }
 
 function exportPDF(){
   const printHTML=buildPrintHTML();
-  const iframe=document.getElementById('printFrame');
-  iframe.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;border:none;display:block;z-index:9999;';
-  iframe.srcdoc=printHTML;
-  iframe.onload=()=>{
-    setTimeout(()=>{
-      iframe.contentWindow.print();
-      setTimeout(()=>{ iframe.style.display='none'; },1000);
-    },400);
-  };
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    // iOS: open in new tab for share/print
+    const w=window.open('','_blank');
+    if(w){ w.document.write(printHTML); w.document.close();
+      setTimeout(()=>w.print(),600);
+    } else { showToast('請允許彈出視窗'); }
+  } else {
+    const iframe=document.getElementById('printFrame');
+    iframe.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;border:none;display:block;z-index:9999;';
+    iframe.srcdoc=printHTML;
+    iframe.onload=()=>{
+      setTimeout(()=>{
+        iframe.contentWindow.print();
+        setTimeout(()=>{ iframe.style.display='none'; },1000);
+      },400);
+    };
+  }
 }
 
 function showToast(msg){
