@@ -195,6 +195,60 @@ input[type=range]{width:100%;accent-color:var(--sage-dk);height:4px;cursor:point
   .panel-r{height:auto;overflow:visible;padding:0;}
   .card,.rc{box-shadow:none;break-inside:avoid;}
 }
+
+/* MODE TABS */
+.mode-tabs{display:flex;gap:0;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
+.mode-tab{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-family:var(--serif);letter-spacing:2px;color:var(--ink-l);cursor:pointer;transition:all .18s;user-select:none;border:none;background:none;}
+.mode-tab:hover{color:var(--ink-m);background:var(--surface2);}
+.mode-tab.active{background:var(--sage-dk);color:#fff;}
+.mode-tab-icon{font-size:14px;display:block;margin-bottom:2px;}
+
+/* REVERSE MODE */
+.rv-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;}
+.rv-item:last-child{margin-bottom:0;}
+.rv-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.rv-name{font-size:12px;font-weight:600;color:var(--ink-m);flex:1;}
+.rv-input-wrap{display:flex;align-items:center;gap:6px;}
+.rv-input{width:64px;border:1px solid var(--border2);border-radius:var(--r);padding:6px 8px;font-size:13px;font-family:var(--serif);color:var(--ink);background:var(--surface);outline:none;text-align:center;}
+.rv-input:focus{border-color:var(--sage);}
+.rv-unit{font-size:11px;color:var(--ink-l);}
+
+/* VERDICT */
+.verdict-card{border-radius:var(--rl);padding:16px 18px;margin-bottom:12px;border:2px solid;}
+.verdict-card.ok{background:#f0f7f0;border-color:#2e7d32;}
+.verdict-card.warn{background:#fef9e7;border-color:#c8960a;}
+.verdict-card.bad{background:#fdecea;border-color:#c0392b;}
+.verdict-icon{font-size:28px;margin-bottom:6px;}
+.verdict-title{font-family:var(--serif);font-size:18px;margin-bottom:4px;}
+.verdict-card.ok .verdict-title{color:#1b5e20;}
+.verdict-card.warn .verdict-title{color:#7a5200;}
+.verdict-card.bad .verdict-title{color:#7a1a10;}
+.verdict-desc{font-size:12px;line-height:1.8;color:var(--ink-m);}
+
+/* LUX METER */
+.lux-meter{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px;}
+.lux-bar-wrap{position:relative;height:12px;background:var(--surface3);border-radius:6px;margin:10px 0;overflow:hidden;}
+.lux-bar{height:100%;border-radius:6px;transition:width .4s ease,background .4s;}
+.lux-markers{display:flex;justify-content:space-between;font-size:9px;color:var(--ink-f);}
+.lux-val-row{display:flex;align-items:baseline;gap:6px;}
+.lux-estimated{font-family:var(--serif);font-size:32px;color:var(--ink);}
+.lux-target-line{font-size:11px;color:var(--ink-l);}
+
+/* GAP SUGGESTIONS */
+.gap-list{display:flex;flex-direction:column;gap:7px;}
+.gap-item{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border-radius:var(--r);font-size:12px;line-height:1.6;}
+.gap-item.add{background:#f0f7f0;border:1px solid rgba(46,125,50,.2);color:#1b5e20;}
+.gap-item.reduce{background:#fef9e7;border:1px solid rgba(200,150,10,.2);color:#7a5200;}
+.gap-item.ok{background:var(--sage-lt);border:1px solid var(--sage-pa);color:var(--sage-dk);}
+.gap-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+
+/* RV LUX BREAKDOWN */
+.rv-breakdown{display:flex;flex-direction:column;gap:5px;margin-top:10px;}
+.rv-bk-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-m);}
+.rv-bk-bar-wrap{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.rv-bk-bar{height:100%;border-radius:3px;}
+.rv-bk-val{min-width:52px;text-align:right;color:var(--sage-dk);font-family:var(--serif);font-size:12px;}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -238,6 +292,16 @@ input[type=range]{width:100%;accent-color:var(--sage-dk);height:4px;cursor:point
 <div class="workspace">
 <!-- ══ LEFT ══ -->
 <div class="panel-l">
+
+  <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-forward" onclick="switchMode('forward')">
+      <span class="mode-tab-icon">🔢</span>正 向 計 算
+    </button>
+    <button class="mode-tab" id="tab-reverse" onclick="switchMode('reverse')">
+      <span class="mode-tab-icon">🔍</span>反 向 驗 證
+    </button>
+  </div>
 
   <!-- 專案資訊 -->
   <div class="card">
@@ -341,11 +405,92 @@ input[type=range]{width:100%;accent-color:var(--sage-dk);height:4px;cursor:point
     </div>
   </div>
 
+  <!-- REVERSE MODE PANEL -->
+  <div id="rv-panel" style="display:none;">
+
+    <div class="card">
+      <div class="card-hd"><span class="card-icon">💡</span><span class="card-title">輸 入 燈 具 數 量</span></div>
+      <div class="card-body">
+        <div style="font-size:11px;color:var(--ink-l);margin-bottom:10px;line-height:1.7;">
+          輸入你計畫安裝的各燈具數量，系統自動反推照度並給出合理性判斷。
+        </div>
+        <div id="rv-inputs"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span class="card-icon">🏠</span><span class="card-title">空 間 條 件（同上）</span></div>
+      <div class="card-body" style="padding:10px 16px;">
+        <div style="font-size:11px;color:var(--ink-l);line-height:1.8;">
+          使用上方「空間維度」與「空間條件」的設定值。<br>
+          若需調整，請切換回正向模式修改後再回來驗證。
+        </div>
+        <div class="computed-row" style="margin-top:8px;"><span class="computed-label">面積</span><span class="computed-val" id="rv-d-area">—</span></div>
+        <div class="computed-row" style="margin-top:4px;"><span class="computed-label">情境 / 目標照度</span><span class="computed-val" id="rv-d-target">—</span></div>
+        <div class="computed-row" style="margin-top:4px;"><span class="computed-label">有效 U 值</span><span class="computed-val" id="rv-d-ueff">—</span></div>
+      </div>
+    </div>
+
+  </div><!-- /rv-panel -->
+
 </div><!-- /panel-l -->
 
 <!-- ══ RIGHT ══ -->
 <div class="panel-r" id="exportTarget">
 
+  <!-- REVERSE MODE RESULTS (hidden by default) -->
+  <div id="rv-results" style="display:none;">
+
+    <!-- Lux meter -->
+    <div class="lux-meter">
+      <div style="font-size:10px;color:var(--ink-l);letter-spacing:1.5px;margin-bottom:4px;">預估地面平均照度</div>
+      <div class="lux-val-row">
+        <div class="lux-estimated" id="rv-lux">—</div>
+        <div style="font-size:16px;color:var(--ink-l);">Lux</div>
+        <div class="lux-target-line" id="rv-target-label"></div>
+      </div>
+      <div class="lux-bar-wrap">
+        <div class="lux-bar" id="rv-lux-bar" style="width:0%;background:var(--sage-dk);"></div>
+      </div>
+      <div class="lux-markers">
+        <span>0</span><span>100</span><span>300</span><span>500</span><span>750+</span>
+      </div>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict-card ok" id="rv-verdict">
+      <div class="verdict-icon" id="rv-verdict-icon">✅</div>
+      <div class="verdict-title" id="rv-verdict-title">—</div>
+      <div class="verdict-desc" id="rv-verdict-desc">—</div>
+    </div>
+
+    <!-- Lux breakdown by fixture -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hd"><span class="card-icon">📊</span><span class="card-title">各 燈 具 照 度 貢 獻</span></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;" id="rv-stats"></div>
+        <div class="rv-breakdown" id="rv-breakdown"></div>
+      </div>
+    </div>
+
+    <!-- Gap suggestions -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hd"><span class="card-icon">💬</span><span class="card-title">調 整 建 議</span></div>
+      <div class="card-body">
+        <div class="gap-list" id="rv-suggestions"></div>
+      </div>
+    </div>
+
+    <!-- Scene reference -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hd"><span class="card-icon">🎨</span><span class="card-title">照 明 層 次 參 考</span></div>
+      <div class="card-body"><table class="tbl"><thead><tr><th>層次</th><th>建議比例</th><th>適用燈具</th><th>照度貢獻</th></tr></thead>
+      <tbody id="rv-layer-tbl"></tbody></table></div>
+    </div>
+
+  </div><!-- /rv-results -->
+
+  <!-- project title for export -->
   <!-- project title for export -->
   <div id="export-title" style="display:none;font-family:var(--serif);font-size:18px;letter-spacing:3px;color:var(--ink);padding:10px 0 16px;border-bottom:1px solid var(--border);margin-bottom:14px;"></div>
 
@@ -477,6 +622,7 @@ let lineSide = 'top';
 // INIT
 // ══════════════════════════════════════════════
 function init(){
+  FX_DB.forEach(f=>{ rvQty[f.id]=0; });
   renderFxGrid();
   renderDraftList();
   calc();
@@ -930,6 +1076,259 @@ function drawStripPlan(L,W){
   ctx.fillStyle='#8a8780';ctx.font='11px sans-serif';ctx.textAlign='center';
   ctx.fillText((L/100).toFixed(1)+' m',CW/2,oy-14);
   ctx.save();ctx.translate(ox-16,CH/2);ctx.rotate(-Math.PI/2);ctx.fillText((W/100).toFixed(1)+' m',0,0);ctx.restore();
+}
+
+
+// ══════════════════════════════════════════════
+// MODE SWITCHING
+// ══════════════════════════════════════════════
+let currentMode = 'forward';
+
+function switchMode(mode){
+  currentMode = mode;
+  document.getElementById('tab-forward').classList.toggle('active', mode==='forward');
+  document.getElementById('tab-reverse').classList.toggle('active', mode==='reverse');
+
+  // forward UI
+  const fwEls = ['exportTarget'];
+  // Show/hide right panels
+  const fwRight = document.getElementById('exportTarget');
+  const rvRight = document.getElementById('rv-results');
+
+  // Left panels - show/hide rv-panel
+  document.getElementById('rv-panel').style.display = mode==='reverse' ? '' : 'none';
+
+  // Right: toggle between forward results and reverse results
+  // Forward results are all direct children of exportTarget except rv-results
+  const fwCards = fwRight.querySelectorAll(':scope > .card, :scope > .result-grid, :scope > .warn-box, :scope > #export-title');
+  fwCards.forEach(el=>el.style.display = mode==='forward' ? '' : 'none');
+  rvRight.style.display = mode==='reverse' ? '' : 'none';
+
+  if(mode==='reverse'){
+    renderRvInputs();
+    calcReverse();
+  } else {
+    calc();
+  }
+}
+
+// ══════════════════════════════════════════════
+// REVERSE MODE: INPUT RENDERING
+// ══════════════════════════════════════════════
+// State: qty per fixture id
+const rvQty = {};
+
+function renderRvInputs(){
+  const wrap = document.getElementById('rv-inputs');
+  wrap.innerHTML = '';
+  FX_DB.forEach(f=>{
+    if(rvQty[f.id]===undefined) rvQty[f.id] = 0;
+    const row = document.createElement('div');
+    row.className = 'rv-item';
+    const unit = f.type==='strip' ? '公尺' : '顆';
+    const step = f.type==='strip' ? '0.5' : '1';
+    row.innerHTML =
+      '<div class="rv-dot" style="background:'+f.color+';"></div>'+
+      '<div class="rv-name">'+f.name+'<br><span style="font-size:10px;font-weight:400;color:var(--ink-l);">'+f.spec+'</span></div>'+
+      '<div class="rv-input-wrap">'+
+        '<button onclick="adjustRv(\''+f.id+'\', -'+step+')" style="width:28px;height:28px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);cursor:pointer;font-size:16px;line-height:1;color:var(--ink-m);">−</button>'+
+        '<input class="rv-input" type="number" id="rv-qty-'+f.id+'" value="'+rvQty[f.id]+'" min="0" step="'+step+'" oninput="rvQty[\''+f.id+'\']=parseFloat(this.value)||0;calcReverse();">'+
+        '<button onclick="adjustRv(\''+f.id+'\', '+step+')" style="width:28px;height:28px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);cursor:pointer;font-size:16px;line-height:1;color:var(--ink-m);">＋</button>'+
+        '<span class="rv-unit">'+unit+'</span>'+
+      '</div>';
+    wrap.appendChild(row);
+  });
+}
+
+function adjustRv(id, delta){
+  const f = FX_DB.find(x=>x.id===id);
+  const isStrip = f && f.type==='strip';
+  rvQty[id] = Math.max(0, Math.round((rvQty[id]||0) + delta * (isStrip?2:1)) / (isStrip?2:1));
+  const inp = document.getElementById('rv-qty-'+id);
+  if(inp) inp.value = rvQty[id];
+  calcReverse();
+}
+
+// ══════════════════════════════════════════════
+// REVERSE MODE: CALC
+// ══════════════════════════════════════════════
+function calcReverse(){
+  const L = parseFloat(document.getElementById('roomL').value)||0;
+  const W = parseFloat(document.getElementById('roomW').value)||0;
+  const H = parseFloat(document.getElementById('roomH').value)||0;
+  const U = parseFloat(document.getElementById('uVal').value)||0.4;
+  const E_target = parseFloat(document.getElementById('targetLux').value)||150;
+  const M = 0.8;
+  const area = (L*W)/10000;
+  const ping = area/3.30579;
+  const rcr = (L>0&&W>0&&H>0) ? (5*(H/100)*((L+W)/100))/((L/100)*(W/100)) : 0;
+
+  // RCR correction
+  let Ueff = U;
+  if(rcr>6) Ueff=U*0.75; else if(rcr>4) Ueff=U*0.88;
+
+  // Update sidebar info
+  document.getElementById('rv-d-area').textContent = area.toFixed(2)+' m²（'+ping.toFixed(1)+' 坪）';
+  document.getElementById('rv-d-target').textContent = E_target+' Lux';
+  document.getElementById('rv-d-ueff').textContent = Ueff.toFixed(2)+(rcr>4?' (RCR修正)':'');
+
+  // Calc total lm from input quantities
+  let totalLm = 0;
+  const fxContribs = []; // {fx, qty, lm, lux}
+  FX_DB.forEach(f=>{
+    const qty = rvQty[f.id]||0;
+    if(qty<=0) return;
+    const lm = f.type==='strip' ? qty*f.lm : qty*f.lm;
+    totalLm += lm;
+    fxContribs.push({fx:f, qty, lm});
+  });
+
+  // Estimated lux: E = (totalLm * Ueff * M) / area
+  const estLux = area>0 ? Math.round((totalLm * Ueff * M) / area) : 0;
+
+  // Update lux meter
+  document.getElementById('rv-lux').textContent = estLux.toLocaleString();
+  document.getElementById('rv-target-label').textContent = '目標 '+E_target+' Lux';
+
+  // Bar: map 0~750 lux to 0~100%
+  const barPct = Math.min(100, Math.round(estLux/750*100));
+  const barColor = estLux < E_target*0.7 ? '#c0392b' :
+                   estLux < E_target*0.9 ? '#c8960a' :
+                   estLux > E_target*1.4 ? '#c8960a' :
+                   estLux > E_target*1.8 ? '#c0392b' : '#2e7d32';
+  const bar = document.getElementById('rv-lux-bar');
+  bar.style.width = barPct+'%';
+  bar.style.background = barColor;
+
+  // Verdict
+  const ratio = E_target>0 ? estLux/E_target : 0;
+  let verdictClass, icon, title, desc;
+  if(totalLm===0){
+    verdictClass='bad'; icon='⚠️'; title='尚未輸入燈具數量';
+    desc='請在左側輸入各燈具的計畫安裝數量。';
+  } else if(ratio < 0.5){
+    verdictClass='bad'; icon='❌'; title='照度嚴重不足（'+estLux+' Lux）';
+    desc='目前配燈僅達目標照度的 '+Math.round(ratio*100)+'%，空間會顯得昏暗壓抑，建議大幅增加燈具數量或改用光通量更高的燈具。';
+  } else if(ratio < 0.8){
+    verdictClass='bad'; icon='⚠️'; title='照度不足（'+estLux+' Lux）';
+    desc='距離目標照度 '+E_target+' Lux 尚有 '+(E_target-estLux)+' Lux 缺口（'+Math.round(ratio*100)+'%），建議補充燈具或提高反射率條件。';
+  } else if(ratio < 0.95){
+    verdictClass='warn'; icon='🔆'; title='略低於目標（'+estLux+' Lux）';
+    desc='照度達目標的 '+Math.round(ratio*100)+'%，可接受範圍，若搭配淺色牆面或增加反射率可補足缺口。';
+  } else if(ratio <= 1.3){
+    verdictClass='ok'; icon='✅'; title='照度合理（'+estLux+' Lux）';
+    desc='配燈方案符合「'+document.getElementById('scene').options[document.getElementById('scene').selectedIndex].text+'」的照度需求，光環境配置合理。';
+  } else if(ratio <= 1.8){
+    verdictClass='warn'; icon='💡'; title='照度略高（'+estLux+' Lux）';
+    desc='超出目標照度 '+Math.round((ratio-1)*100)+'%，建議加裝調光器（Dimmer）控制亮度，兼顧節能與情境彈性。';
+  } else {
+    verdictClass='bad'; icon='🌟'; title='照度過高（'+estLux+' Lux）';
+    desc='超出目標 '+Math.round((ratio-1)*100)+'%，長時間處於過亮環境容易眼睛疲勞。建議減少 '+Math.round(totalLm*(1-1/ratio)/Math.max(...FX_DB.map(x=>x.lm)))+' 顆燈具，或全數加裝調光控制。';
+  }
+  const vCard = document.getElementById('rv-verdict');
+  vCard.className = 'verdict-card '+verdictClass;
+  document.getElementById('rv-verdict-icon').textContent = icon;
+  document.getElementById('rv-verdict-title').textContent = title;
+  document.getElementById('rv-verdict-desc').textContent = desc;
+
+  // Stats
+  const statEl = document.getElementById('rv-stats');
+  const totalW = FX_DB.reduce((s,f)=>{
+    const qty=rvQty[f.id]||0;
+    return s+(f.type==='strip'?qty*f.w:qty*f.w);
+  },0);
+  const totalCount = FX_DB.filter(f=>f.type==='point').reduce((s,f)=>s+(rvQty[f.id]||0),0);
+  statEl.innerHTML =
+    '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center;">'+
+      '<div style="font-family:var(--serif);font-size:20px;color:var(--sage-dk);">'+totalLm.toLocaleString()+'</div>'+
+      '<div style="font-size:10px;color:var(--ink-l);">總光通量 lm</div></div>'+
+    '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center;">'+
+      '<div style="font-family:var(--serif);font-size:20px;color:var(--sage-dk);">'+totalW+'</div>'+
+      '<div style="font-size:10px;color:var(--ink-l);">總功率 W</div></div>';
+
+  // Breakdown bars
+  const bkEl = document.getElementById('rv-breakdown');
+  bkEl.innerHTML = '';
+  if(fxContribs.length===0){
+    bkEl.innerHTML='<div style="font-size:11px;color:var(--ink-f);text-align:center;padding:8px;">尚未配置燈具</div>';
+  } else {
+    fxContribs.forEach(c=>{
+      const pct = totalLm>0 ? Math.round(c.lm/totalLm*100) : 0;
+      const luxContrib = area>0 ? Math.round((c.lm*Ueff*M)/area) : 0;
+      const unit = c.fx.type==='strip'?'m':'顆';
+      const row = document.createElement('div');
+      row.className='rv-bk-row';
+      row.innerHTML=
+        '<div style="min-width:72px;color:var(--ink-m);font-weight:600;">'+c.fx.name+'</div>'+
+        '<div style="min-width:36px;color:var(--ink-l);font-size:10px;">'+c.qty+' '+unit+'</div>'+
+        '<div class="rv-bk-bar-wrap"><div class="rv-bk-bar" style="width:'+pct+'%;background:'+c.fx.color+';"></div></div>'+
+        '<div class="rv-bk-val">'+luxContrib+' Lux</div>';
+      bkEl.appendChild(row);
+    });
+  }
+
+  // Gap suggestions
+  const sugEl = document.getElementById('rv-suggestions');
+  sugEl.innerHTML = '';
+  const luxGap = E_target - estLux;
+
+  if(totalLm===0){
+    sugEl.innerHTML='<div class="gap-item ok"><span class="gap-icon">💡</span>請在左側輸入燈具數量，系統將自動分析並給出建議。</div>';
+  } else if(ratio>=0.95 && ratio<=1.3){
+    sugEl.innerHTML='<div class="gap-item ok"><span class="gap-icon">✅</span>配燈方案合理，各燈具數量符合此情境需求。</div>';
+    // Check per-ping density
+    FX_DB.filter(f=>f.type==='point').forEach(f=>{
+      const qty=rvQty[f.id]||0;
+      if(qty===0) return;
+      const pPerPing=qty/ping;
+      const maxPP=f.angle<=36?3:(f.angle<=60?2.5:(f.angle<=90?2:1.5));
+      if(pPerPing>maxPP){
+        const el=document.createElement('div');
+        el.className='gap-item reduce';
+        el.innerHTML='<span class="gap-icon">💡</span>'+f.name+'目前 '+pPerPing.toFixed(1)+' 顆/坪，超過建議上限（'+maxPP+'/坪），考慮改用光通量更高的燈具減少數量。';
+        sugEl.appendChild(el);
+      }
+    });
+  } else if(luxGap>0){
+    // Need more light
+    FX_DB.filter(f=>f.type==='point').forEach(f=>{
+      const addCount = Math.ceil((luxGap*area)/(f.lm*Ueff*M));
+      const el=document.createElement('div');
+      el.className='gap-item add';
+      el.innerHTML='<span class="gap-icon">➕</span>補充 <strong>'+addCount+' 顆'+f.name+'</strong> 可將照度提升至目標（每顆貢獻約 '+Math.round(f.lm*Ueff*M/area)+' Lux）';
+      sugEl.appendChild(el);
+    });
+    const stripF=FX_DB.find(f=>f.type==='strip');
+    if(stripF){
+      const addM=Math.ceil((luxGap*area)/(stripF.lm*Ueff*M));
+      const el=document.createElement('div');
+      el.className='gap-item add';
+      el.innerHTML='<span class="gap-icon">➕</span>或增加 <strong>'+addM+' 公尺 LED 燈帶</strong> 作為間接補光';
+      sugEl.appendChild(el);
+    }
+  } else {
+    // Too bright
+    FX_DB.filter(f=>f.type==='point').forEach(f=>{
+      const qty=rvQty[f.id]||0;
+      if(qty===0) return;
+      const removeCount=Math.ceil(qty*(1-1/ratio));
+      if(removeCount>0){
+        const el=document.createElement('div');
+        el.className='gap-item reduce';
+        el.innerHTML='<span class="gap-icon">➖</span>'+f.name+'減少 <strong>'+removeCount+' 顆</strong>（約減 '+Math.round(removeCount*f.lm*Ueff*M/area)+' Lux），或全數加裝調光器（Dimmer）';
+        sugEl.appendChild(el);
+      }
+    });
+  }
+
+  // Layer table reference
+  const sc = SCENES[document.getElementById('scene').value];
+  if(sc){
+    document.getElementById('rv-layer-tbl').innerHTML=sc.layers.map(l=>
+      '<tr><td><span class="badge '+l.b+'">'+l.n+'</span></td><td>'+l.r+'</td><td>'+l.f+'</td>'+
+      '<td style="color:var(--sage-dk);font-family:var(--serif)">'+l.l+'</td></tr>'
+    ).join('');
+  }
 }
 
 // ══════════════════════════════════════════════
