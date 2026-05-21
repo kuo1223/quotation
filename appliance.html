@@ -998,47 +998,123 @@ function emailReport(){
   window.location.href='mailto:kuo1223@gmail.com?subject='+encodeURIComponent(_reportSubject)+'&body='+encodeURIComponent(_reportPlainText);
 }
 
-function downloadPDF(){
-  const bodyHTML=document.getElementById('reportBody').innerHTML;
-  const printHTML=`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:#2b2926;padding:20px 24px;}
-.rpt-header{margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #6e7a6a;}
-.rpt-title{font-family:'Noto Serif TC',serif;font-size:17px;letter-spacing:3px;margin-bottom:4px;}
-.rpt-meta{font-size:11px;color:#8a8780;line-height:1.8;}
-.rpt-section{margin-bottom:14px;}
-.rpt-sp-title{font-family:'Noto Serif TC',serif;font-size:12px;color:#6e7a6a;letter-spacing:2px;padding:5px 9px;background:#eef0ea;border-left:3px solid #6e7a6a;margin-bottom:7px;border-radius:0 4px 4px 0;}
-.rpt-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:5px;}
-.rpt-tbl th{background:#f5f2ee;padding:5px 8px;text-align:left;font-weight:500;color:#4a4742;border:1px solid #dddad4;font-size:10px;}
-.rpt-tbl td{padding:5px 8px;border:1px solid #e2e0da;}
-.rpt-tbl tr:nth-child(even) td{background:#faf9f6;}
-.rpt-tbl tr.owned td{background:#f0f7f0;}
-.rpt-tbl tr.plan td{background:#fef9e7;}
-.rpt-tbl tr.both td{background:#f5f7f0;}
-.rpt-v220{color:#c0392b;font-weight:600;}
-.rpt-v110{color:#3a6ea8;}
-.rpt-ded{background:#fdecea;color:#c0392b;padding:1px 5px;border-radius:4px;font-size:10px;}
-.rpt-nor{background:#eef0ea;color:#6e7a6a;padding:1px 5px;border-radius:4px;font-size:10px;}
-.rpt-summary{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
-.rpt-sum-chip{padding:3px 10px;border-radius:16px;font-size:10px;}
-.rpt-sum-ok{background:#eef0ea;color:#6e7a6a;}
-.rpt-sum-warn{background:#fef9e7;color:#c8960a;}
-.rpt-sum-over{background:#fdecea;color:#c0392b;}
-.rpt-ded-list{font-size:10px;color:#c0392b;margin-top:3px;}
-.rpt-divider{border:none;border-top:1px solid #e2e0da;margin:10px 0;}
-.rpt-footer{font-size:9px;color:#b8b5ae;text-align:center;margin-top:10px;line-height:1.8;}
-@media print{@page{margin:12mm 14mm;}body{padding:0;}}
-</style></head><body>${bodyHTML}</body></html>`;
+async function downloadPDF(){
+  const name=document.getElementById('f-name').value.trim()||'屋主';
+  const now=new Date();
+  const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const fileName=name+'_電器功率需求單_'+dateStr+'.pdf';
 
-  const w=window.open('','_blank','width=900,height=700');
-  if(w){
-    w.document.write(printHTML);
-    w.document.close();
-    setTimeout(()=>w.print(),600);
-  } else {
-    showToast('請允許彈出視窗以下載PDF');
+  showToast('PDF 產生中，請稍候…');
+
+  // Load html2canvas and jsPDF if not already loaded
+  if(typeof html2canvas==='undefined'){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+  }
+  if(typeof window.jspdf==='undefined'){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+  }
+
+  // Build offscreen render div
+  const bodyHTML=document.getElementById('reportBody').innerHTML;
+  const printStyles=`
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#2b2926;background:#fff;padding:20px 24px;width:800px;}
+    .rpt-header{margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #6e7a6a;}
+    .rpt-title{font-size:16px;letter-spacing:2px;margin-bottom:4px;font-weight:600;}
+    .rpt-meta{font-size:10px;color:#8a8780;line-height:1.8;}
+    .rpt-section{margin-bottom:14px;}
+    .rpt-sp-title{font-size:11px;color:#6e7a6a;letter-spacing:2px;padding:5px 9px;background:#eef0ea;border-left:3px solid #6e7a6a;margin-bottom:7px;font-weight:600;}
+    .rpt-tbl{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:5px;}
+    .rpt-tbl th{background:#f5f2ee;padding:5px 8px;text-align:left;font-weight:600;color:#4a4742;border:1px solid #dddad4;font-size:9px;}
+    .rpt-tbl td{padding:5px 8px;border:1px solid #e2e0da;vertical-align:middle;}
+    .rpt-tbl tr:nth-child(even) td{background:#faf9f6;}
+    .rpt-tbl tr.owned td{background:#f0f7f0;}
+    .rpt-tbl tr.plan td{background:#fef9e7;}
+    .rpt-tbl tr.both td{background:#f5f7f0;}
+    .rpt-v220{color:#c0392b;font-weight:700;}
+    .rpt-v110{color:#3a6ea8;}
+    .rpt-ded{background:#fdecea;color:#c0392b;padding:1px 5px;border-radius:3px;font-size:9px;}
+    .rpt-nor{background:#eef0ea;color:#6e7a6a;padding:1px 5px;border-radius:3px;font-size:9px;}
+    .rpt-summary{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+    .rpt-sum-chip{padding:2px 8px;border-radius:10px;font-size:9px;}
+    .rpt-sum-ok{background:#eef0ea;color:#6e7a6a;}
+    .rpt-sum-warn{background:#fef9e7;color:#c8960a;}
+    .rpt-sum-over{background:#fdecea;color:#c0392b;}
+    .rpt-ded-list{font-size:9px;color:#c0392b;margin-top:3px;}
+    .rpt-divider{border:none;border-top:1px solid #e2e0da;margin:10px 0;}
+    .rpt-footer{font-size:9px;color:#b8b5ae;text-align:center;margin-top:10px;line-height:1.8;}
+  `;
+
+  // Create hidden iframe for rendering
+  const iframe=document.createElement('iframe');
+  iframe.style.cssText='position:fixed;top:-9999px;left:0;width:820px;height:auto;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  const iDoc=iframe.contentDocument||iframe.contentWindow.document;
+  iDoc.open();
+  iDoc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+printStyles+'</style></head><body>'+bodyHTML+'</body></html>');
+  iDoc.close();
+
+  await new Promise(r=>setTimeout(r,400));
+
+  try{
+    const canvas=await html2canvas(iDoc.body,{
+      scale:2,
+      useCORS:true,
+      backgroundColor:'#ffffff',
+      width:820,
+      height:iDoc.body.scrollHeight,
+      windowWidth:820,
+    });
+
+    const imgData=canvas.toDataURL('image/jpeg',0.92);
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+    const pdfW=pdf.internal.pageSize.getWidth();
+    const pdfH=pdf.internal.pageSize.getHeight();
+    const margin=10;
+    const contentW=pdfW-margin*2;
+    const imgW=canvas.width;
+    const imgH=canvas.height;
+    const ratio=contentW/((imgW/2)*0.264583); // px to mm
+    const contentH=(imgH/2)*0.264583*ratio;
+
+    let yPos=margin;
+    let remainH=contentH;
+    let srcY=0;
+    const pageH=pdfH-margin*2;
+
+    while(remainH>0){
+      const sliceH=Math.min(remainH,pageH);
+      const sliceCanvas=document.createElement('canvas');
+      sliceCanvas.width=imgW;
+      const slicePx=Math.round(sliceH/ratio/0.264583*2);
+      sliceCanvas.height=slicePx;
+      const sCtx=sliceCanvas.getContext('2d');
+      sCtx.drawImage(canvas,0,srcY*2,imgW,slicePx,0,0,imgW,slicePx);
+      const sliceData=sliceCanvas.toDataURL('image/jpeg',0.92);
+      pdf.addImage(sliceData,'JPEG',margin,yPos,contentW,sliceH);
+      remainH-=sliceH;
+      srcY+=sliceH/ratio/0.264583;
+      if(remainH>0){pdf.addPage();yPos=margin;}
+    }
+
+    pdf.save(fileName);
+    showToast('PDF 已下載：'+fileName);
+  } catch(err){
+    console.error('PDF error:',err);
+    showToast('PDF 產生失敗，請再試一次');
+  } finally{
+    document.body.removeChild(iframe);
   }
 }
 
