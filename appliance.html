@@ -860,6 +860,194 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
 }
+
+// ══════════════════════════════════════════════
+// REPORT MODAL
+// ══════════════════════════════════════════════
+let _reportPlainText = '';
+let _reportSubject = '';
+
+function showReport(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('請填寫屋主姓名');return;}
+  let hasAny=false;
+  spaces.forEach(sp=>{
+    const groups=AP_DB[sp.dbKey]||[];
+    groups.forEach(g=>g.items.forEach(ap=>{
+      const s=spState[sp.id]&&spState[sp.id][ap.id];
+      if(s&&(s.owned||s.plan)) hasAny=true;
+    }));
+  });
+  if(!hasAny){showToast('請先勾選電器項目');return;}
+
+  const phone=document.getElementById('f-phone').value.trim();
+  const addr=document.getElementById('f-addr').value.trim();
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('zh-TW')+' '+now.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  _reportSubject=name+'｜電器功率需求單｜'+dateStr;
+
+  let html='<div class="rpt-header">';
+  html+='<div class="rpt-title">居家電器功率需求單</div>';
+  html+='<div class="rpt-meta">屋主：<strong>'+name+'</strong>';
+  if(phone) html+='　電話：'+phone;
+  if(addr)  html+='　地址：'+addr;
+  html+='<br>填寫時間：'+dateStr+'　（若有修改請重新產生，以最新時間版本為準）';
+  html+='</div></div>';
+
+  let plain='屋主姓名：'+name+'\n';
+  if(phone) plain+='聯絡電話：'+phone+'\n';
+  if(addr)  plain+='案件地址：'+addr+'\n';
+  plain+='填寫時間：'+dateStr+'\n若有修改請重新填寫，以最新時間版本為準\n';
+
+  let totalCircuits=0,totalDedicated=0,totalItems=0;
+
+  spaces.forEach(sp=>{
+    const groups=AP_DB[sp.dbKey]||[];
+    const rows=[];
+    let amp110=0;
+    const deds=[];
+    groups.forEach(g=>g.items.forEach(ap=>{
+      const s=spState[sp.id]&&spState[sp.id][ap.id];
+      if(!s||(!s.owned&&!s.plan)) return;
+      const qty=s.qty||1;
+      const amp=parseFloat((ap.w/ap.v*qty).toFixed(1));
+      const status=s.owned&&s.plan?'擁有+計畫':s.owned?'已擁有':'計畫購買';
+      const isDed=ap.circuit==='dedicated'||ap.v===220;
+      rows.push({name:ap.name,v:ap.v,w:ap.w,amp,qty,status,isDed,owned:s.owned,plan:s.plan});
+      if(isDed) deds.push(ap.name);
+      else amp110+=amp;
+      totalItems++;
+    }));
+    if(!rows.length) return;
+
+    const circuits=amp110>0?Math.ceil(amp110/16):0;
+    totalCircuits+=circuits;
+    totalDedicated+=deds.length;
+
+    html+='<div class="rpt-section">';
+    html+='<div class="rpt-sp-title">'+sp.label+'</div>';
+    html+='<table class="rpt-tbl"><thead><tr><th style="width:30%">電器名稱</th><th>電壓</th><th>功率</th><th>安培</th><th>數量</th><th>狀態</th><th>迴路類型</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      const rc=r.owned&&r.plan?'both':r.owned?'owned':'plan';
+      html+='<tr class="'+rc+'"><td>'+r.name+'</td>';
+      html+='<td class="'+(r.v===220?'rpt-v220':'rpt-v110')+'">'+r.v+'V</td>';
+      html+='<td>'+r.w+'W</td>';
+      html+='<td><strong>'+r.amp+'A</strong></td>';
+      html+='<td>×'+r.qty+'</td>';
+      html+='<td>'+r.status+'</td>';
+      html+='<td><span class="'+(r.isDed?'rpt-ded':'rpt-nor')+'">'+(r.isDed?'220V 專用':'一般插座')+'</span></td></tr>';
+    });
+    html+='</tbody></table>';
+    html+='<div class="rpt-summary">';
+    const bc=amp110>20?'rpt-sum-over':amp110>16?'rpt-sum-warn':'rpt-sum-ok';
+    if(amp110>0) html+='<span class="rpt-sum-chip '+bc+'">110V 總計 '+amp110.toFixed(1)+'A　建議 '+circuits+' 條迴路</span>';
+    if(amp110>20) html+='<span class="rpt-sum-chip rpt-sum-over">⚠ 超載，請增加迴路</span>';
+    else if(amp110>16) html+='<span class="rpt-sum-chip rpt-sum-warn">⚡ 接近上限</span>';
+    html+='</div>';
+    if(deds.length) html+='<div class="rpt-ded-list">220V 專用迴路：'+deds.join('、')+'</div>';
+    html+='</div>';
+
+    plain+='\n【'+sp.label+'】\n';
+    plain+='電器名稱                電壓   功率    安培   數量  狀態      迴路\n';
+    plain+='─'.repeat(72)+'\n';
+    rows.forEach(r=>{
+      plain+=pR(r.name,22)+' '+pL(r.v+'V',5)+' '+pL(r.w+'W',7)+' '+pL(r.amp+'A',6)+' '+pL('×'+r.qty,5)+' '+pR(r.status,9)+' '+(r.isDed?'220V專用':'一般插座')+'\n';
+    });
+    plain+='110V總計：'+amp110.toFixed(1)+'A　建議'+circuits+'條迴路\n';
+    if(deds.length) plain+='220V專用：'+deds.join('、')+'\n';
+  });
+
+  html+='<hr class="rpt-divider"><div class="rpt-summary" style="justify-content:center;">';
+  html+='<span class="rpt-sum-chip rpt-sum-ok">110V 迴路共 '+totalCircuits+' 條</span>';
+  html+='<span class="rpt-sum-chip rpt-sum-over">220V 專用 '+totalDedicated+' 迴路</span>';
+  html+='<span class="rpt-sum-chip rpt-sum-ok">共 '+totalItems+' 項電器</span></div>';
+  html+='<div class="rpt-footer">得森室內裝修設計有限公司　|　居家電器功率需求工具<br>若有修改請重新填寫並產生報表，以最新時間版本為準</div>';
+
+  plain+='\n========================================\n';
+  plain+='110V迴路共'+totalCircuits+'條　220V專用'+totalDedicated+'迴路　共'+totalItems+'項\n';
+  plain+='得森室內裝修設計有限公司\n';
+
+  _reportPlainText=plain;
+  document.getElementById('reportBody').innerHTML=html;
+  document.getElementById('reportModal').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('reportModal').classList.remove('open');
+}
+
+function copyText(){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(_reportPlainText)
+      .then(()=>showToast('已複製！可貼到 LINE 或 Email'))
+      .catch(()=>fallbackCopy());
+  } else { fallbackCopy(); }
+}
+function fallbackCopy(){
+  const ta=document.createElement('textarea');
+  ta.value=_reportPlainText;
+  ta.style.cssText='position:fixed;top:-9999px;';
+  document.body.appendChild(ta);
+  ta.focus();ta.select();
+  try{document.execCommand('copy');showToast('已複製！');}
+  catch(e){showToast('請手動複製');}
+  document.body.removeChild(ta);
+}
+
+function emailReport(){
+  window.location.href='mailto:kuo1223@gmail.com?subject='+encodeURIComponent(_reportSubject)+'&body='+encodeURIComponent(_reportPlainText);
+}
+
+function downloadPDF(){
+  const bodyHTML=document.getElementById('reportBody').innerHTML;
+  const printHTML=`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:#2b2926;padding:20px 24px;}
+.rpt-header{margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #6e7a6a;}
+.rpt-title{font-family:'Noto Serif TC',serif;font-size:17px;letter-spacing:3px;margin-bottom:4px;}
+.rpt-meta{font-size:11px;color:#8a8780;line-height:1.8;}
+.rpt-section{margin-bottom:14px;}
+.rpt-sp-title{font-family:'Noto Serif TC',serif;font-size:12px;color:#6e7a6a;letter-spacing:2px;padding:5px 9px;background:#eef0ea;border-left:3px solid #6e7a6a;margin-bottom:7px;border-radius:0 4px 4px 0;}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:5px;}
+.rpt-tbl th{background:#f5f2ee;padding:5px 8px;text-align:left;font-weight:500;color:#4a4742;border:1px solid #dddad4;font-size:10px;}
+.rpt-tbl td{padding:5px 8px;border:1px solid #e2e0da;}
+.rpt-tbl tr:nth-child(even) td{background:#faf9f6;}
+.rpt-tbl tr.owned td{background:#f0f7f0;}
+.rpt-tbl tr.plan td{background:#fef9e7;}
+.rpt-tbl tr.both td{background:#f5f7f0;}
+.rpt-v220{color:#c0392b;font-weight:600;}
+.rpt-v110{color:#3a6ea8;}
+.rpt-ded{background:#fdecea;color:#c0392b;padding:1px 5px;border-radius:4px;font-size:10px;}
+.rpt-nor{background:#eef0ea;color:#6e7a6a;padding:1px 5px;border-radius:4px;font-size:10px;}
+.rpt-summary{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.rpt-sum-chip{padding:3px 10px;border-radius:16px;font-size:10px;}
+.rpt-sum-ok{background:#eef0ea;color:#6e7a6a;}
+.rpt-sum-warn{background:#fef9e7;color:#c8960a;}
+.rpt-sum-over{background:#fdecea;color:#c0392b;}
+.rpt-ded-list{font-size:10px;color:#c0392b;margin-top:3px;}
+.rpt-divider{border:none;border-top:1px solid #e2e0da;margin:10px 0;}
+.rpt-footer{font-size:9px;color:#b8b5ae;text-align:center;margin-top:10px;line-height:1.8;}
+@media print{@page{margin:12mm 14mm;}body{padding:0;}}
+</style></head><body>${bodyHTML}</body></html>`;
+
+  const w=window.open('','_blank','width=900,height=700');
+  if(w){
+    w.document.write(printHTML);
+    w.document.close();
+    setTimeout(()=>w.print(),600);
+  } else {
+    showToast('請允許彈出視窗以下載PDF');
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('reportModal').addEventListener('click',function(e){
+    if(e.target===this) closeModal();
+  });
+});
+
 </script>
 
 <!-- REPORT MODAL -->
