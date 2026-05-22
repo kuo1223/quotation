@@ -779,7 +779,7 @@ function renderSpace(spId){
   groups.forEach(function(g){
     html+='<tr><td colspan="9" style="padding:0;">'+
       '<div class="group-hd"><span>▸ '+g.label+'</span>'+
-      '<button class="group-add-btn" onclick="openAddModal(\''+spId+'\',\''+g.label+'\')" onmousedown="event.preventDefault()">＋ 新增</button></div>'+
+      '<button class="group-add-btn" data-sp="'+spId+'" data-g="'+encodeURIComponent(g.label)+'" onclick="openAddModalFromBtn(this)">＋ 新增</button></div>'+
       '</td></tr>';
     g.items.forEach(function(ap){
       if(hiddenItems[spId]&&hiddenItems[spId].has(ap.id)) return;
@@ -804,6 +804,31 @@ function renderSpace(spId){
     });
 
   });
+  // Render custom items for this space
+  var _allCi = customItems[spId]||[];
+  if(_allCi.length > 0){
+    html += '<tr><td colspan="9" style="padding:6px 10px 3px;background:var(--s3);font-size:10px;color:var(--ink-l);letter-spacing:1px;">★ 自填電器</td></tr>';
+    _allCi.forEach(function(ci){
+      var amp = ci.w>0&&ci.v>0 ? (ci.w/ci.v).toFixed(1) : '—';
+      var isDed = ci.v===220;
+      var rowCls = ci.owned&&ci.plan?'both':ci.owned?'owned':ci.plan?'plan':'';
+      html+='<tr class="ci-row '+rowCls+'">';
+      html+='<td><div class="ap-name" style="color:var(--sage-dk);">'+ci.groupLabel+' ／ '+ci.name+'</div></td>';
+      html+='<td class="c"><span class="'+(isDed?'v220':'v110')+'">'+ci.v+'V</span></td>';
+      html+='<td class="c">'+ci.w+'W</td>';
+      html+='<td class="c">'+amp+'A</td>';
+      html+='<td class="c"><div class="qty-wrap">'+
+        '<div class="qty-btn" onclick="adjCI(\''+spId+'\',\''+ci.id+'\',-1)">−</div>'+
+        '<span class="qty-num">'+ci.qty+'</span>'+
+        '<div class="qty-btn" onclick="adjCI(\''+spId+'\',\''+ci.id+'\',1)">＋</div>'+
+        '</div></td>';
+      html+='<td class="c"><input type="checkbox" class="chk"'+(ci.owned?' checked':'')+' onchange="setCICheck(\''+spId+'\',\''+ci.id+'\',\'owned\',this.checked)"></td>';
+      html+='<td class="c"><input type="checkbox" class="chk"'+(ci.plan?' checked':'')+' onchange="setCICheck(\''+spId+'\',\''+ci.id+'\',\'plan\',this.checked)"></td>';
+      html+='<td><span class="badge '+(isDed?'badge-ded':'badge-nor')+'">'+(isDed?'專用迴路':'一般插座')+'</span></td>';
+      html+='<td class="c"><button class="ap-del" onclick="removeCI(\''+spId+'\',\''+ci.id+'\')" title="刪除">×</button></td>';
+      html+='</tr>';
+    });
+  }
   html+='</tbody></table>';
   
   wrap.innerHTML=html;
@@ -879,17 +904,7 @@ function renderResults(){
     const groups=AP_DB[sp.dbKey]||[];
     let amp110=0;
     const deds=[];
-    // Include custom items
-    (customItems[sp.id]||[]).forEach(ci=>{
-      if(!ci.owned&&!ci.plan) return;
-      if(!ci.w||!ci.name) return;
-      const qty=ci.qty||1;
-      const isDed=ci.v===220;
-      totalItems++;totalW+=ci.w*qty;
-      if(isDed) deds.push({name:ci.name,w:ci.w,v:ci.v,qty});
-      else amp110+=(ci.w/ci.v)*qty;
-    });
-    // Custom items first
+    // Custom items
     (customItems[sp.id]||[]).forEach(ci=>{
       if(!ci.owned&&!ci.plan||!ci.w||!ci.name) return;
       const qty=ci.qty||1;
@@ -897,8 +912,8 @@ function renderResults(){
       const status=ci.owned&&ci.plan?'擁有+計畫':ci.owned?'已擁有':'計畫購買';
       const isDed=ci.v===220;
       rows.push({name:'★'+ci.name,v:ci.v,w:ci.w,amp,qty,status,isDed,owned:ci.owned,plan:ci.plan});
-      if(isDed) deds.push('★'+ci.name);
-      else amp110+=amp;
+      if(isDed) deds.push(ci.name);
+      else amp110+=(ci.w/ci.v)*qty;
       totalItems++;
     });
     groups.forEach(g=>g.items.forEach(ap=>{
@@ -962,6 +977,9 @@ function sendEmail(){
       const s=spState[sp.id]&&spState[sp.id][ap.id];
       if(s&&(s.owned||s.plan)) hasAny=true;
     }));
+    (customItems[sp.id]||[]).forEach(ci=>{
+      if(ci.owned||ci.plan) hasAny=true;
+    });
   });
   if(!hasAny){showToast('請先勾選電器項目');return;}
 
@@ -975,17 +993,16 @@ function sendEmail(){
     const groups=AP_DB[sp.dbKey]||[];
     const rows=[];
     let amp110=0; const deds=[];
-    // Custom items first
+    // Custom items
     (customItems[sp.id]||[]).forEach(ci=>{
       if(!ci.owned&&!ci.plan||!ci.w||!ci.name) return;
       const qty=ci.qty||1;
-      const amp=parseFloat((ci.w/ci.v*qty).toFixed(1));
+      const amp=(ci.w/ci.v*qty).toFixed(1);
       const status=ci.owned&&ci.plan?'擁有+計畫':ci.owned?'已擁有':'計畫購買';
-      const isDed=ci.v===220;
-      rows.push({name:'★'+ci.name,v:ci.v,w:ci.w,amp,qty,status,isDed,owned:ci.owned,plan:ci.plan});
-      if(isDed) deds.push('★'+ci.name);
-      else amp110+=amp;
-      totalItems++;
+      const ded=ci.v===220;
+      rows.push({name:'★'+ci.name,v:ci.v,w:ci.w,amp,qty,status,ded});
+      if(ded) deds.push(ci.name);
+      else amp110+=(ci.w/ci.v)*qty;
     });
     groups.forEach(g=>g.items.forEach(ap=>{
       const s=spState[sp.id]&&spState[sp.id][ap.id];
@@ -998,7 +1015,7 @@ function sendEmail(){
       if(ded) deds.push(ap.name);
       else amp110+=(ap.w/ap.v)*qty;
     }));
-    if(!rows.length) return;
+    if(!rows.length&&amp110===0&&deds.length===0) return;
     body+='\n【'+sp.label+'】\n';
     body+='電器名稱                電壓    功率    安培  數量  狀態      迴路\n';
     body+='─'.repeat(76)+'\n';
@@ -1042,6 +1059,9 @@ function showReport(){
       const s=spState[sp.id]&&spState[sp.id][ap.id];
       if(s&&(s.owned||s.plan)) hasAny=true;
     }));
+    (customItems[sp.id]||[]).forEach(ci=>{
+      if(ci.owned||ci.plan) hasAny=true;
+    });
   });
   if(!hasAny){showToast('請先勾選電器項目');return;}
 
@@ -1071,17 +1091,7 @@ function showReport(){
     const rows=[];
     let amp110=0;
     const deds=[];
-    // Include custom items
-    (customItems[sp.id]||[]).forEach(ci=>{
-      if(!ci.owned&&!ci.plan) return;
-      if(!ci.w||!ci.name) return;
-      const qty=ci.qty||1;
-      const isDed=ci.v===220;
-      totalItems++;totalW+=ci.w*qty;
-      if(isDed) deds.push({name:ci.name,w:ci.w,v:ci.v,qty});
-      else amp110+=(ci.w/ci.v)*qty;
-    });
-    // Custom items first
+    // Custom items
     (customItems[sp.id]||[]).forEach(ci=>{
       if(!ci.owned&&!ci.plan||!ci.w||!ci.name) return;
       const qty=ci.qty||1;
@@ -1089,8 +1099,8 @@ function showReport(){
       const status=ci.owned&&ci.plan?'擁有+計畫':ci.owned?'已擁有':'計畫購買';
       const isDed=ci.v===220;
       rows.push({name:'★'+ci.name,v:ci.v,w:ci.w,amp,qty,status,isDed,owned:ci.owned,plan:ci.plan});
-      if(isDed) deds.push('★'+ci.name);
-      else amp110+=amp;
+      if(isDed) deds.push(ci.name);
+      else amp110+=(ci.w/ci.v)*qty;
       totalItems++;
     });
     groups.forEach(g=>g.items.forEach(ap=>{
@@ -1105,7 +1115,7 @@ function showReport(){
       else amp110+=amp;
       totalItems++;
     }));
-    if(!rows.length) return;
+    if(!rows.length&&amp110===0&&deds.length===0) return;
 
     const circuits=amp110>0?Math.ceil(amp110/16):0;
     totalCircuits+=circuits;
@@ -1422,6 +1432,12 @@ function hidePreset(spId,apId){
 // ══════════════════════════════════════════════
 // CUSTOM ITEM FUNCTIONS
 // ══════════════════════════════════════════════
+function openAddModalFromBtn(btn){
+  var spId = btn.getAttribute('data-sp');
+  var groupLabel = decodeURIComponent(btn.getAttribute('data-g'));
+  openAddModal(spId, groupLabel);
+}
+
 var _amiSpId='', _amiGroup='';
 function openAddModal(spId,groupLabel){
   _amiSpId=spId; _amiGroup=groupLabel;
@@ -1473,7 +1489,6 @@ document.addEventListener('click',function(e){
 document.addEventListener('keydown',function(e){
   var m=document.getElementById('amiModal');
   if(!m||!m.classList.contains('open')) return;
-  if(e.key==='Enter') confirmAmi();
   if(e.key==='Escape') closeAmi();
 });
 
