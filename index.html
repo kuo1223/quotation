@@ -108,7 +108,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
 </div>
 <div class="main-grid">
   <div class="modules">
-    <a class="module" href="quotation.html">
+    <a class="module" href="quotation.html" onclick="openPwd(event,'quotation.html','報 價 系 統')">
       <div class="module-stripe" style="background:#8a9082;"></div>
       <div class="module-body">
         <div class="module-icon">📋</div>
@@ -117,7 +117,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="project-manager.html">
+    <a class="module" href="project-manager.html" onclick="openPwd(event,'project-manager.html','工程進度管理')">
       <div class="module-stripe" style="background:#5c7a6e;"></div>
       <div class="module-body">
         <div class="module-icon">🏗️</div>
@@ -126,7 +126,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="contract.html" onclick="openContractPwd(event)">
+    <a class="module" href="contract.html" onclick="openPwd(event,'contract.html','合 約 管 理')">
       <div class="module-stripe" style="background:#b09080;"></div>
       <div class="module-body">
         <div class="module-icon">📄</div>
@@ -135,7 +135,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="finance.html" onclick="openFinance(event)">
+    <a class="module" href="finance.html" onclick="openPwd(event,'finance.html','財 務 報 表')">
       <div class="module-stripe" style="background:#6e7a8a;"></div>
       <div class="module-body">
         <div class="module-icon">📊</div>
@@ -376,26 +376,11 @@ loadTodosFromSheets().then(function(){renderTodos();}).catch(function(){renderTo
 </script>
 
 
-<!-- CONTRACT PASSWORD MODAL -->
-<div class="pwd-backdrop" id="pwdBackdrop2">
-  <div class="pwd-box">
-    <div class="pwd-title">🔒 合 約 管 理</div>
-    <div class="pwd-sub">請輸入密碼以繼續</div>
-    <input class="pwd-input" type="password" id="pwdInput2" maxlength="4" placeholder="••••"
-      oninput="if(this.value.length===4) checkPwd2()"
-      onkeydown="if(event.key==='Enter') checkPwd2()">
-    <div class="pwd-err" id="pwdErr2"></div>
-    <div class="pwd-btns">
-      <button class="pwd-btn pwd-btn-cancel" onclick="closePwd2()">取消</button>
-      <button class="pwd-btn pwd-btn-ok" onclick="checkPwd2()">確認</button>
-    </div>
-  </div>
-</div>
 
 <!-- PASSWORD MODAL -->
 <div class="pwd-backdrop" id="pwdBackdrop">
   <div class="pwd-box">
-    <div class="pwd-title">🔒 財 務 報 表</div>
+    <div class="pwd-title" id="pwdModalTitle">🔒</div>
     <div class="pwd-sub">請輸入密碼以繼續</div>
     <input class="pwd-input" type="password" id="pwdInput" maxlength="4" placeholder="••••"
       oninput="if(this.value.length===4) checkPwd()"
@@ -408,29 +393,11 @@ loadTodosFromSheets().then(function(){renderTodos();}).catch(function(){renderTo
   </div>
 </div>
 <script>
-function openContractPwd(e){
+let _pwdTarget='';
+function openPwd(e,url,title){
   e.preventDefault();
-  document.getElementById('pwdInput2').value='';
-  document.getElementById('pwdErr2').textContent='';
-  document.getElementById('pwdBackdrop2').classList.add('open');
-  setTimeout(()=>document.getElementById('pwdInput2').focus(),100);
-}
-function closePwd2(){
-  document.getElementById('pwdBackdrop2').classList.remove('open');
-}
-function checkPwd2(){
-  const v=document.getElementById('pwdInput2').value;
-  if(v===atob('MDAwMA==')){
-    closePwd2();
-    window.location.href='contract.html';
-  } else {
-    document.getElementById('pwdErr2').textContent='密碼錯誤，請再試一次';
-    document.getElementById('pwdInput2').value='';
-    document.getElementById('pwdInput2').focus();
-  }
-}
-function openFinance(e){
-  e.preventDefault();
+  _pwdTarget=url;
+  document.getElementById('pwdModalTitle').textContent='🔒 '+title;
   document.getElementById('pwdInput').value='';
   document.getElementById('pwdErr').textContent='';
   document.getElementById('pwdBackdrop').classList.add('open');
@@ -443,7 +410,7 @@ function checkPwd(){
   const v=document.getElementById('pwdInput').value;
   if(v===atob('MDAwMA==')){
     closePwd();
-    window.location.href='finance.html';
+    window.location.href=_pwdTarget;
   } else {
     document.getElementById('pwdErr').textContent='密碼錯誤，請再試一次';
     document.getElementById('pwdInput').value='';
@@ -452,9 +419,6 @@ function checkPwd(){
 }
 document.getElementById('pwdBackdrop').addEventListener('click',function(e){
   if(e.target===this) closePwd();
-});
-document.getElementById('pwdBackdrop2').addEventListener('click',function(e){
-  if(e.target===this) closePwd2();
 });
 </script>
 </body>
