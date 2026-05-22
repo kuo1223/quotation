@@ -938,12 +938,10 @@ function renderResults(){
     (customItems[sp.id]||[]).forEach(ci=>{
       if(!ci.owned&&!ci.plan||!ci.w||!ci.name) return;
       const qty=ci.qty||1;
-      const amp=parseFloat((ci.w/ci.v*qty).toFixed(1));
-      const status=ci.owned&&ci.plan?'擁有+計畫':ci.owned?'已擁有':'計畫購買';
       const isDed=ci.v===220;
-      rows.push({name:'★'+ci.name,v:ci.v,w:ci.w,amp,qty,status,isDed,owned:ci.owned,plan:ci.plan});
-      if(isDed) deds.push(ci.name);
+      if(isDed) deds.push({name:'★'+ci.name,w:ci.w,v:ci.v,qty});
       else amp110+=(ci.w/ci.v)*qty;
+      totalW+=ci.w*qty;
       totalItems++;
     });
     groups.forEach(g=>g.items.forEach(ap=>{
@@ -971,7 +969,6 @@ function renderResults(){
     </div>`;
     deds.forEach(d=>{
       totalDedicated++;
-      totalW+=0; // already counted above
       dedHtml+=`<div class="ded-item"><span>${sp.label}｜${d.name}${d.qty>1?' ×'+d.qty:''}</span><span>${d.w*d.qty}W/${d.v}V</span></div>`;
     });
   });
@@ -1125,12 +1122,10 @@ function showReport(){
     (customItems[sp.id]||[]).forEach(ci=>{
       if(!ci.owned&&!ci.plan||!ci.w||!ci.name) return;
       const qty=ci.qty||1;
-      const amp=parseFloat((ci.w/ci.v*qty).toFixed(1));
-      const status=ci.owned&&ci.plan?'擁有+計畫':ci.owned?'已擁有':'計畫購買';
       const isDed=ci.v===220;
-      rows.push({name:'★'+ci.name,v:ci.v,w:ci.w,amp,qty,status,isDed,owned:ci.owned,plan:ci.plan});
-      if(isDed) deds.push(ci.name);
+      if(isDed) deds.push({name:'★'+ci.name,w:ci.w,v:ci.v,qty});
       else amp110+=(ci.w/ci.v)*qty;
+      totalW+=ci.w*qty;
       totalItems++;
     });
     groups.forEach(g=>g.items.forEach(ap=>{
@@ -1393,7 +1388,12 @@ function loadProState(s){
   });
   Object.keys(s.customItems||{}).forEach(function(id){ customItems[id]=(s.customItems[id]||[]).map(function(c){return Object.assign({},c);}); });
   if(s.activeSpId) activeSpId=s.activeSpId;
-  renderTabs(); renderSpace(activeSpId); renderResults(); updateSendBtn();
+  renderTabs();
+  renderSpace(activeSpId);
+  renderResults();
+  updateSendBtn();
+  // Force re-render after brief delay to ensure DOM is settled
+  setTimeout(function(){ renderResults(); }, 100);
 }
 function saveProDraft(){
   var name=document.getElementById('proNameInput').value.trim();
