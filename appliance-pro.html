@@ -262,7 +262,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 /* ITEM DELETE & ADD */
 .ap-del{background:none;border:none;color:var(--ink-f);cursor:pointer;font-size:14px;padding:0 3px;line-height:1;}
 .ap-del:hover{color:var(--red);}
-.group-hd{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--s3);font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:2px;border-bottom:1px solid var(--border);}
+.group-hd-unused{display:none;}
 .group-add-btn{font-size:10px;padding:2px 8px;border:1px dashed var(--border2);border-radius:10px;background:transparent;color:var(--ink-l);cursor:pointer;font-family:var(--sans);letter-spacing:0;white-space:nowrap;border-bottom:none;}
 .group-add-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);background:var(--sage-lt);}
 /* ADD MODAL */
@@ -1500,80 +1500,6 @@ if(document.readyState === 'loading'){
     </div>
     <div class="modal-body" id="reportBody"></div>
   </div>
-</div>
-
-<div class="pro-backdrop" id="proBdrop" onclick="closeDraftDrawer()"></div>
-<div class="pro-drawer" id="proDrawer">
-  <div class="pro-drawer-hd">
-    <div class="pro-drawer-title">草 稿 管 理</div>
-    <button class="pro-drawer-close" onclick="closeDraftDrawer()">×</button>
-  </div>
-  <div class="pro-drawer-save">
-    <div style="font-size:11px;color:var(--ink-l);margin-bottom:7px;">儲存目前設定為草稿</div>
-    <div class="pro-d-row">
-      <input class="pro-d-input" id="proNameInput" placeholder="草稿名稱">
-      <button class="pro-d-btn" onclick="saveProDraft()">儲存</button>
-    </div>
-  </div>
-  <div class="pro-drawer-list" id="proDrawerList"></div>
-</div>
-
-    <div class="add-modal-field">
-      <div class="add-modal-label">電器名稱 *</div>
-      <input class="add-modal-input" id="ami-name" placeholder="例：電動捲簾、UV殺菌燈">
-    </div>
-    <div class="add-modal-row">
-      <div class="add-modal-field" style="flex:1;">
-        <div class="add-modal-label">電壓</div>
-        <select class="add-modal-input" id="ami-v">
-          <option value="110">110V</option>
-          <option value="220">220V</option>
-        </select>
-      </div>
-      <div class="add-modal-field" style="flex:1;">
-        <div class="add-modal-label">功率（W）</div>
-        <input class="add-modal-input" type="number" id="ami-w" placeholder="0" min="0">
-      </div>
-    </div>
-    <div class="add-modal-field">
-      <div class="add-modal-label">安培（自動換算）</div>
-      <div id="ami-amp" style="font-size:13px;color:#6e7a6a;padding:4px 0;">— A</div>
-    </div>
-    <div class="add-modal-btns">
-      <button class="add-modal-btn add-modal-cancel" onclick="closeAddModal()">取消</button>
-      <button class="add-modal-btn add-modal-ok" onclick="confirmAddItem()">✓ 確認新增</button>
-    </div>
-  </div>
-</div>
-
-    <div class="add-modal-field">
-      <div class="add-modal-label">電器名稱 *</div>
-      <input class="add-modal-input" id="ami-name" placeholder="例：電動捲簾、UV殺菌燈">
-    </div>
-    <div class="add-modal-row">
-      <div class="add-modal-field" style="flex:1;">
-        <div class="add-modal-label">電壓</div>
-        <select class="add-modal-input" id="ami-v">
-          <option value="110">110V</option>
-          <option value="220">220V</option>
-        </select>
-      </div>
-      <div class="add-modal-field" style="flex:1;">
-        <div class="add-modal-label">功率（W）</div>
-        <input class="add-modal-input" type="number" id="ami-w" placeholder="0" min="0">
-      </div>
-    </div>
-    <div class="add-modal-field">
-      <div class="add-modal-label">安培（自動換算）</div>
-      <div id="ami-amp" style="font-size:13px;color:#6e7a6a;padding:4px 0;">— A</div>
-    </div>
-    <div class="add-modal-btns">
-      <button class="add-modal-btn add-modal-cancel" onclick="closeAddModal()">取消</button>
-      <button class="add-modal-btn add-modal-ok" onclick="confirmAddItem()">✓ 確認新增</button>
-    </div>
-  </div>
-</div>
-
 </div>
 
 <!-- ADD ITEM MODAL -->
