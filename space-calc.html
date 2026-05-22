@@ -169,6 +169,35 @@ input:focus,select:focus,textarea:focus{border-color:var(--sage);}
 
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* DRAFT DRAWER */
+.backdrop{display:none;position:fixed;inset:0;background:rgba(43,41,38,.4);z-index:200;}
+.backdrop.open{display:block;}
+.drawer{position:fixed;top:0;right:-440px;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:201;display:flex;flex-direction:column;transition:right .26s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 24px rgba(0,0,0,.1);}
+.drawer.open{right:0;}
+.drawer-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.drawer-title{font-family:var(--serif);font-size:15px;font-weight:400;color:var(--ink);letter-spacing:2px;}
+.drawer-close{background:none;border:none;font-size:18px;color:var(--ink-l);cursor:pointer;padding:2px 6px;border-radius:4px;}
+.drawer-close:hover{color:var(--ink);background:var(--surface3);}
+.drawer-save{padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.d-save-row{display:flex;gap:7px;}
+.d-save-input{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--ink);background:var(--surface2);outline:none;}
+.d-save-input:focus{border-color:var(--sage);}
+.d-save-btn{padding:7px 14px;background:var(--sage-dk);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-family:var(--sans);cursor:pointer;}
+.d-save-btn:hover{background:#5a6a58;}
+.drawer-list{flex:1;overflow-y:auto;padding:12px 18px;display:flex;flex-direction:column;gap:9px;}
+.draft-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;transition:border-color .15s;}
+.draft-card:hover{border-color:var(--sage);}
+.draft-name{font-family:var(--serif);font-size:14px;color:var(--ink);margin-bottom:3px;}
+.draft-meta{font-size:10px;color:var(--ink-l);margin-bottom:9px;}
+.draft-acts{display:flex;gap:7px;}
+.d-btn{padding:5px 12px;border-radius:var(--r);font-size:11px;font-family:var(--sans);cursor:pointer;border:none;}
+.d-btn-load{background:var(--sage-lt);color:var(--sage-dk);border:1px solid var(--sage-pa);}
+.d-btn-load:hover{background:var(--sage-dk);color:#fff;}
+.d-btn-del{background:var(--red-lt);color:var(--red);border:1px solid rgba(192,57,43,.2);}
+.d-btn-del:hover{background:var(--red);color:#fff;}
+.drawer-empty{text-align:center;padding:36px 16px;color:var(--ink-f);font-size:12px;line-height:1.8;}
+@media(max-width:768px){.drawer{width:100%;right:-100%;}.drawer.open{right:0;}}
 </style>
 </head>
 <body>
@@ -180,6 +209,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--sage);}
   </div>
   <div class="hd-right">
     <a href="index.html" class="back-btn">← 首頁</a>
+    <button class="hbtn hbtn-sage" onclick="openDrawer()">📁 草稿</button>
   </div>
 </header>
 
@@ -683,6 +713,24 @@ th span{font-size:10px;color:#8a8780;font-family:'Noto Sans TC',sans-serif;displ
   <tbody>${bodyRows}</tbody>
 </table>
 <div class="notice">⚠ 冷氣噸數為概估參考值，實際選購請洽空調廠商現場評估，不同品牌機型效能有差異。本表格由得森設計空間換算工具自動產生。</div>
+
+<!-- DRAFT BACKDROP -->
+<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+<!-- DRAFT DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div class="drawer-title">草 稿 管 理</div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-save">
+    <div style="font-size:11px;color:var(--ink-l);margin-bottom:7px;">儲存目前所有空間設定</div>
+    <div class="d-save-row">
+      <input class="d-save-input" id="draftNameInput" placeholder="草稿名稱（預帶專案名）">
+      <button class="d-save-btn" onclick="saveDraft()">儲存</button>
+    </div>
+  </div>
+  <div class="drawer-list" id="draftList"></div>
+</div>
 </body></html>`;
 }
 
@@ -711,7 +759,7 @@ async function exportJPG(){
   if(isIOS){
     const w=window.open('','_blank');
     if(w){
-      w.document.write('<html><head><title>'+fileName+'</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><div style="text-align:center"><p style="color:#fff;font-size:13px;padding:12px;">長按圖片 → 儲存至相簿 或 分享</p><img src="'+dataUrl+'" style="max-width:100%;display:block;"></div></body></html>');
+      w.document.write('<html><head><title>'+fileName+'</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;"><p style="color:#fff;font-size:13px;padding:12px;">長按圖片 → 儲存至相簿 或 分享</p><img src="'+dataUrl+'" style="max-width:100%;display:block;"></body></html>');
       w.document.close();
     } else { showToast('請允許彈出視窗'); }
   } else {
@@ -747,6 +795,110 @@ function exportPDF(){
   }
 }
 
+// ══════════════════════════════════════════════
+// DRAFT MANAGEMENT
+// ══════════════════════════════════════════════
+function openDrawer(){
+  const proj = document.getElementById('f-project').value.trim() || '未命名';
+  document.getElementById('draftNameInput').value = proj;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('backdrop').classList.add('open');
+  renderDraftList();
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+}
+function getDrafts(){
+  try{ return JSON.parse(localStorage.getItem('spacecalc_drafts')||'[]'); }
+  catch{ return []; }
+}
+function saveDraftsLS(arr){ localStorage.setItem('spacecalc_drafts', JSON.stringify(arr)); }
+
+function getDraftState(){
+  return {
+    project: document.getElementById('f-project').value,
+    unit: unit,
+    spaces: spaces.map(sp=>({
+      id: sp.id, name: sp.name, use: sp.use, customUse: sp.customUse||'',
+      L: sp.L, W: sp.W, H: sp.H, wallU: sp.wallU, lux: sp.lux,
+      openings: sp.openings,
+      chips: [...sp.chips],
+    })),
+    activeSpId: activeSpId,
+    spCounter: spCounter,
+  };
+}
+
+function loadDraftState(s){
+  document.getElementById('f-project').value = s.project || '';
+  unit = s.unit || 'cm';
+  document.querySelectorAll('.unit-btn').forEach(b=>{
+    b.classList.toggle('active', b.textContent.trim()===unit);
+  });
+  spCounter = s.spCounter || 0;
+  spaces = (s.spaces||[]).map(sp=>({
+    ...sp,
+    chips: new Set(sp.chips||[]),
+    openingCounter: sp.openings ? sp.openings.length : 0,
+  }));
+  activeSpId = s.activeSpId || (spaces[0]&&spaces[0].id);
+  renderTabs();
+  renderEditor();
+  renderAll();
+}
+
+function saveDraft(){
+  const name = document.getElementById('draftNameInput').value.trim();
+  if(!name){ showToast('請輸入草稿名稱'); return; }
+  const drafts = getDrafts();
+  drafts.unshift({
+    id: Date.now(),
+    name,
+    savedAt: new Date().toLocaleDateString('zh-TW'),
+    state: getDraftState()
+  });
+  saveDraftsLS(drafts);
+  renderDraftList();
+  showToast('草稿「'+name+'」已儲存');
+}
+
+function loadDraft(id){
+  const d = getDrafts().find(d=>d.id===id);
+  if(!d) return;
+  loadDraftState(d.state);
+  closeDrawer();
+  showToast('已載入「'+d.name+'」');
+}
+
+function deleteDraft(id){
+  saveDraftsLS(getDrafts().filter(d=>d.id!==id));
+  renderDraftList();
+  showToast('已刪除');
+}
+
+function renderDraftList(){
+  const drafts = getDrafts();
+  const wrap = document.getElementById('draftList');
+  if(!drafts.length){
+    wrap.innerHTML = '<div class="drawer-empty">尚無草稿<br>填寫後點擊「儲存」</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  drafts.forEach(d=>{
+    const card = document.createElement('div');
+    card.className = 'draft-card';
+    card.innerHTML =
+      '<div class="draft-name">'+d.name+'</div>'+
+      '<div class="draft-meta">'+d.savedAt+'　'+((d.state.spaces||[]).length)+' 個空間</div>'+
+      '<div class="draft-acts">'+
+      '<button class="d-btn d-btn-load" onclick="loadDraft('+d.id+')">載入</button>'+
+      '<button class="d-btn d-btn-del" onclick="deleteDraft('+d.id+')">刪除</button>'+
+      '</div>';
+    wrap.appendChild(card);
+  });
+}
+
 function showToast(msg){
   let t=document.getElementById('_toast');
   if(!t){t=document.createElement('div');t.id='_toast';
@@ -757,5 +909,23 @@ function showToast(msg){
 }
 </script>
 
+
+<!-- DRAFT BACKDROP -->
+<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+<!-- DRAFT DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div class="drawer-title">草 稿 管 理</div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-save">
+    <div style="font-size:11px;color:var(--ink-l);margin-bottom:7px;">儲存目前所有空間設定</div>
+    <div class="d-save-row">
+      <input class="d-save-input" id="draftNameInput" placeholder="草稿名稱（預帶專案名）">
+      <button class="d-save-btn" onclick="saveDraft()">儲存</button>
+    </div>
+  </div>
+  <div class="drawer-list" id="draftList"></div>
+</div>
 </body>
 </html>
