@@ -443,7 +443,7 @@ function renderMembers(){
           ${ageDef.icon}
         </div>
         <div>
-          <div class="member-name">${m.name}</div>
+          <div class="member-name" id="mn-${m.id}">${m.name}</div>
           <div class="member-tag">${ageDef.label}　共 ${totalShoes} 雙</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
@@ -455,7 +455,11 @@ function renderMembers(){
         <div class="field-row2" style="margin-bottom:10px;">
           <div class="field">
             <div class="field-label">姓名</div>
-            <input type="text" value="${m.name}" oninput="members.find(x=>x.id==${m.id}).name=this.value;renderMembers();calc();">
+            <input type="text" value="${m.name}" 
+            oninput="members.find(x=>x.id==${m.id}).name=this.value;
+              document.getElementById('mn-'+${m.id}) && (document.getElementById('mn-'+${m.id}).textContent=this.value||('成員 '+${m.id}));
+              calc();"
+            onblur="renderTabs();">
           </div>
           <div class="field">
             <div class="field-label">性別</div>
@@ -587,21 +591,27 @@ function calcForward(){
   });
 
   // Find optimal width: try widths from 60 to 300cm
-  let bestW=0, bestLayers=[];
-  for(let w=60;w<=300;w+=5){
+  // Taiwan industry standard: max single cabinet 120cm, total 90~150cm
+  // Try widths in practical range: 60~150cm (single cabinet)
+  // If 150cm still not enough height, suggest 2 cabinets
+  let bestW=0, bestLayers=[], needTwoCabinets=false;
+  for(let w=60;w<=150;w+=5){
     let h=benchH+(board*2);
     const ld=zones.map(z=>{
       const repType=SHOE_TYPES.find(t=>z.ids.includes(t.id));
       const shoeW=repType?repType.w:25;
       const effectiveShoeW=Math.max(10,Math.round(shoeW/factor));
-      const pairsPerLayer=Math.floor(w/effectiveShoeW);
-      const layers=Math.ceil(z.countWithReserve/Math.max(1,pairsPerLayer));
+      const pairsPerLayer=Math.max(1,Math.floor(w/effectiveShoeW));
+      const layers=Math.ceil(z.countWithReserve/pairsPerLayer);
       h+=layers*(z.height+board);
       return {...z,shoeW,effectiveShoeW,pairsPerLayer,layers,w};
     });
-    if(h<=240){bestW=w;bestLayers=ld;break;}
+    if(h<=240&&!bestW){bestW=w;bestLayers=ld;}
   }
-  if(!bestW){bestW=120;} // fallback
+  if(!bestW){
+    // Even 150cm not enough - suggest 2 cabinets at 90cm each (total 180cm)
+    bestW=90; needTwoCabinets=true;
+  }
 
   // Recalc with bestW
   let finalH=benchH+(board*2);
@@ -620,20 +630,22 @@ function calcForward(){
   const totalCapacity=finalLayers.reduce((s,l)=>s+l.pairsPerLayer*l.layers,0);
 
   renderForwardResults({bestW,finalH,finalLayers,totalPairs,totalWithReserve,
-    reserve,doors,doorW,hasBench,benchH,board,depth,totalCapacity,placement});
+    reserve,doors,doorW,hasBench,benchH,board,depth,totalCapacity,placement,needTwoCabinets});
 }
 
 function renderForwardResults(d){
   const {bestW,finalH,finalLayers,totalPairs,totalWithReserve,
-    reserve,doors,hasBench,benchH,board,depth,totalCapacity,placement}=d;
+    reserve,doors,hasBench,benchH,board,depth,totalCapacity,placement,needTwoCabinets}=d;
 
   const heightOk=finalH<=240;
-  const infoClass=finalH>240?'red':finalH>200?'amber':'green';
-  const infoMsg=finalH>240
-    ?`⚠ 總高度 ${finalH}cm 超出標準天花板範圍，建議增加寬度或分成多組鞋櫃。`
+  const infoClass=needTwoCabinets?'red':finalH>210?'amber':'green';
+  const infoMsg=needTwoCabinets
+    ?`⚠ 鞋子數量較多，150cm 寬度裝不下。建議規劃 2 組鞋櫃（每組約 90cm），分置玄關兩側或其他空間，總寬約 180cm。`
+    :finalH>210
+    ?`⚠ 高度 ${finalH}cm 偏高，建議部分鞋款收納至其他空間，或採用到頂式設計（高度 240cm）。`
     :finalH<120
-    ?`✅ 空間充裕（${finalH}cm），可考慮加入抽屜或其他收納格。`
-    :`✅ 建議鞋櫃高度 ${finalH}cm，在合理範圍內。`;
+    ?`✅ 空間充裕（${finalH}cm），可加入抽屜或穿鞋椅提升機能。`
+    :`✅ 建議鞋櫃寬 ${bestW}cm、高 ${finalH}cm，符合台灣住宅常見玄關尺寸（單組以 120cm 以內為佳）。`;
 
   const placementLabel={'normal':'正放','diagonal':'斜放','front-back':'前後錯位'}[placement]||'正放';
 
