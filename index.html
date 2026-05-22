@@ -126,7 +126,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="contract.html">
+    <a class="module" href="contract.html" onclick="openContractPwd(event)">
       <div class="module-stripe" style="background:#b09080;"></div>
       <div class="module-body">
         <div class="module-icon">📄</div>
@@ -375,6 +375,23 @@ loadCalendar();
 loadTodosFromSheets().then(function(){renderTodos();}).catch(function(){renderTodos();});
 </script>
 
+
+<!-- CONTRACT PASSWORD MODAL -->
+<div class="pwd-backdrop" id="pwdBackdrop2">
+  <div class="pwd-box">
+    <div class="pwd-title">🔒 合 約 管 理</div>
+    <div class="pwd-sub">請輸入密碼以繼續</div>
+    <input class="pwd-input" type="password" id="pwdInput2" maxlength="4" placeholder="••••"
+      oninput="if(this.value.length===4) checkPwd2()"
+      onkeydown="if(event.key==='Enter') checkPwd2()">
+    <div class="pwd-err" id="pwdErr2"></div>
+    <div class="pwd-btns">
+      <button class="pwd-btn pwd-btn-cancel" onclick="closePwd2()">取消</button>
+      <button class="pwd-btn pwd-btn-ok" onclick="checkPwd2()">確認</button>
+    </div>
+  </div>
+</div>
+
 <!-- PASSWORD MODAL -->
 <div class="pwd-backdrop" id="pwdBackdrop">
   <div class="pwd-box">
@@ -391,6 +408,27 @@ loadTodosFromSheets().then(function(){renderTodos();}).catch(function(){renderTo
   </div>
 </div>
 <script>
+function openContractPwd(e){
+  e.preventDefault();
+  document.getElementById('pwdInput2').value='';
+  document.getElementById('pwdErr2').textContent='';
+  document.getElementById('pwdBackdrop2').classList.add('open');
+  setTimeout(()=>document.getElementById('pwdInput2').focus(),100);
+}
+function closePwd2(){
+  document.getElementById('pwdBackdrop2').classList.remove('open');
+}
+function checkPwd2(){
+  const v=document.getElementById('pwdInput2').value;
+  if(v===atob('MDAwMA==')){
+    closePwd2();
+    window.location.href='contract.html';
+  } else {
+    document.getElementById('pwdErr2').textContent='密碼錯誤，請再試一次';
+    document.getElementById('pwdInput2').value='';
+    document.getElementById('pwdInput2').focus();
+  }
+}
 function openFinance(e){
   e.preventDefault();
   document.getElementById('pwdInput').value='';
@@ -414,6 +452,9 @@ function checkPwd(){
 }
 document.getElementById('pwdBackdrop').addEventListener('click',function(e){
   if(e.target===this) closePwd();
+});
+document.getElementById('pwdBackdrop2').addEventListener('click',function(e){
+  if(e.target===this) closePwd2();
 });
 </script>
 </body>
