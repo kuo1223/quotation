@@ -226,6 +226,13 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .add-custom-item-btn{width:100%;padding:6px;border:1px dashed var(--border2);border-radius:0 0 var(--r) var(--r);background:transparent;color:var(--ink-l);font-size:11px;font-family:var(--sans);cursor:pointer;transition:all .15s;}
 .add-custom-item-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);background:var(--sage-lt);}
 
+
+.ap-del{background:none;border:none;color:var(--ink-f);cursor:pointer;font-size:15px;padding:0 2px;line-height:1;}
+.ap-del:hover{color:var(--red);}
+.group-hd-wrap{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--s3);font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:2px;border-bottom:1px solid var(--border);}
+.group-add-btn{font-size:10px;padding:2px 8px;border:1px dashed var(--border2);border-radius:10px;background:transparent;color:var(--ink-l);cursor:pointer;font-family:var(--sans);letter-spacing:0;white-space:nowrap;}
+.group-add-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);background:var(--sage-lt);}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -708,13 +715,19 @@ function renderSpace(spId){
     return;
   }
   var html='<table class="ap-table"><thead><tr>'+
-    '<th style="width:32%;">電器名稱</th>'+
+    '<th style="width:28%;">電器名稱</th>'+
     '<th class="c">電壓</th><th class="c">功率</th><th class="c">安培</th>'+
-    '<th class="c">數量</th><th class="c">已擁有</th><th class="c">計畫購買</th><th>迴路</th>'+
+    '<th class="c">數量</th><th class="c">已擁有</th><th class="c">計畫購買</th><th>迴路</th><th style="width:28px;"></th>'+
     '</tr></thead><tbody>';
   groups.forEach(function(g){
-    html+='<tr><td colspan="8" class="group-hd">▸ '+g.label+'</td></tr>';
+    html+='<tr><td colspan="9" style="padding:0;">'+
+      '<div class="group-hd-wrap">'+
+      '<span>▸ '+g.label+'</span>'+
+      '<button class="group-add-btn" onclick="addGroupItem(\''+spId+'\',\''+g.label+'\')">' +
+      '＋ 新增</button>'+
+      '</div></td></tr>';
     g.items.forEach(function(ap){
+      if(isHidden(spId,ap.id)) return;
       var s=(spState[spId]&&spState[spId][ap.id])||{owned:false,plan:false,qty:1};
       var amp=(ap.w/ap.v).toFixed(1);
       var isDed=ap.circuit==='dedicated';
@@ -732,14 +745,82 @@ function renderSpace(spId){
       html+='<td class="c"><input type="checkbox" class="chk" '+(s.owned?'checked':'')+' onchange="setOwned(\''+spId+'\',\''+ap.id+'\',this.checked)"></td>';
       html+='<td class="c"><input type="checkbox" class="chk" '+(s.plan?'checked':'')+' onchange="setPlan(\''+spId+'\',\''+ap.id+'\',this.checked)"></td>';
       html+='<td><span class="badge '+(isDed?'badge-ded':'badge-nor')+'">'+(isDed?'專用迴路':'一般插座')+'</span></td>';
+      html+='<td class="c"><button class="ap-del" onclick="hideItem(\''+spId+'\',\''+ap.id+'\')" title="刪除">×</button></td>';
       html+='</tr>';
     });
+    // Custom items for this group
+    var gCustom=(customItems[spId]||[]).filter(function(ci){return ci.groupLabel===g.label;});
+    gCustom.forEach(function(ci){
+      var amp=ci.w>0&&ci.v>0?(ci.w/ci.v).toFixed(1):'—';
+      var isDed=ci.v===220;
+      html+='<tr style="background:#fffef5;">'
+        +'<td colspan="9" style="padding:0;"><div id="gci-'+ci.id+'" style="display:flex;align-items:center;gap:5px;padding:5px 9px;">'
+        +'<input class="ci-name" type="text" placeholder="電器名稱★" value="'+ci.name+'" style="flex:2;" oninput="updateCI(\''+spId+'\',\''+ci.id+'\',\'name\',this.value)">'
+        +'<select class="ci-v" onchange="updateCI(\''+spId+'\',\''+ci.id+'\',\'v\',this.value)">'
+        +'<option value="110"'+(ci.v===110?' selected':'')+'>110V</option>'
+        +'<option value="220"'+(ci.v===220?' selected':'')+'>220V</option></select>'
+        +'<input class="ci-w" type="number" placeholder="W" value="'+(ci.w||'')+'" oninput="updateCI(\''+spId+'\',\''+ci.id+'\',\'w\',this.value)">'
+        +'<span style="font-size:11px;color:var(--ink-l);min-width:32px;">'+amp+'A</span>'
+        +'<div class="qty-wrap">'
+        +'<div class="qty-btn" onclick="updateCI(\''+spId+'\',\''+ci.id+'\',\'qty\',' +(ci.qty-1)+')">−</div>'
+        +'<span style="min-width:20px;text-align:center;font-size:11px;">×'+ci.qty+'</span>'
+        +'<div class="qty-btn" onclick="updateCI(\''+spId+'\',\''+ci.id+'\',\'qty\',' +(ci.qty+1)+')">＋</div></div>'
+        +'<input type="checkbox" class="chk" title="已擁有"'+(ci.owned?' checked':'')+' onchange="updateCI(\''+spId+'\',\''+ci.id+'\',\'owned\',this.checked)">'
+        +'<input type="checkbox" class="chk" title="計畫購買"'+(ci.plan?' checked':'')+' onchange="updateCI(\''+spId+'\',\''+ci.id+'\',\'plan\',this.checked)">'
+        +'<span class="badge '+(isDed?'badge-ded':'badge-nor')+'">'+(isDed?'專用':'一般')+'</span>'
+        +'<button class="ap-del" onclick="removeCI(\''+spId+'\',\''+ci.id+'\')" title="刪除">×</button>'
+        +'</div></td></tr>';
+    });
   });
-  html+='<tr id="custom-list-wrapper-'+spId+'"><td colspan="8" style="padding:0;"><tbody id="custom-list-'+spId+'"></tbody></td></tr>';
+  html+='<tr id="custom-list-wrapper-'+spId+'"><td colspan="9" style="padding:0;"><tbody id="custom-list-'+spId+'"></tbody></td></tr>';
   html+='</tbody></table>';
-  html+='<button class="add-custom-item-btn" onclick="addCustomItem(\''+spId+'\')">＋ 新增自填電器</button>';
+  
   wrap.innerHTML=html;
   renderCustomItems(spId);
+}
+
+// ── HIDE PRESET ITEM ──────────────────────────────────────────
+function updateCI(spId,ciId,field,val){
+  var ci=(customItems[spId]||[]).find(function(c){return c.id===ciId;});
+  if(!ci) return;
+  if(field==='name') ci.name=val;
+  else if(field==='v') ci.v=parseInt(val)||110;
+  else if(field==='w') ci.w=parseFloat(val)||0;
+  else if(field==='owned') ci.owned=val;
+  else if(field==='plan') ci.plan=val;
+  else if(field==='qty') ci.qty=Math.max(1,parseInt(val)||1);
+  renderResults(); renderTabs();
+}
+function removeCI(spId,ciId){
+  if(customItems[spId]) customItems[spId]=customItems[spId].filter(function(c){return c.id!==ciId;});
+  renderSpace(spId); renderResults(); renderTabs();
+}
+
+function hideItem(spId, apId){
+  if(!hiddenItems[spId]) hiddenItems[spId]=new Set();
+  hiddenItems[spId].add(apId);
+  if(spState[spId]&&spState[spId][apId]){
+    spState[spId][apId].owned=false;
+    spState[spId][apId].plan=false;
+  }
+  renderSpace(spId); renderResults(); renderTabs();
+}
+function isHidden(spId,apId){
+  return hiddenItems[spId]&&hiddenItems[spId].has(apId);
+}
+
+// ── ADD ITEM IN GROUP ─────────────────────────────────────────
+function addGroupItem(spId, groupLabel){
+  customCounter++;
+  if(!customItems[spId]) customItems[spId]=[];
+  customItems[spId].push({id:'ci'+customCounter,name:'',v:110,w:0,
+    owned:false,plan:false,qty:1,groupLabel:groupLabel});
+  renderSpace(spId);
+  // Focus the new name input
+  setTimeout(function(){
+    var inputs=document.querySelectorAll('.ci-name');
+    if(inputs.length) inputs[inputs.length-1].focus();
+  },50);
 }
 
 function setOwned(spId,apId,val){
@@ -774,8 +855,9 @@ function updateRow(spId,apId){
 // CUSTOM ITEMS PER SPACE
 // ══════════════════════════════════════════════
 // customItems[spaceId] = [{id, name, v, w, owned, plan, qty}]
-const customItems = {};
+const customItems = {};  // spId -> [{id,name,v,w,owned,plan,qty,groupLabel}]
 let customCounter = 0;
+const hiddenItems = {};  // spId -> Set of hidden preset ap IDs
 
 function getCustomItems(spId){
   if(!customItems[spId]) customItems[spId] = [];
@@ -896,7 +978,7 @@ function renderCustomItems(spId){
 
     div.append(nameIn, vSel, wIn, ampSpan, qtyWrap, ownedChk, planChk, badge, delBtn);
     const td = document.createElement('td');
-    td.colSpan = 8;
+    td.colSpan = 9;
     td.style.padding = '0';
     td.appendChild(div);
     tr.appendChild(td);
