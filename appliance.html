@@ -233,6 +233,24 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .group-add-btn{font-size:10px;padding:2px 8px;border:1px dashed var(--border2);border-radius:10px;background:transparent;color:var(--ink-l);cursor:pointer;font-family:var(--sans);letter-spacing:0;white-space:nowrap;}
 .group-add-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);background:var(--sage-lt);}
 
+
+/* ADD ITEM MODAL */
+.add-modal-bd{display:none;position:fixed;inset:0;background:rgba(43,41,38,.5);z-index:400;align-items:center;justify-content:center;}
+.add-modal-bd.open{display:flex;}
+.add-modal{background:#fff;border-radius:14px;padding:24px 26px;width:360px;box-shadow:0 12px 48px rgba(0,0,0,.18);}
+.add-modal-title{font-family:'Noto Serif TC',serif;font-size:15px;letter-spacing:2px;color:#2b2926;margin-bottom:16px;}
+.add-modal-field{margin-bottom:12px;}
+.add-modal-label{font-size:10px;color:#8a8780;letter-spacing:.8px;margin-bottom:4px;}
+.add-modal-input{width:100%;border:1px solid #d4d1c9;border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Noto Sans TC',sans-serif;color:#2b2926;outline:none;}
+.add-modal-input:focus{border-color:#6e7a6a;}
+.add-modal-row{display:flex;gap:8px;}
+.add-modal-btns{display:flex;gap:8px;margin-top:16px;}
+.add-modal-btn{flex:1;padding:9px;border-radius:8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:none;}
+.add-modal-cancel{background:#f0efe9;color:#4a4742;}
+.add-modal-cancel:hover{background:#e2e0da;}
+.add-modal-ok{background:#6e7a6a;color:#fff;}
+.add-modal-ok:hover{background:#5a6a58;}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -748,28 +766,26 @@ function renderSpace(spId){
       html+='<td class="c"><button class="ap-del" onclick="hideItem(\''+spId+'\',\''+ap.id+'\')" title="刪除">×</button></td>';
       html+='</tr>';
     });
-    // Custom items for this group
+    // Custom items for this group - render as normal rows
     var gCustom=(customItems[spId]||[]).filter(function(ci){return ci.groupLabel===g.label;});
     gCustom.forEach(function(ci){
       var amp=ci.w>0&&ci.v>0?(ci.w/ci.v).toFixed(1):'—';
       var isDed=ci.v===220;
-      html+='<tr style="background:#fffef5;">'
-        +'<td colspan="9" style="padding:0;"><div id="gci-'+ci.id+'" style="display:flex;align-items:center;gap:5px;padding:5px 9px;">'
-        +'<input class="ci-name" type="text" placeholder="電器名稱★" value="'+ci.name+'" style="flex:2;" oninput="updateCI(\''+spId+'\',\''+ci.id+'\',\'name\',this.value)">'
-        +'<select class="ci-v" onchange="updateCI(\''+spId+'\',\''+ci.id+'\',\'v\',this.value)">'
-        +'<option value="110"'+(ci.v===110?' selected':'')+'>110V</option>'
-        +'<option value="220"'+(ci.v===220?' selected':'')+'>220V</option></select>'
-        +'<input class="ci-w" type="number" placeholder="W" value="'+(ci.w||'')+'" oninput="updateCI(\''+spId+'\',\''+ci.id+'\',\'w\',this.value)">'
-        +'<span style="font-size:11px;color:var(--ink-l);min-width:32px;">'+amp+'A</span>'
-        +'<div class="qty-wrap">'
-        +'<div class="qty-btn" onclick="updateCI(\''+spId+'\',\''+ci.id+'\',\'qty\',' +(ci.qty-1)+')">−</div>'
-        +'<span style="min-width:20px;text-align:center;font-size:11px;">×'+ci.qty+'</span>'
-        +'<div class="qty-btn" onclick="updateCI(\''+spId+'\',\''+ci.id+'\',\'qty\',' +(ci.qty+1)+')">＋</div></div>'
-        +'<input type="checkbox" class="chk" title="已擁有"'+(ci.owned?' checked':'')+' onchange="updateCI(\''+spId+'\',\''+ci.id+'\',\'owned\',this.checked)">'
-        +'<input type="checkbox" class="chk" title="計畫購買"'+(ci.plan?' checked':'')+' onchange="updateCI(\''+spId+'\',\''+ci.id+'\',\'plan\',this.checked)">'
-        +'<span class="badge '+(isDed?'badge-ded':'badge-nor')+'">'+(isDed?'專用':'一般')+'</span>'
-        +'<button class="ap-del" onclick="removeCI(\''+spId+'\',\''+ci.id+'\')" title="刪除">×</button>'
-        +'</div></td></tr>';
+      html+='<tr style="background:#fffef5;">';
+      html+='<td><div class="ap-name">★ '+ci.name+'</div></td>';
+      html+='<td class="c"><span class="'+(isDed?'v220':'v110')+'">'+ci.v+'V</span></td>';
+      html+='<td class="c">'+ci.w+'W</td>';
+      html+='<td class="c">'+amp+'A</td>';
+      html+='<td class="c"><div class="qty-wrap">'
+        +'<div class="qty-btn" onclick="adjCI(\''+spId+'\',\''+ci.id+'\',-1)">−</div>'
+        +'<span class="qty-num">×'+ci.qty+'</span>'
+        +'<div class="qty-btn" onclick="adjCI(\''+spId+'\',\''+ci.id+'\',1)">＋</div>'
+        +'</div></td>';
+      html+='<td class="c"><input type="checkbox" class="chk"'+(ci.owned?' checked':'')+' onchange="setCIOwned(\''+spId+'\',\''+ci.id+'\',this.checked)"></td>';
+      html+='<td class="c"><input type="checkbox" class="chk"'+(ci.plan?' checked':'')+' onchange="setCIPlan(\''+spId+'\',\''+ci.id+'\',this.checked)"></td>';
+      html+='<td><span class="badge '+(isDed?'badge-ded':'badge-nor')+'">'+(isDed?'專用迴路':'一般插座')+'</span></td>';
+      html+='<td class="c"><button class="ap-del" onclick="removeCI(\''+spId+'\',\''+ci.id+'\')" title="刪除">×</button></td>';
+      html+='</tr>';
     });
   });
   html+='<tr id="custom-list-wrapper-'+spId+'"><td colspan="9" style="padding:0;"><tbody id="custom-list-'+spId+'"></tbody></td></tr>';
@@ -780,6 +796,21 @@ function renderSpace(spId){
 }
 
 // ── HIDE PRESET ITEM ──────────────────────────────────────────
+function adjCI(spId,ciId,delta){
+  var ci=(customItems[spId]||[]).find(function(c){return c.id===ciId;});
+  if(!ci) return;
+  ci.qty=Math.max(1,(ci.qty||1)+delta);
+  renderSpace(spId); renderResults();
+}
+function setCIOwned(spId,ciId,val){
+  var ci=(customItems[spId]||[]).find(function(c){return c.id===ciId;});
+  if(ci){ci.owned=val;} renderResults(); renderTabs();
+}
+function setCIPlan(spId,ciId,val){
+  var ci=(customItems[spId]||[]).find(function(c){return c.id===ciId;});
+  if(ci){ci.plan=val;} renderResults(); renderTabs();
+}
+
 function updateCI(spId,ciId,field,val){
   var ci=(customItems[spId]||[]).find(function(c){return c.id===ciId;});
   if(!ci) return;
@@ -809,18 +840,34 @@ function isHidden(spId,apId){
   return hiddenItems[spId]&&hiddenItems[spId].has(apId);
 }
 
-// ── ADD ITEM IN GROUP ─────────────────────────────────────────
+// ── ADD ITEM IN GROUP (modal) ─────────────────────────────────
+var _addSpId='', _addGroupLabel='';
 function addGroupItem(spId, groupLabel){
+  _addSpId=spId; _addGroupLabel=groupLabel;
+  document.getElementById('addModalTitle').textContent='新 增 電 器 ─ '+groupLabel;
+  document.getElementById('ami-name').value='';
+  document.getElementById('ami-v').value='110';
+  document.getElementById('ami-w').value='';
+  document.getElementById('ami-amp').textContent='— A';
+  document.getElementById('addItemModal').classList.add('open');
+  setTimeout(function(){document.getElementById('ami-name').focus();},100);
+}
+function closeAddModal(){
+  document.getElementById('addItemModal').classList.remove('open');
+}
+function confirmAddItem(){
+  var name=document.getElementById('ami-name').value.trim();
+  if(!name){document.getElementById('ami-name').focus();return;}
+  var v=parseInt(document.getElementById('ami-v').value)||110;
+  var w=parseFloat(document.getElementById('ami-w').value)||0;
   customCounter++;
-  if(!customItems[spId]) customItems[spId]=[];
-  customItems[spId].push({id:'ci'+customCounter,name:'',v:110,w:0,
-    owned:false,plan:false,qty:1,groupLabel:groupLabel});
-  renderSpace(spId);
-  // Focus the new name input
-  setTimeout(function(){
-    var inputs=document.querySelectorAll('.ci-name');
-    if(inputs.length) inputs[inputs.length-1].focus();
-  },50);
+  if(!customItems[_addSpId]) customItems[_addSpId]=[];
+  customItems[_addSpId].push({id:'ci'+customCounter,name:name,v:v,w:w,
+    owned:false,plan:false,qty:1,groupLabel:_addGroupLabel});
+  closeAddModal();
+  renderSpace(_addSpId);
+  renderResults();
+  renderTabs();
 }
 
 function setOwned(spId,apId,val){
@@ -1429,6 +1476,7 @@ function doInit(){
   var modal = document.getElementById('reportModal');
   if(modal) modal.addEventListener('click', function(e){ if(e.target===this) closeModal(); });
   updateSendBtn();
+  initAmiModal();
 }
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', doInit);
@@ -1436,6 +1484,25 @@ if(document.readyState === 'loading'){
   doInit();
 }
 
+
+var _amiInited=false;
+function initAmiModal(){
+  if(_amiInited) return; _amiInited=true;
+  var wInput=document.getElementById('ami-w');
+  var vSelect=document.getElementById('ami-v');
+  function updateAmp(){
+    var w=parseFloat(wInput.value)||0;
+    var v=parseInt(vSelect.value)||110;
+    document.getElementById('ami-amp').textContent=w>0?(w/v).toFixed(1)+' A':'— A';
+  }
+  if(wInput){wInput.addEventListener('input',updateAmp);vSelect.addEventListener('change',updateAmp);}
+  var modal=document.getElementById('addItemModal');
+  if(modal) modal.addEventListener('click',function(e){if(e.target===this)closeAddModal();});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&document.getElementById('addItemModal').classList.contains('open')) confirmAddItem();
+    if(e.key==='Escape'&&document.getElementById('addItemModal').classList.contains('open')) closeAddModal();
+  });
+}
 </script>
 
 <!-- REPORT MODAL -->
@@ -1452,6 +1519,72 @@ if(document.readyState === 'loading'){
     </div>
     <div class="modal-body" id="reportBody"></div>
   </div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="add-modal-bd" id="addItemModal">
+  <div class="add-modal">
+    <div class="add-modal-title" id="addModalTitle">新 增 電 器</div>
+    <div class="add-modal-field">
+      <div class="add-modal-label">電器名稱 *</div>
+      <input class="add-modal-input" id="ami-name" placeholder="例：電動捲簾、UV殺菌燈">
+    </div>
+    <div class="add-modal-row">
+      <div class="add-modal-field" style="flex:1;">
+        <div class="add-modal-label">電壓</div>
+        <select class="add-modal-input" id="ami-v">
+          <option value="110">110V</option>
+          <option value="220">220V</option>
+        </select>
+      </div>
+      <div class="add-modal-field" style="flex:1;">
+        <div class="add-modal-label">功率（W）</div>
+        <input class="add-modal-input" type="number" id="ami-w" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="add-modal-field">
+      <div class="add-modal-label">安培（自動換算）</div>
+      <div id="ami-amp" style="font-size:13px;color:#6e7a6a;padding:4px 0;">— A</div>
+    </div>
+    <div class="add-modal-btns">
+      <button class="add-modal-btn add-modal-cancel" onclick="closeAddModal()">取消</button>
+      <button class="add-modal-btn add-modal-ok" onclick="confirmAddItem()">✓ 確認新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="add-modal-bd" id="addItemModal">
+  <div class="add-modal">
+    <div class="add-modal-title" id="addModalTitle">新 增 電 器</div>
+    <div class="add-modal-field">
+      <div class="add-modal-label">電器名稱 *</div>
+      <input class="add-modal-input" id="ami-name" placeholder="例：電動捲簾、UV殺菌燈">
+    </div>
+    <div class="add-modal-row">
+      <div class="add-modal-field" style="flex:1;">
+        <div class="add-modal-label">電壓</div>
+        <select class="add-modal-input" id="ami-v">
+          <option value="110">110V</option>
+          <option value="220">220V</option>
+        </select>
+      </div>
+      <div class="add-modal-field" style="flex:1;">
+        <div class="add-modal-label">功率（W）</div>
+        <input class="add-modal-input" type="number" id="ami-w" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="add-modal-field">
+      <div class="add-modal-label">安培（自動換算）</div>
+      <div id="ami-amp" style="font-size:13px;color:#6e7a6a;padding:4px 0;">— A</div>
+    </div>
+    <div class="add-modal-btns">
+      <button class="add-modal-btn add-modal-cancel" onclick="closeAddModal()">取消</button>
+      <button class="add-modal-btn add-modal-ok" onclick="confirmAddItem()">✓ 確認新增</button>
+    </div>
+  </div>
+</div>
+
 </div>
 </body>
 </html>
