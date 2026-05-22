@@ -621,6 +621,156 @@ function initSpState(spId, dbKey){
 
 
 // ══════════════════════════════════════════════
+// TAB & SPACE RENDERING
+// ══════════════════════════════════════════════
+function renderTabs(){
+  var bar=document.getElementById('tabBar');
+  if(!bar) return;
+  bar.innerHTML='';
+  spaces.forEach(function(sp){
+    var cnt=countSel(sp.id,sp.dbKey);
+    var btn=document.createElement('div');
+    btn.className='sp-tab'+(sp.id===activeSpId?' active':'');
+    btn.innerHTML=sp.label+(cnt>0?'<span class="cnt">'+cnt+'</span>':'')+
+      (!sp.fixed?'<span class="del-tab" onclick="event.stopPropagation();removeSpace(\''+sp.id+'\')">×</span>':'');
+    btn.onclick=function(){ switchSpace(sp.id); };
+    bar.appendChild(btn);
+  });
+  // Add buttons
+  var sep=document.createElement('div');sep.className='tab-sep';bar.appendChild(sep);
+  var addGroup=document.createElement('div');addGroup.className='tab-add-group';
+  ADDABLE.forEach(function(a){
+    var btn=document.createElement('button');
+    btn.className='add-tab-btn';
+    btn.textContent='＋ '+a.label;
+    btn.onclick=function(){ addSpace(a.type); };
+    addGroup.appendChild(btn);
+  });
+  bar.appendChild(addGroup);
+}
+
+function countSel(spId,dbKey){
+  if(!spState[spId]) return 0;
+  var groups=AP_DB[dbKey]||[];
+  var n=0;
+  groups.forEach(function(g){ g.items.forEach(function(ap){
+    var s=spState[spId][ap.id];
+    if(s&&(s.owned||s.plan)) n++;
+  }); });
+  n+=(customItems[spId]||[]).filter(function(c){return c.owned||c.plan;}).length;
+  return n;
+}
+
+function switchSpace(id){
+  activeSpId=id;
+  renderTabs();
+  renderSpace(id);
+}
+
+function addSpace(type){
+  spCounter++;
+  var def=ADDABLE.find(function(a){return a.type===type;});
+  if(!def) return;
+  var existing=spaces.filter(function(s){return s.type===type;}).length;
+  var num=existing+2;
+  var label=def.custom?def.prefix+' '+num:def.prefix+(existing>0?' '+num:'');
+  var newSp={id:'sp'+spCounter,label:label,dbKey:def.dbKey,type:type,fixed:false,custom:def.custom||false};
+  spaces.push(newSp);
+  initSpState(newSp.id,newSp.dbKey);
+  activeSpId=newSp.id;
+  renderTabs();
+  renderSpace(newSp.id);
+  renderResults();
+}
+
+function removeSpace(id){
+  spaces=spaces.filter(function(s){return s.id!==id;});
+  if(activeSpId===id) activeSpId=spaces[spaces.length-1].id;
+  renderTabs();
+  renderSpace(activeSpId);
+  renderResults();
+}
+
+function renderSpace(spId){
+  var sp=spaces.find(function(s){return s.id===spId;});
+  if(!sp) return;
+  var customBar=document.getElementById('customNameBar');
+  if(customBar) customBar.style.display=sp.custom?'flex':'none';
+  if(sp.custom){
+    var inp=document.getElementById('customNameInput');
+    if(inp) inp.value=sp.label;
+  }
+  var groups=AP_DB[sp.dbKey]||[];
+  var wrap=document.getElementById('apContent');
+  if(!wrap) return;
+  if(!groups.length){
+    wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--ink-f);font-size:12px;">此空間無預設電器清單</div>';
+    return;
+  }
+  var html='<table class="ap-table"><thead><tr>'+
+    '<th style="width:32%;">電器名稱</th>'+
+    '<th class="c">電壓</th><th class="c">功率</th><th class="c">安培</th>'+
+    '<th class="c">數量</th><th class="c">已擁有</th><th class="c">計畫購買</th><th>迴路</th>'+
+    '</tr></thead><tbody>';
+  groups.forEach(function(g){
+    html+='<tr><td colspan="8" class="group-hd">▸ '+g.label+'</td></tr>';
+    g.items.forEach(function(ap){
+      var s=(spState[spId]&&spState[spId][ap.id])||{owned:false,plan:false,qty:1};
+      var amp=(ap.w/ap.v).toFixed(1);
+      var isDed=ap.circuit==='dedicated';
+      var rowCls=s.owned&&s.plan?'both':s.owned?'owned':s.plan?'plan':'';
+      html+='<tr class="'+rowCls+'" id="row-'+spId+'-'+ap.id+'">';
+      html+='<td><div class="ap-name">'+ap.name+'</div>'+(ap.spec?'<div class="ap-spec">'+ap.spec+'</div>':'')+'</td>';
+      html+='<td class="c"><span class="'+(ap.v===220?'v220':'v110')+'">'+ap.v+'V</span></td>';
+      html+='<td class="c">'+ap.w+'W</td>';
+      html+='<td class="c">'+amp+'A</td>';
+      html+='<td class="c"><div class="qty-wrap">'+
+        '<div class="qty-btn" onclick="adjQty(\''+spId+'\',\''+ap.id+'\',-1)">−</div>'+
+        '<span class="qty-num" id="qn-'+spId+'-'+ap.id+'">'+s.qty+'</span>'+
+        '<div class="qty-btn" onclick="adjQty(\''+spId+'\',\''+ap.id+'\',1)">＋</div>'+
+        '</div></td>';
+      html+='<td class="c"><input type="checkbox" class="chk" '+(s.owned?'checked':'')+' onchange="setOwned(\''+spId+'\',\''+ap.id+'\',this.checked)"></td>';
+      html+='<td class="c"><input type="checkbox" class="chk" '+(s.plan?'checked':'')+' onchange="setPlan(\''+spId+'\',\''+ap.id+'\',this.checked)"></td>';
+      html+='<td><span class="badge '+(isDed?'badge-ded':'badge-nor')+'">'+(isDed?'專用迴路':'一般插座')+'</span></td>';
+      html+='</tr>';
+    });
+  });
+  html+='<tr id="custom-list-wrapper-'+spId+'"><td colspan="8" style="padding:0;"><tbody id="custom-list-'+spId+'"></tbody></td></tr>';
+  html+='</tbody></table>';
+  html+='<button class="add-custom-item-btn" onclick="addCustomItem(\''+spId+'\')">＋ 新增自填電器</button>';
+  wrap.innerHTML=html;
+  renderCustomItems(spId);
+}
+
+function setOwned(spId,apId,val){
+  if(!spState[spId]) spState[spId]={};
+  if(!spState[spId][apId]) spState[spId][apId]={owned:false,plan:false,qty:1};
+  spState[spId][apId].owned=val;
+  updateRow(spId,apId);renderTabs();renderResults();
+}
+function setPlan(spId,apId,val){
+  if(!spState[spId]) spState[spId]={};
+  if(!spState[spId][apId]) spState[spId][apId]={owned:false,plan:false,qty:1};
+  spState[spId][apId].plan=val;
+  updateRow(spId,apId);renderTabs();renderResults();
+}
+function adjQty(spId,apId,delta){
+  if(!spState[spId]||!spState[spId][apId]) return;
+  var s=spState[spId][apId];
+  if(!s.owned&&!s.plan) return;
+  s.qty=Math.max(1,Math.min(20,s.qty+delta));
+  var el=document.getElementById('qn-'+spId+'-'+apId);
+  if(el) el.textContent=s.qty;
+  renderResults();
+}
+function updateRow(spId,apId){
+  var s=(spState[spId]&&spState[spId][apId])||{owned:false,plan:false};
+  var row=document.getElementById('row-'+spId+'-'+apId);
+  if(!row) return;
+  row.className=s.owned&&s.plan?'both':s.owned?'owned':s.plan?'plan':'';
+}
+
+// ══════════════════════════════════════════════
 // CUSTOM ITEMS PER SPACE
 // ══════════════════════════════════════════════
 // customItems[spaceId] = [{id, name, v, w, owned, plan, qty}]
@@ -1189,11 +1339,20 @@ async function downloadPDF(){
 }
 
 
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('reportModal').addEventListener('click',function(e){
-    if(e.target===this) closeModal();
-  });
-});
+function doInit(){
+  spaces.forEach(function(sp){ initSpState(sp.id, sp.dbKey); });
+  renderTabs();
+  renderSpace(activeSpId);
+  renderResults();
+  var modal = document.getElementById('reportModal');
+  if(modal) modal.addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+  updateSendBtn();
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', doInit);
+} else {
+  doInit();
+}
 
 </script>
 
