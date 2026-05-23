@@ -194,7 +194,34 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
     </a>
   </div>
 </div>
-<footer>得森室內裝修設計有限公司 · ERIC KUO SPACE DESIGN · 高雄市苓雅區</footer>
+<footer>
+  得森室內裝修設計有限公司 · ERIC KUO SPACE DESIGN · 高雄市苓雅區
+  <br>
+  <span style="margin-top:8px;display:inline-flex;align-items:center;gap:10px;">
+    <span style="color:var(--ink-l);">🔧 實用工具分享：</span>
+    <a id="tools-link" href="tools.html" target="_blank" style="color:var(--sage-dk);text-decoration:none;letter-spacing:1px;">kuo1223.github.io/quotation/tools.html</a>
+    <button onclick="copyToolsLink()" style="background:var(--sage-pa);border:none;border-radius:6px;padding:3px 10px;font-size:10px;color:var(--sage-dk);cursor:pointer;letter-spacing:1px;">📋 複製連結</button>
+  </span>
+</footer>
+<script>
+function copyToolsLink(){
+  var url='https://kuo1223.github.io/quotation/tools.html';
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(function(){
+      var btn=document.querySelector('footer button');
+      btn.textContent='✓ 已複製';
+      setTimeout(function(){btn.textContent='📋 複製連結';},2000);
+    });
+  } else {
+    var ta=document.createElement('textarea');
+    ta.value=url;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    var btn=document.querySelector('footer button');
+    btn.textContent='✓ 已複製';
+    setTimeout(function(){btn.textContent='📋 複製連結';},2000);
+  }
+}
+</script>
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw6H86-UzVOhptUuE6z3uBy96vzqpV93cXpTsvt5KgOYwbhqdE5J9jmOIMf6cAAyB5U/exec';
 const WEEKDAYS=['日','一','二','三','四','五','六'];
