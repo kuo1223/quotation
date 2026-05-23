@@ -68,29 +68,13 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
 @media(max-width:480px){.modules{grid-template-columns:1fr;}}
 
 .tools-row{margin-top:14px;}
-.tools-label{font-size:10px;color:var(--ink-f);letter-spacing:3px;margin-bottom:8px;padding-left:2px;}
-.tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.tool-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--r);padding:20px 14px;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:all .2s;text-align:center;aspect-ratio:1/1;}
+.tools-label{font-size:12px;color:var(--ink-f);letter-spacing:3px;margin-bottom:12px;padding-left:2px;}
+.tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.tool-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--r);padding:24px 16px;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:all .2s;text-align:center;aspect-ratio:1/1;}
 .tool-card:hover{border-color:var(--sage-dk);box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px);}
 .tool-card-icon{font-size:40px;line-height:1;}
-.tool-card-name{font-family:var(--serif);font-size:16px;color:var(--ink-m);letter-spacing:1px;line-height:1.6;}
-.tool-card-tag{font-size:12px;letter-spacing:1px;padding:4px 12px;border-radius:20px;background:var(--sage-pa);color:var(--sage-dk);}
-
-/* PASSWORD MODAL */
-.pwd-backdrop{display:none;position:fixed;inset:0;background:rgba(43,41,38,.55);z-index:500;align-items:center;justify-content:center;}
-.pwd-backdrop.open{display:flex;}
-.pwd-box{background:#fff;border-radius:14px;padding:28px 32px;width:320px;box-shadow:0 12px 48px rgba(0,0,0,.18);text-align:center;}
-.pwd-title{font-family:'Noto Serif TC',serif;font-size:16px;letter-spacing:2px;color:#2b2926;margin-bottom:6px;}
-.pwd-sub{font-size:11px;color:#8a8780;margin-bottom:18px;}
-.pwd-input{width:100%;border:1px solid #d4d1c9;border-radius:8px;padding:10px 14px;font-size:18px;text-align:center;letter-spacing:8px;font-family:monospace;color:#2b2926;outline:none;margin-bottom:8px;}
-.pwd-input:focus{border-color:#6e7a6a;}
-.pwd-err{font-size:11px;color:#c0392b;min-height:16px;margin-bottom:10px;}
-.pwd-btns{display:flex;gap:8px;}
-.pwd-btn{flex:1;padding:9px;border-radius:8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:none;}
-.pwd-btn-cancel{background:#f0efe9;color:#4a4742;}
-.pwd-btn-cancel:hover{background:#e2e0da;}
-.pwd-btn-ok{background:#6e7a6a;color:#fff;}
-.pwd-btn-ok:hover{background:#5a6a58;}
+.tool-card-name{font-family:var(--serif);font-size:15px;color:var(--ink-m);letter-spacing:1px;line-height:1.6;}
+.tool-card-tag{font-size:11px;letter-spacing:1px;padding:4px 12px;border-radius:20px;background:var(--sage-pa);color:var(--sage-dk);}
 </style>
 </head>
 <body>
@@ -108,7 +92,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
 </div>
 <div class="main-grid">
   <div class="modules">
-    <a class="module" href="quotation.html" onclick="openPwd(event,'quotation.html','報 價 系 統')">
+    <a class="module" href="quotation.html">
       <div class="module-stripe" style="background:#8a9082;"></div>
       <div class="module-body">
         <div class="module-icon">📋</div>
@@ -117,7 +101,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="project-manager.html" onclick="openPwd(event,'project-manager.html','工程進度管理')">
+    <a class="module" href="project-manager.html">
       <div class="module-stripe" style="background:#5c7a6e;"></div>
       <div class="module-body">
         <div class="module-icon">🏗️</div>
@@ -126,7 +110,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="contract.html" onclick="openPwd(event,'contract.html','合 約 管 理')">
+    <a class="module" href="contract.html">
       <div class="module-stripe" style="background:#b09080;"></div>
       <div class="module-body">
         <div class="module-icon">📄</div>
@@ -135,7 +119,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <a class="module" href="finance.html" onclick="openPwd(event,'finance.html','財 務 報 表')">
+    <a class="module" href="finance.html">
       <div class="module-stripe" style="background:#6e7a8a;"></div>
       <div class="module-body">
         <div class="module-icon">📊</div>
@@ -144,46 +128,6 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <span class="module-tag">使用中</span>
       </div>
     </a>
-    <div class="tools-row">
-      <div class="tools-label">小 工 具</div>
-      <div class="tools-grid">
-        <a class="tool-card" href="notice.html">
-          <div class="tool-card-icon">📢</div>
-          <div class="tool-card-name">施工公告<br>產生器</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-        <a class="tool-card" href="space-calc.html">
-          <div class="tool-card-icon">📐</div>
-          <div class="tool-card-name">空間條件<br>換算器</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-        <a class="tool-card" href="shoe-cabinet.html">
-          <div class="tool-card-icon">👟</div>
-          <div class="tool-card-name">鞋櫃容量<br>轉換器</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-        <a class="tool-card" href="lighting.html">
-          <div class="tool-card-icon">💡</div>
-          <div class="tool-card-name">燈光照度<br>配置助理</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-        <a class="tool-card" href="appliance.html">
-          <div class="tool-card-icon">⚡</div>
-          <div class="tool-card-name">電器負載<br>配置工具</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-        <a class="tool-card" href="appliance-pro.html">
-          <div class="tool-card-icon">🔌</div>
-          <div class="tool-card-name">電器負載<br>設計師版</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-        <a class="tool-card" href="law-check.html">
-          <div class="tool-card-icon">⚖️</div>
-          <div class="tool-card-name">裝修法規<br>速查平台</div>
-          <span class="tool-card-tag">使用中</span>
-        </a>
-      </div>
-    </div>
   </div>
   <div class="sidebar">
     <!-- 今日/明日工程進度 -->
@@ -208,6 +152,46 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
       </div>
       <div id="todo-list"></div>
     </div>
+  </div>
+</div>
+<div class="tools-row" style="max-width:1100px;margin:20px auto 0;padding:0 24px 48px;">
+  <div class="tools-label">小 工 具</div>
+  <div class="tools-grid">
+    <a class="tool-card" href="notice.html">
+      <div class="tool-card-icon">📢</div>
+      <div class="tool-card-name">施工公告<br>產生器</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
+    <a class="tool-card" href="space-calc.html">
+      <div class="tool-card-icon">📐</div>
+      <div class="tool-card-name">空間條件<br>換算器</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
+    <a class="tool-card" href="shoe-cabinet.html">
+      <div class="tool-card-icon">👟</div>
+      <div class="tool-card-name">鞋櫃容量<br>轉換器</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
+    <a class="tool-card" href="lighting.html">
+      <div class="tool-card-icon">💡</div>
+      <div class="tool-card-name">燈光照度<br>配置助理</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
+    <a class="tool-card" href="appliance.html">
+      <div class="tool-card-icon">⚡</div>
+      <div class="tool-card-name">電器負載<br>配置工具</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
+    <a class="tool-card" href="appliance-pro.html">
+      <div class="tool-card-icon">🔌</div>
+      <div class="tool-card-name">電器負載<br>設計師版</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
+    <a class="tool-card" href="law-check.html">
+      <div class="tool-card-icon">⚖️</div>
+      <div class="tool-card-name">裝修法規<br>速查平台</div>
+      <span class="tool-card-tag">使用中</span>
+    </a>
   </div>
 </div>
 <footer>得森室內裝修設計有限公司 · ERIC KUO SPACE DESIGN · 高雄市苓雅區</footer>
@@ -383,53 +367,6 @@ function deleteTodo(i){var todos=getTodos();todos.splice(i,1);saveTodos(todos);r
 renderSiteOverview();
 loadCalendar();
 loadTodosFromSheets().then(function(){renderTodos();}).catch(function(){renderTodos();});
-</script>
-
-
-
-<!-- PASSWORD MODAL -->
-<div class="pwd-backdrop" id="pwdBackdrop">
-  <div class="pwd-box">
-    <div class="pwd-title" id="pwdModalTitle">🔒</div>
-    <div class="pwd-sub">請輸入密碼以繼續</div>
-    <input class="pwd-input" type="password" id="pwdInput" maxlength="4" placeholder="••••"
-      oninput="if(this.value.length===4) checkPwd()"
-      onkeydown="if(event.key==='Enter') checkPwd()">
-    <div class="pwd-err" id="pwdErr"></div>
-    <div class="pwd-btns">
-      <button class="pwd-btn pwd-btn-cancel" onclick="closePwd()">取消</button>
-      <button class="pwd-btn pwd-btn-ok" onclick="checkPwd()">確認</button>
-    </div>
-  </div>
-</div>
-<script>
-let _pwdTarget='';
-function openPwd(e,url,title){
-  e.preventDefault();
-  _pwdTarget=url;
-  document.getElementById('pwdModalTitle').textContent='🔒 '+title;
-  document.getElementById('pwdInput').value='';
-  document.getElementById('pwdErr').textContent='';
-  document.getElementById('pwdBackdrop').classList.add('open');
-  setTimeout(()=>document.getElementById('pwdInput').focus(),100);
-}
-function closePwd(){
-  document.getElementById('pwdBackdrop').classList.remove('open');
-}
-function checkPwd(){
-  const v=document.getElementById('pwdInput').value;
-  if(v===atob('MDAwMA==')){
-    closePwd();
-    window.location.href=_pwdTarget;
-  } else {
-    document.getElementById('pwdErr').textContent='密碼錯誤，請再試一次';
-    document.getElementById('pwdInput').value='';
-    document.getElementById('pwdInput').focus();
-  }
-}
-document.getElementById('pwdBackdrop').addEventListener('click',function(e){
-  if(e.target===this) closePwd();
-});
 </script>
 </body>
 </html>
