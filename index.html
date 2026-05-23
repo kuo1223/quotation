@@ -154,6 +154,19 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
     </div>
   </div>
 </div>
+<div style="max-width:1100px;margin:16px auto 0;padding:0 24px 12px;">
+  <div style="background:var(--paper-c);border:1px solid var(--border-l);border-radius:10px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;">🔧</span>
+      <span style="font-family:var(--serif);font-size:12px;color:var(--ink-m);letter-spacing:1px;">實用工具分享</span>
+      <span style="font-size:11px;color:var(--ink-l);">— 免費開放同業與屋主使用</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="tools.html" target="_blank" style="font-size:11px;color:var(--sage-dk);text-decoration:none;letter-spacing:.5px;">kuo1223.github.io/quotation/tools.html</a>
+      <button onclick="copyToolsLink()" style="background:var(--sage-pa);border:none;border-radius:6px;padding:4px 12px;font-size:11px;color:var(--sage-dk);cursor:pointer;letter-spacing:.5px;white-space:nowrap;">📋 複製連結</button>
+    </div>
+  </div>
+</div>
 <div class="tools-row" style="max-width:1100px;margin:20px auto 0;padding:0 24px 48px;">
   <div class="tools-label">小 工 具</div>
   <div class="tools-grid">
@@ -194,15 +207,7 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
     </a>
   </div>
 </div>
-<footer>
-  得森室內裝修設計有限公司 · ERIC KUO SPACE DESIGN · 高雄市苓雅區
-  <br>
-  <span style="margin-top:8px;display:inline-flex;align-items:center;gap:10px;">
-    <span style="color:var(--ink-l);">🔧 實用工具分享：</span>
-    <a id="tools-link" href="tools.html" target="_blank" style="color:var(--sage-dk);text-decoration:none;letter-spacing:1px;">kuo1223.github.io/quotation/tools.html</a>
-    <button onclick="copyToolsLink()" style="background:var(--sage-pa);border:none;border-radius:6px;padding:3px 10px;font-size:10px;color:var(--sage-dk);cursor:pointer;letter-spacing:1px;">📋 複製連結</button>
-  </span>
-</footer>
+<footer>得森室內裝修設計有限公司 · ERIC KUO SPACE DESIGN · 高雄市苓雅區</footer>
 <script>
 function copyToolsLink(){
   var url='https://kuo1223.github.io/quotation/tools.html';
