@@ -69,12 +69,12 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
 
 .tools-row{margin-top:14px;}
 .tools-label{font-size:10px;color:var(--ink-f);letter-spacing:3px;margin-bottom:8px;padding-left:2px;}
-.tools-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
-.tool-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--r);padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;text-align:center;}
+.tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.tool-card{background:var(--paper-c);border:1px solid var(--border-l);border-radius:var(--r);padding:20px 14px;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:all .2s;text-align:center;aspect-ratio:1/1;}
 .tool-card:hover{border-color:var(--sage-dk);box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px);}
-.tool-card-icon{font-size:22px;line-height:1;}
-.tool-card-name{font-family:var(--serif);font-size:11px;color:var(--ink-m);letter-spacing:1px;line-height:1.4;}
-.tool-card-tag{font-size:9px;letter-spacing:1px;padding:1px 7px;border-radius:20px;background:var(--sage-pa);color:var(--sage-dk);}
+.tool-card-icon{font-size:40px;line-height:1;}
+.tool-card-name{font-family:var(--serif);font-size:16px;color:var(--ink-m);letter-spacing:1px;line-height:1.6;}
+.tool-card-tag{font-size:12px;letter-spacing:1px;padding:4px 12px;border-radius:20px;background:var(--sage-pa);color:var(--sage-dk);}
 
 /* PASSWORD MODAL */
 .pwd-backdrop{display:none;position:fixed;inset:0;background:rgba(43,41,38,.55);z-index:500;align-items:center;justify-content:center;}
@@ -175,6 +175,11 @@ footer{margin-top:auto;padding:16px;text-align:center;font-size:11px;color:var(-
         <a class="tool-card" href="appliance-pro.html">
           <div class="tool-card-icon">🔌</div>
           <div class="tool-card-name">電器負載<br>設計師版</div>
+          <span class="tool-card-tag">使用中</span>
+        </a>
+        <a class="tool-card" href="law-check.html">
+          <div class="tool-card-icon">⚖️</div>
+          <div class="tool-card-name">裝修法規<br>速查平台</div>
           <span class="tool-card-tag">使用中</span>
         </a>
       </div>
