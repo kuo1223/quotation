@@ -958,21 +958,45 @@ async function exportJPG(){
       s.onload=res;s.onerror=rej;document.head.appendChild(s);
     });
   }
-  // 建立獨立截圖容器，避免空白問題
   const source = document.getElementById('resultPanel');
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;width:'+source.offsetWidth+'px;background:#f4f3f0;padding:14px;';
-  wrapper.innerHTML = source.innerHTML;
-  document.body.appendChild(wrapper);
-  await new Promise(r=>setTimeout(r,300));
-  // 截取實際內容高度
-  const canvas=await html2canvas(wrapper,{
-    scale:2,useCORS:true,backgroundColor:'#f4f3f0',
-    width:wrapper.offsetWidth,
-    height:wrapper.scrollHeight,
-    windowWidth:wrapper.offsetWidth,
+
+  // 先把 canvas 轉成 img，避免複製後空白
+  source.querySelectorAll('canvas').forEach(function(cv){
+    var img = document.createElement('img');
+    img.src = cv.toDataURL('image/png');
+    img.style.width = cv.offsetWidth + 'px';
+    img.style.height = cv.offsetHeight + 'px';
+    img.setAttribute('data-replace-canvas','1');
+    cv.parentNode.insertBefore(img, cv);
+    cv.style.display = 'none';
   });
-  document.body.removeChild(wrapper);
+
+  // 暫時展開高度截完整內容
+  const origOverflow = source.style.overflow;
+  const origHeight = source.style.height;
+  const origMaxH = source.style.maxHeight;
+  source.style.overflow = 'visible';
+  source.style.height = 'auto';
+  source.style.maxHeight = 'none';
+  await new Promise(r=>setTimeout(r,150));
+
+  const canvas=await html2canvas(source,{
+    scale:2, useCORS:true, backgroundColor:'#f4f3f0',
+    width:source.offsetWidth,
+    height:source.scrollHeight,
+    windowWidth:source.offsetWidth,
+    scrollX:0, scrollY:-window.scrollY,
+    ignoreElements:function(el){ return el.tagName==='CANVAS' && !el.getAttribute('data-replace-canvas'); }
+  });
+
+  // 還原
+  source.style.overflow = origOverflow;
+  source.style.height = origHeight;
+  source.style.maxHeight = origMaxH;
+
+  // 移除替代 img，還原 canvas 顯示
+  source.querySelectorAll('img[data-replace-canvas]').forEach(function(img){ img.remove(); });
+  source.querySelectorAll('canvas').forEach(function(cv){ cv.style.display = ''; });
   const dataUrl=canvas.toDataURL('image/jpeg',0.92);
   const fileName='鞋櫃容量_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.jpg';
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
