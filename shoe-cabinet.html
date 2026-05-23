@@ -958,27 +958,21 @@ async function exportJPG(){
       s.onload=res;s.onerror=rej;document.head.appendChild(s);
     });
   }
-  const target=document.getElementById('resultPanel');
-  // 暫時展開完整高度讓 html2canvas 截到全部內容
-  const origOverflow = target.style.overflow;
-  const origHeight = target.style.height;
-  const origMaxHeight = target.style.maxHeight;
-  target.style.overflow = 'visible';
-  target.style.height = 'auto';
-  target.style.maxHeight = 'none';
-  await new Promise(r=>setTimeout(r,100));
-  const fullH = target.scrollHeight;
-  const canvas=await html2canvas(target,{
+  // 建立獨立截圖容器，避免空白問題
+  const source = document.getElementById('resultPanel');
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;width:'+source.offsetWidth+'px;background:#f4f3f0;padding:14px;';
+  wrapper.innerHTML = source.innerHTML;
+  document.body.appendChild(wrapper);
+  await new Promise(r=>setTimeout(r,300));
+  // 截取實際內容高度
+  const canvas=await html2canvas(wrapper,{
     scale:2,useCORS:true,backgroundColor:'#f4f3f0',
-    width:target.offsetWidth,
-    height:fullH,
-    windowWidth:target.offsetWidth,
-    scrollX:0,scrollY:0
+    width:wrapper.offsetWidth,
+    height:wrapper.scrollHeight,
+    windowWidth:wrapper.offsetWidth,
   });
-  // 還原
-  target.style.overflow = origOverflow;
-  target.style.height = origHeight;
-  target.style.maxHeight = origMaxHeight;
+  document.body.removeChild(wrapper);
   const dataUrl=canvas.toDataURL('image/jpeg',0.92);
   const fileName='鞋櫃容量_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.jpg';
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
