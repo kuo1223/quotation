@@ -209,10 +209,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
   <div class="pl-tab-content" id="tab-import">
     <div class="import-area">
       <div class="import-notice">
-        💡 可從「電器負載配置工具」匯入已確認的迴路資料，或直接在「盤體設定」手動新增迴路。
+        💡 從「電器負載配置工具」匯出後，點擊下方匯入；或選擇草稿直接載入。
       </div>
-      <button class="import-btn" onclick="importFromAppliance()">⬇ 從電器負載工具匯入</button>
-      <button class="import-btn" style="background:var(--ink-m);" onclick="loadSample()">📋 載入範例資料</button>
+      <button class="import-btn" onclick="importFromAppliance()">⬇ 匯入最新匯出資料</button>
+      <div class="sec-title" style="margin-top:14px;">電器工具草稿</div>
+      <div id="draftListWrap" style="margin-bottom:10px;"></div>
+      <button class="import-btn" style="background:var(--ink-m);" onclick="loadSample()">📋 載入場景範例</button>
       <div style="margin-top:12px;font-size:10px;color:var(--ink-f);">
         匯入後可在「盤體設定」調整各迴路內容
       </div>
@@ -302,6 +304,9 @@ function switchTab(tab){
   document.querySelectorAll('.pl-tab-content').forEach(function(c){
     c.classList.toggle('active', c.id==='tab-'+tab);
   });
+  // 切換到盤體設定時強制重新渲染
+  if(tab==='boards') renderBoards();
+  if(tab==='import') renderDraftList();
 }
 
 // ══════════════════════════════════════════════
@@ -317,13 +322,12 @@ var BOARD_TEMPLATES = {
       {name:'一般插座（臥室/書房）',   v:'110', type:'1P20A',   elcb:false, spare:false},
       {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
       {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'浴室1（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'浴室2（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'浴室（ELCB，多間合併）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
       {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
       {name:'冷氣（客廳）',           v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（主臥）',           v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（臥室）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（ELCB）',     v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'浴室暖風機（ELCB，合併）',v:'220', type:'2P20A',   elcb:true,  spare:false},
       {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
       {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
     ]
@@ -337,14 +341,13 @@ var BOARD_TEMPLATES = {
       {name:'廚房插座（冰箱/小家電）',  v:'110', type:'1P20A',   elcb:false, spare:false},
       {name:'廚房高功率（電鍋/烤箱）',  v:'110', type:'1P20A-H', elcb:false, spare:false},
       {name:'廚房高功率（洗碗機）',     v:'110', type:'1P20A-H', elcb:true,  spare:false},
-      {name:'浴室1（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'浴室2（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'浴室（ELCB，多間合併）',    v:'110', type:'1P20A',   elcb:true,  spare:false},
       {name:'陽台／洗衣機（ELCB）',    v:'110', type:'1P20A',   elcb:true,  spare:false},
       {name:'冷氣（客廳）',            v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（主臥）',            v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（臥室2）',           v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（臥室3）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（ELCB）',      v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'浴室暖風機（ELCB，合併）', v:'220', type:'2P20A',   elcb:true,  spare:false},
       {name:'SPARE',                   v:'110', type:'1P20A',   elcb:false, spare:true},
       {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
       {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
@@ -932,6 +935,62 @@ window.onbeforeprint = function(){
     document.head.appendChild(_printCSS);
   }
 };
+
+// ══════════════════════════════════════════════
+// DRAFT LIST FROM APPLIANCE TOOL
+// ══════════════════════════════════════════════
+function renderDraftList(){
+  var wrap = document.getElementById('draftListWrap');
+  if(!wrap) return;
+  // Try both draft keys
+  var drafts = [];
+  ['appliance_drafts','appliance_pro_drafts'].forEach(function(key){
+    try{
+      var d = JSON.parse(localStorage.getItem(key)||'[]');
+      if(Array.isArray(d)) d.forEach(function(dr){ dr._sourceKey=key; drafts.push(dr); });
+    }catch(e){}
+  });
+  if(!drafts.length){
+    wrap.innerHTML='<div style="font-size:11px;color:var(--ink-f);padding:8px 0;">尚無儲存的草稿</div>';
+    return;
+  }
+  wrap.innerHTML='';
+  drafts.slice(0,8).forEach(function(dr){
+    var btn=document.createElement('button');
+    btn.style.cssText='width:100%;text-align:left;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--s2);margin-bottom:6px;cursor:pointer;font-family:var(--sans);font-size:11px;color:var(--ink);';
+    btn.innerHTML='<b>'+(dr.name||'未命名')+'</b><br><span style="color:var(--ink-f);font-size:10px;">'+(dr.savedAt||'')+'</span>';
+    btn.addEventListener('click', function(){ importFromDraft(dr); });
+    wrap.appendChild(btn);
+  });
+}
+
+function importFromDraft(dr){
+  // dr has spaces state - convert to SLD format using same grouping logic
+  var sldData = JSON.parse(localStorage.getItem('sld_import_data')||'null');
+  if(!sldData){
+    showToast('請先在電器工具勾選電器並點「匯出單線圖」');
+    return;
+  }
+  // If sld_import_data exists, use it
+  boards = []; boardCounter = 0; circuitCounter = 0;
+  var sc = sldData.scenario||'R1';
+  var sel = document.getElementById('f-scenario');
+  if(sel) sel.value = sc;
+  if(sldData.project) { var p=document.getElementById('f-project'); if(p) p.value=sldData.project; }
+  if(sldData.owner)   { var o=document.getElementById('f-owner');   if(o) o.value=sldData.owner; }
+  (sldData.boards||[]).forEach(function(b){
+    var nb = addBoard(b.name, b.isMain, b.parentId||null, false);
+    (b.circuits||[]).forEach(function(c){
+      circuitCounter++;
+      nb.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v||'110',
+        type:c.type||'1P20A',elcb:!!c.elcb,spare:!!c.spare});
+    });
+  });
+  renderBoards(); renderSLD();
+  switchTab('boards');
+  showToast('草稿「'+(dr.name||'')+'」匯入完成');
+}
+
 
 init();
 </script>
