@@ -1747,9 +1747,14 @@ function exportToSLD(){
 
   // 依性質分組產出迴路
   var circuits = [];
-  var acItems=[], fanItems=[], highItems=[], bathroomItems=[], kitchenHighItems=[];
-  var lighting110=0, general110=0, kitchen110=0, fridge=null, laundry=null;
+  var acItems=[], fanItems=[], highItems=[], bathroomItems=[], kitchenBigItems=[];
+  var lighting110=0, general110=0, kitchen110=0, kitchenMidW=0, fridge=null, laundry=null;
   var other110=[], other220=[];
+
+  // 偵測空間種類（強制 ELCB 判斷用）
+  var hasBathroom = spaces.some(function(sp){ return /浴室|衛浴/.test(sp.label); });
+  var hasBalcony  = spaces.some(function(sp){ return /陽台/.test(sp.label); });
+  var hasKitchen  = spaces.some(function(sp){ return /廚房/.test(sp.label); });
 
   allItems.forEach(function(i){
     var n=i.name, sp=i.space, w=i.w, v=i.v;
@@ -1759,7 +1764,11 @@ function exportToSLD(){
     else if(v===220&&/暖風|乾燥機|浴室.*風/.test(n)) fanItems.push(i);
     else if(v===220&&w>=2000) highItems.push(i);
     else if(v===220) other220.push(i);
-    else if(/廚房|kitchen/i.test(sp)&&w>=800||/電鍋|烤箱|微波|洗碗機|烘碗|氣炸/.test(n)&&w>=800) kitchenHighItems.push(i);
+    // 廚房大功率獨立：>1500W 或 洗碗機
+    else if(/洗碗機/.test(n)) kitchenBigItems.push(i);
+    else if((/廚房|kitchen/i.test(sp)||/電鍋|微波|烤箱|烘碗|氣炸|電熱/.test(n))&&w>1500) kitchenBigItems.push(i);
+    // 廚房中功率合併：800W～1500W
+    else if((/廚房|kitchen/i.test(sp)||/電鍋|微波|烤麵包|氣炸|果汁機/.test(n))&&w>=800) kitchenMidW+=w*i.qty;
     else if(/廚房|排油煙/.test(sp+n)) kitchen110+=w*i.qty;
     else if(/浴室|衛浴|吹風機/.test(sp+n)) bathroomItems.push(i);
     else if(/洗衣機|烘衣|陽台/.test(n+sp)) laundry=i;
@@ -1767,47 +1776,74 @@ function exportToSLD(){
     else other110.push(i);
   });
 
-  // 照明
-  if(lighting110>0) circuits.push({name:'電燈（全室照明）',v:'110',type:'1P15A',elcb:false,spare:false});
-  // 一般插座
+  // ── 照明 ───────────────────────────────────────────────
+  if(lighting110>0)
+    circuits.push({name:'電燈（全室照明）',v:'110',type:'1P15A',elcb:false,spare:false});
+
+  // ── 一般插座 ───────────────────────────────────────────
   if(general110>0){
     var gCkts=Math.max(1,Math.ceil(general110/110/16));
-    for(var i=0;i<Math.min(gCkts,3);i++)
+    for(var gi=0;gi<Math.min(gCkts,3);gi++)
       circuits.push({name:'一般插座（客廳/臥室）',v:'110',type:'1P20A',elcb:false,spare:false});
   }
-  // 廚房一般
-  if(kitchen110>0) circuits.push({name:'廚房一般插座',v:'110',type:'1P20A',elcb:false,spare:false});
-  // 冰箱
-  if(fridge) circuits.push({name:'冰箱（專用）',v:'110',type:'1P20A',elcb:false,spare:false});
-  // 廚房高功率 - 每台獨立
-  kitchenHighItems.forEach(function(i){
-    circuits.push({name:'廚房高功率｜'+i.name,v:'110',type:'1P20A-H',elcb:/洗碗/.test(i.name),spare:false});
+
+  // ── 廚房一般插座（<800W 小家電、排油煙機） ────────────
+  if(kitchen110>0||hasKitchen)
+    circuits.push({name:'廚房一般插座',v:'110',type:'1P20A',elcb:false,spare:false});
+
+  // ── 冰箱專用 ───────────────────────────────────────────
+  if(fridge)
+    circuits.push({name:'冰箱（專用）',v:'110',type:'1P20A',elcb:false,spare:false});
+
+  // ── 廚房中功率合併（電鍋/微波/烤麵包 800W~1500W）──────
+  // 線徑加大到 5.5mm²（1P20A-H），可共用一迴路
+  if(kitchenMidW>0){
+    var midCkts=Math.max(1,Math.ceil(kitchenMidW/110/16));
+    for(var mi=0;mi<Math.min(midCkts,2);mi++)
+      circuits.push({name:'廚房小家電共用（電鍋/微波等）',v:'110',type:'1P20A-H',elcb:false,spare:false});
+  }
+
+  // ── 廚房大功率各自獨立（洗碗機/大烤箱/>1500W） ────────
+  kitchenBigItems.forEach(function(i){
+    var isWasher=/洗碗/.test(i.name);
+    circuits.push({name:'廚房大功率｜'+i.name,v:'110',type:'1P20A-H',elcb:isWasher,spare:false});
   });
-  // 浴室 ELCB 合併一路
-  if(bathroomItems.length>0) circuits.push({name:'浴室（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false});
-  // 洗衣機/陽台
-  if(laundry) circuits.push({name:'陽台／洗衣機（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false});
-  // 其他 110V
+
+  // ── 浴室 ELCB（強制，不管有沒有勾選） ─────────────────
+  circuits.push({name:'浴室插座（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false});
+
+  // ── 陽台/洗衣機 ELCB（強制，偵測到陽台空間） ──────────
+  if(hasBalcony||laundry)
+    circuits.push({name:'陽台／洗衣機（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false});
+
+  // ── 其他 110V ──────────────────────────────────────────
   other110.forEach(function(i){
     circuits.push({name:i.space+'｜'+i.name,v:'110',type:'1P20A',elcb:false,spare:false});
   });
-  // 冷氣 - 每台獨立
+
+  // ── 冷氣各自獨立 ───────────────────────────────────────
   acItems.forEach(function(i){
     circuits.push({name:'冷氣｜'+i.space,v:'220',type:'2P20A',elcb:false,spare:false});
   });
-  // 浴室暖風機 ELCB 合併一路
-  if(fanItems.length>0) circuits.push({name:'浴室暖風機（ELCB）',v:'220',type:'2P20A',elcb:true,spare:false});
-  // 高功率 220V
+
+  // ── 浴室暖風機 ELCB（強制，偵測到浴室空間） ───────────
+  circuits.push({name:'浴室暖風機（ELCB）',v:'220',type:'2P20A',elcb:true,spare:false});
+
+  // ── 高功率 220V 各自獨立 ───────────────────────────────
   highItems.forEach(function(i){
     circuits.push({name:i.space+'｜'+i.name,v:'220',type:'2P30A',elcb:false,spare:false});
   });
-  // 其他 220V
+
+  // ── 其他 220V ──────────────────────────────────────────
   other220.forEach(function(i){
     circuits.push({name:i.space+'｜'+i.name,v:'220',type:'2P20A',elcb:false,spare:false});
   });
-  // SPARE
-  var spareN = sc.startsWith('R')?2:4;
-  for(var j=0;j<spareN;j++) circuits.push({name:'SPARE',v:j<spareN/2?'110':'220',type:j<spareN/2?'1P20A':'2P20A',elcb:false,spare:true});
+
+  // ── SPARE ──────────────────────────────────────────────
+  var spareN=sc.startsWith('R')?2:4;
+  for(var j=0;j<spareN;j++)
+    circuits.push({name:'SPARE',v:j<spareN/2?'110':'220',
+      type:j<spareN/2?'1P20A':'2P20A',elcb:false,spare:true});
 
   var data = {
     scenario: sc,
