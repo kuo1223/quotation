@@ -312,6 +312,31 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .pro-drawer-empty{text-align:center;padding:36px 16px;color:var(--ink-f);font-size:12px;line-height:1.8;}
 @media(max-width:768px){.pro-drawer{width:100%;right:-100%;}.pro-drawer.open{right:0;}}
 
+/* SCENARIO BAR */
+.scenario-bar{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.scenario-label{font-size:11px;color:var(--ink-l);letter-spacing:1px;white-space:nowrap;}
+.scenario-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.s-btn{padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink-l);transition:all .15s;white-space:nowrap;font-family:var(--sans);}
+.s-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);}
+.s-btn.active{background:var(--sage-dk);color:#fff;border-color:var(--sage-dk);}
+/* ALERT BANNER */
+.alert-banner{margin:10px 12px;border-radius:var(--r);padding:10px 14px;font-size:11px;line-height:1.8;display:none;}
+.alert-banner.show{display:block;}
+.alert-red{background:var(--red-lt);border:1px solid rgba(192,57,43,.25);color:var(--red);}
+.alert-amber{background:var(--amber-lt);border:1px solid rgba(200,150,10,.25);color:#7a5200;}
+.alert-title{font-size:12px;font-weight:600;margin-bottom:4px;}
+/* SCENARIO STATUS in right panel */
+.scenario-status{padding:10px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:8px;font-size:11px;}
+.sc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.sc-row:last-child{margin-bottom:0;}
+.sc-name{color:var(--ink-l);}
+.sc-val{font-weight:500;color:var(--ink);}
+.sc-bar-wrap{height:6px;background:var(--border);border-radius:3px;margin-top:6px;overflow:hidden;}
+.sc-bar{height:100%;border-radius:3px;transition:width .3s;}
+.sc-bar.ok{background:var(--sage-dk);}
+.sc-bar.warn{background:var(--amber);}
+.sc-bar.over{background:var(--red);}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -346,6 +371,20 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
   <button class="send-btn" id="sendBtn" onclick="showReport()" disabled>📋 產生報表</button>
 </div>
 
+
+<div class="scenario-bar">
+  <div class="scenario-label">場 景 設 定</div>
+  <div class="scenario-btns" id="scenarioBtns">
+    <button class="s-btn active" data-code="R1" onclick="setScenario('R1')">🏢 R1 公寓 60A</button>
+    <button class="s-btn" data-code="R2" onclick="setScenario('R2')">🏢 R2 公寓 100A</button>
+    <button class="s-btn" data-code="H1" onclick="setScenario('H1')">🏠 H1 透天 75A</button>
+    <button class="s-btn" data-code="H2" onclick="setScenario('H2')">🏠 H2 透天 100A</button>
+    <button class="s-btn" data-code="C1" onclick="setScenario('C1')">🏪 C1 商空 100A</button>
+    <button class="s-btn" data-code="C2" onclick="setScenario('C2')">🏪 C2 商空 200A</button>
+  </div>
+</div>
+<div class="alert-banner" id="alertBanner"></div>
+
 <div class="layout">
   <div class="left">
     <div class="tab-bar" id="tabBar"></div>
@@ -355,7 +394,17 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
     <div class="ap-content" id="apContent"></div>
   </div>
   <div class="right">
-    <div class="r-card"><div class="r-title">迴 路 負 載 總 覽</div><div id="r-spaces"><div class="empty-note">請勾選電器後顯示</div></div></div>
+    <div class="r-card" id="scenarioStatusCard">
+  <div class="r-title">場 景 用 電 評 估</div>
+  <div class="scenario-status" id="scenarioStatus">
+    <div class="sc-row"><span class="sc-name">場景</span><span class="sc-val" id="sc-name-val">R1 公寓 60A</span></div>
+    <div class="sc-row"><span class="sc-name">場景上限</span><span class="sc-val" id="sc-limit-val">6,600 W</span></div>
+    <div class="sc-row"><span class="sc-name">目前負載</span><span class="sc-val" id="sc-load-val">0 W</span></div>
+    <div class="sc-row"><span class="sc-name">使用率</span><span class="sc-val" id="sc-pct-val">0%</span></div>
+    <div class="sc-bar-wrap"><div class="sc-bar ok" id="sc-bar" style="width:0%"></div></div>
+  </div>
+</div>
+<div class="r-card"><div class="r-title">迴 路 負 載 總 覽</div><div id="r-spaces"><div class="empty-note">請勾選電器後顯示</div></div></div>
     <div class="r-card"><div class="r-title">220V 專 用 迴 路</div><div id="r-dedicated"><div class="empty-note">尚無 220V 專用迴路</div></div></div>
     <div class="r-card"><div class="r-title">全 屋 彙 整</div><div class="sum-grid" id="r-summary"></div></div>
     <div class="r-card"><div class="r-title">建 議 線 徑 參 考</div>
@@ -1521,6 +1570,167 @@ document.addEventListener('keydown',function(e){
   if(!m||!m.classList.contains('open')) return;
   if(e.key==='Escape') closeAmi();
 });
+// ══════════════════════════════════════════════
+// SCENARIO SYSTEM
+// ══════════════════════════════════════════════
+const SCENARIOS = {
+  'R1': {name:'R1 公寓 60A',   amp:60,  maxW:6600,  label:'公寓大樓'},
+  'R2': {name:'R2 公寓 100A',  amp:100, maxW:11000, label:'公寓大樓'},
+  'H1': {name:'H1 透天 75A',   amp:75,  maxW:8250,  label:'平房透天'},
+  'H2': {name:'H2 透天 100A',  amp:100, maxW:11000, label:'平房透天'},
+  'C1': {name:'C1 商空 100A',  amp:100, maxW:11000, label:'商業空間'},
+  'C2': {name:'C2 商空 200A',  amp:200, maxW:22000, label:'商業空間'},
+};
+var currentScenario = 'R1';
+
+function setScenario(code){
+  currentScenario = code;
+  document.querySelectorAll('.s-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-code')===code);
+  });
+  renderResults();
+  renderAlerts();
+}
+
+// ── 合理化規則 ─────────────────────────────────
+const RULES = [
+  {
+    id:'charger',
+    check: function(allItems){
+      // 充電樁：功率 >= 3000W 且名稱含充電
+      return allItems.filter(function(i){
+        return i.w >= 3000 && /充電/.test(i.name);
+      });
+    },
+    level:'red',
+    title:'⚡ 充電樁需獨立電表申請',
+    msg: function(items){
+      return items.map(function(i){return '「'+i.name+'」'+i.w+'W';}).join('、') +
+        '，超過家用電箱合理負荷。依規定需向台電另行申請獨立電表，不建議併入家用迴路計算。';
+    }
+  },
+  {
+    id:'hvac_overlap',
+    check: function(allItems){
+      var central = allItems.filter(function(i){return /中央空調|中央冷氣/.test(i.name);});
+      var split = allItems.filter(function(i){return /冷氣|空調/.test(i.name) && !/中央/.test(i.name);});
+      return (central.length > 0 && split.length > 0) ? central : [];
+    },
+    level:'amber',
+    title:'❄️ 中央空調與個別冷氣功能重疊',
+    msg: function(){
+      return '已勾選中央空調主機，同時又勾選了各房間個別冷氣。建議二選一，避免用電量大幅超載。';
+    }
+  },
+  {
+    id:'water_heater',
+    check: function(allItems){
+      var elec = allItems.filter(function(i){return /電熱水器|熱泵熱水器/.test(i.name);});
+      var gas = allItems.filter(function(i){return /天然氣|瓦斯/.test(i.name) && /熱水/.test(i.name);});
+      return (elec.length > 0) ? elec : [];
+    },
+    level:'amber',
+    title:'💧 熱水器改天然氣可節省 1～2 條 220V 迴路',
+    msg: function(items){
+      return '「'+items.map(function(i){return i.name;}).join('、')+'」耗電量大（'+
+        items.map(function(i){return i.w+'W';}).join('、')+'）。若改用天然氣熱水器，可節省高功率迴路，大幅降低總用電需求。';
+    }
+  },
+  {
+    id:'cooker_overlap',
+    check: function(allItems){
+      var ih = allItems.filter(function(i){return /IH|電磁爐/.test(i.name);});
+      var gas = allItems.filter(function(i){return /瓦斯爐|天然氣爐/.test(i.name);});
+      return (ih.length > 0 && gas.length > 0) ? ih : [];
+    },
+    level:'amber',
+    title:'🍳 IH 爐與瓦斯爐功能重疊',
+    msg: function(){
+      return '已同時勾選 IH 電磁爐與瓦斯爐。兩者功能相同，建議二選一。選擇天然氣瓦斯爐可節省一條 220V 專用迴路。';
+    }
+  },
+  {
+    id:'overload',
+    check: function(allItems, totalW, sc){
+      var limit = SCENARIOS[sc].maxW;
+      if(totalW > limit){
+        return [{name:'總負載', w:totalW}];
+      }
+      return [];
+    },
+    level:'red',
+    title:'🔴 總負載超過場景上限',
+    msg: function(items, totalW, sc){
+      var sc_info = SCENARIOS[sc];
+      var over = totalW - sc_info.maxW;
+      return '目前勾選總負載 '+totalW.toLocaleString()+'W，超過「'+sc_info.name+'」場景上限 '+
+        sc_info.maxW.toLocaleString()+'W，超出 '+over.toLocaleString()+'W。\n建議：升級至更高安培場景，或刪除部分高功率設備。';
+    }
+  }
+];
+
+function getAllCheckedItems(){
+  var all = [];
+  spaces.forEach(function(sp){
+    var groups = AP_DB[sp.dbKey]||[];
+    groups.forEach(function(g){
+      g.items.forEach(function(ap){
+        var s = spState[sp.id]&&spState[sp.id][ap.id];
+        if(s&&(s.owned||s.plan)){
+          all.push({name:ap.name, w:ap.w, v:ap.v, qty:s.qty||1, space:sp.label});
+        }
+      });
+    });
+    (customItems[sp.id]||[]).forEach(function(ci){
+      if(ci.owned||ci.plan){
+        all.push({name:ci.name, w:ci.w, v:ci.v, qty:ci.qty||1, space:sp.label});
+      }
+    });
+  });
+  return all;
+}
+
+function renderAlerts(){
+  var banner = document.getElementById('alertBanner');
+  var allItems = getAllCheckedItems();
+  // calc total W
+  var totalW = 0;
+  allItems.forEach(function(i){ totalW += i.w * (i.qty||1); });
+
+  var msgs = [];
+  RULES.forEach(function(rule){
+    var matched = rule.check(allItems, totalW, currentScenario);
+    if(matched.length > 0){
+      msgs.push({level:rule.level, title:rule.title, msg:rule.msg(matched, totalW, currentScenario)});
+    }
+  });
+
+  if(msgs.length === 0){
+    banner.className = 'alert-banner';
+    banner.innerHTML = '';
+    return;
+  }
+
+  // Show highest level first
+  var hasRed = msgs.some(function(m){return m.level==='red';});
+  banner.className = 'alert-banner show ' + (hasRed?'alert-red':'alert-amber');
+  banner.innerHTML = msgs.map(function(m){
+    return '<div class="alert-title">'+m.title+'</div><div>'+m.msg.replace(/\n/g,'<br>')+'</div><br>';
+  }).join('').replace(/<br>$/,'');
+}
+
+function renderScenarioStatus(totalW){
+  var sc = SCENARIOS[currentScenario];
+  var pct = Math.min(100, Math.round(totalW / sc.maxW * 100));
+  document.getElementById('sc-name-val').textContent = sc.name;
+  document.getElementById('sc-limit-val').textContent = sc.maxW.toLocaleString()+' W（'+sc.amp+'A）';
+  document.getElementById('sc-load-val').textContent = totalW.toLocaleString()+' W';
+  document.getElementById('sc-pct-val').textContent = pct+'%';
+  var bar = document.getElementById('sc-bar');
+  bar.style.width = pct+'%';
+  bar.className = 'sc-bar '+(pct>100?'over':pct>80?'warn':'ok');
+}
+
 
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', doInit);
