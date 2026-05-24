@@ -205,19 +205,32 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 
 <!-- LEFT PANEL -->
 <div class="panel-l">
+
+  <!-- MODE TABS -->
   <div class="mode-tabs">
-  <div class="mode-tab active" id="modeTab1" onclick="switchMode('search')">🔍 情境搜尋</div>
-  <div class="mode-tab" id="modeTab2" onclick="switchMode('fulllaw')">📖 完整法條</div>
-</div>
-<div class="search-wrap" id="searchWrap">
-    <input class="search-input" id="searchInput" type="text" placeholder="輸入關鍵字搜尋，例如：陽台外推、灑水頭、剪力牆…">
+    <div class="mode-tab active" id="modeTab1" onclick="switchMode('search')">🔍 情境搜尋</div>
+    <div class="mode-tab" id="modeTab2" onclick="switchMode('fulllaw')">📖 完整法條</div>
   </div>
-  <div class="cat-tabs" id="catTabs"></div>
-  <div class="sel-bar">
-    <div class="sel-count">已選 <strong id="selCount">0</strong> 筆法規</div>
-    <button class="sel-clear" onclick="clearAll()">清除全部</button>
+
+  <!-- SEARCH MODE (visible by default) -->
+  <div id="searchSection">
+    <div class="search-wrap" id="searchWrap">
+      <input class="search-input" id="searchInput" type="text" placeholder="輸入關鍵字搜尋，例如：陽台外推、灑水頭、剪力牆…">
+    </div>
+    <div class="cat-tabs" id="catTabs"></div>
+    <div class="sel-bar">
+      <div class="sel-count">已選 <strong id="selCount">0</strong> 筆法規</div>
+      <button class="sel-clear" onclick="clearAll()">清除全部</button>
+    </div>
+    <div class="law-list" id="lawList"></div>
   </div>
-  <div class="law-list" id="lawList"></div>
+
+  <!-- FULL LAW MODE (hidden by default) -->
+  <div id="fullLawSection" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+    <div class="fl-tab-row" id="flTabRow"></div>
+    <div class="fl-list" id="flList"></div>
+  </div>
+
 </div>
 
 <!-- RIGHT PANEL -->
@@ -3049,6 +3062,108 @@ function showToast(msg){
   t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
   clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(16px)';},2500);
 }
+
+// ══════════════════════════════════════════════
+// MODE SWITCH
+// ══════════════════════════════════════════════
+var currentMode='search';
+var currentFlLaw='all';
+
+function switchMode(mode){
+  currentMode=mode;
+  var searchSec=document.getElementById('searchSection');
+  var fullSec=document.getElementById('fullLawSection');
+  var t1=document.getElementById('modeTab1');
+  var t2=document.getElementById('modeTab2');
+  if(mode==='search'){
+    if(searchSec){searchSec.style.display='flex';searchSec.style.flexDirection='column';searchSec.style.flex='1';searchSec.style.overflow='hidden';}
+    if(fullSec) fullSec.style.display='none';
+    if(t1) t1.classList.add('active');
+    if(t2) t2.classList.remove('active');
+  } else {
+    if(searchSec) searchSec.style.display='none';
+    if(fullSec){fullSec.style.display='flex';fullSec.style.flexDirection='column';fullSec.style.flex='1';fullSec.style.overflow='hidden';}
+    if(t1) t1.classList.remove('active');
+    if(t2) t2.classList.add('active');
+    renderFlTabs();
+    renderFlList(currentFlLaw);
+  }
+}
+
+// ══════════════════════════════════════════════
+// FULL LAW TABS
+// ══════════════════════════════════════════════
+function renderFlTabs(){
+  var wrap=document.getElementById('flTabRow');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  var allBtn=document.createElement('button');
+  allBtn.className='fl-law-tab'+(currentFlLaw==='all'?' active':'');
+  allBtn.textContent='全部法律';
+  allBtn.onclick=function(){currentFlLaw='all';renderFlTabs();renderFlList('all');};
+  wrap.appendChild(allBtn);
+  FULL_LAWS.forEach(function(fl){
+    var btn=document.createElement('button');
+    btn.className='fl-law-tab'+(currentFlLaw===fl.id?' active':'');
+    btn.textContent=fl.lawName;
+    btn.onclick=function(){currentFlLaw=fl.id;renderFlTabs();renderFlList(fl.id);};
+    wrap.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════
+// FULL LAW LIST
+// ══════════════════════════════════════════════
+function renderFlList(lawId){
+  var wrap=document.getElementById('flList');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  var laws=lawId==='all'?FULL_LAWS:FULL_LAWS.filter(function(fl){return fl.id===lawId;});
+  if(!laws.length){wrap.innerHTML='<div class="law-empty">找不到法規</div>';return;}
+  laws.forEach(function(fl){
+    var card=document.createElement('div');
+    card.className='fl-law-card';
+    var articlesHtml='';
+    fl.articles.forEach(function(art){
+      var scenTags=(art.scenarios||[]).map(function(s){return '<span class="law-tag">#'+s+'</span>';}).join('');
+      var penHtml=art.penalty?'<div class="fl-penalty">⚠️ '+art.penalty+'</div>':'';
+      articlesHtml+=
+        '<div class="fl-article">'+
+          '<div class="fl-article-hd" onclick="toggleFlArticle(this)">'+
+            '<span class="fl-article-no">'+art.no+'</span>'+
+            '<span class="fl-article-title">'+art.title+'</span>'+
+          '</div>'+
+          '<div class="fl-article-body">'+
+            '<div class="fl-plain-lbl">完整條文</div>'+
+            '<div class="fl-fulltext">'+art.text.split('\n').join('<br>')+'</div>'+
+            '<div class="fl-plain-lbl">白話說明</div>'+
+            '<div class="fl-plain">'+art.plain+'</div>'+
+            penHtml+
+            '<div class="fl-plain-lbl">常見情境</div>'+
+            '<div class="fl-scenarios">'+scenTags+'</div>'+
+          '</div>'+
+        '</div>';
+    });
+    card.innerHTML=
+      '<div class="fl-law-hd" onclick="toggleFlCard(this)">'+
+        '<div>'+
+          '<div class="fl-law-name">'+fl.lawName+'</div>'+
+          '<div class="fl-law-meta">最後修正：'+fl.lastAmended+'　主管：'+fl.authority+'</div>'+
+        '</div>'+
+        '<span style="color:var(--ink-f);font-size:12px;">▾</span>'+
+      '</div>'+
+      '<div class="fl-law-body">'+
+        '<div class="fl-law-scope">📌 適用範圍：'+fl.scope+'</div>'+
+        articlesHtml+
+        '<a class="fl-src-link" href="'+fl.sourceUrl+'" target="_blank">🔗 查閱全文（全國法規資料庫）</a>'+
+      '</div>';
+    wrap.appendChild(card);
+  });
+}
+
+
+function toggleFlArticle(hd){ hd.nextElementSibling.classList.toggle('open'); }
+function toggleFlCard(hd){ hd.nextElementSibling.classList.toggle('open'); }
 
 init();
 </script>
