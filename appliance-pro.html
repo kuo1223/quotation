@@ -367,7 +367,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 </header>
 
 <div style="background:var(--s2);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-  <div class="owner-field"><div class="owner-label">案件名稱</div><input class="owner-input md" id="f-case-name" placeholder="例：信義區林宅"></div>
+  <div class="owner-field"><div class="owner-label">案件名稱</div><input class="owner-input md" id="f-case-name" placeholder="例：信義區林宅" oninput="updateSendBtn()"></div>
   <div class="owner-field"><div class="owner-label">案件日期</div><input class="owner-input" id="f-case-date" type="date" style="width:150px;"></div>
   <div class="owner-field"><div class="owner-label">設計師</div><input class="owner-input" id="f-designer" value="郭明彰" style="width:120px;"></div>
 </div>
@@ -408,7 +408,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
     <div class="r-card" id="scenarioStatusCard">
   <div class="r-title">場 景 用 電 評 估</div>
   <div class="scenario-status" id="scenarioStatus">
-    <div class="sc-row"><span class="sc-name">場景</span><span class="sc-val" id="sc-name-val">R1 公寓 60A</span></div>
+    <div class="sc-row"><span class="sc-name">場景</span><span class="sc-val" id="sc-name-val">R1 大樓住宅 60A</span></div>
     <div class="sc-row"><span class="sc-name">場景上限</span><span class="sc-val" id="sc-limit-val">6,600 W</span></div>
     <div class="sc-row"><span class="sc-name">目前負載</span><span class="sc-val" id="sc-load-val">0 W</span></div>
     <div class="sc-row"><span class="sc-name">使用率</span><span class="sc-val" id="sc-pct-val">0%</span></div>
@@ -1178,9 +1178,11 @@ function renderResults(){
 // EMAIL
 // ══════════════════════════════════════════════
 function updateSendBtn(){
-  var ok2=document.getElementById('f-name').value.trim().length>0;
-  var sb=document.getElementById('sldBtn');if(sb)sb.disabled=!ok2;
-  document.getElementById('sendBtn').disabled=!document.getElementById('f-name').value.trim();
+  var caseName = (document.getElementById('f-case-name')||{}).value||'';
+  var ownerName = (document.getElementById('f-name')||{}).value||'';
+  var ok2 = caseName.trim().length>0 || ownerName.trim().length>0;
+  var sb=document.getElementById('sldBtn'); if(sb) sb.disabled=!ok2;
+  var sendBtn=document.getElementById('sendBtn'); if(sendBtn) sendBtn.disabled=!ok2;
 }
 
 function sendEmail(){
@@ -1882,7 +1884,8 @@ function renderScenarioStatus(totalW){
 // ══════════════════════════════════════════════
 function exportToSLD(){
   var sc = currentScenario || 'R1';
-  var owner = (document.getElementById('f-name')||{}).value||'';
+  var caseName2 = (document.getElementById('f-case-name')||{}).value||'';
+  var owner = caseName2 || (document.getElementById('f-name')||{}).value||'';
   var addr = (document.getElementById('f-addr')||{}).value||'';
 
   // 收集所有勾選電器
