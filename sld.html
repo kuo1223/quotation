@@ -150,18 +150,13 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 <!-- LEFT PANEL -->
 <div class="panel-l">
   <div class="panel-l-tabs">
-    <div class="pl-tab active" onclick="switchTab('boards')">📋 盤體設定</div>
-    <div class="pl-tab" onclick="switchTab('info')">ℹ️ 案件資訊</div>
+    <div class="pl-tab active" onclick="switchTab('info')">ℹ️ 案件資訊</div>
+    <div class="pl-tab" onclick="switchTab('boards')">📋 盤體設定</div>
     <div class="pl-tab" onclick="switchTab('import')">⬇ 匯入</div>
   </div>
 
-  <!-- BOARDS TAB -->
-  <div class="pl-tab-content active" id="tab-boards">
-    <div class="boards-list" id="boardsList"></div>
-  </div>
-
-  <!-- INFO TAB -->
-  <div class="pl-tab-content" id="tab-info">
+  <!-- INFO TAB (first, active by default) -->
+  <div class="pl-tab-content active" id="tab-info">
     <div class="panel-l-scroll">
       <div class="sec-title">案 件 資 訊</div>
       <div class="info-card">
@@ -187,8 +182,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
         <div class="info-row">
           <div class="info-lbl">場景類型</div>
           <select class="info-sel" id="f-scenario" onchange="onScenarioChange()">
-            <option value="R1">R1 公寓大樓 60A</option>
-            <option value="R2">R2 公寓大樓 100A</option>
+            <option value="R1">R1 大樓住宅 60A</option>
+            <option value="R2">R2 大樓住宅 100A</option>
             <option value="H1">H1 平房透天 75A</option>
             <option value="H2" selected>H2 平房透天 100A</option>
             <option value="C1">C1 商業空間 100A</option>
@@ -258,8 +253,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 // CONSTANTS
 // ══════════════════════════════════════════════
 const SCENARIOS = {
-  R1:{name:'R1 公寓 60A', amp:60, mainBreaker:'2P 60AT', mainWire:'14mm²'},
-  R2:{name:'R2 公寓 100A',amp:100,mainBreaker:'2P 100AT',mainWire:'22mm²'},
+  R1:{name:'R1 大樓住宅 60A', amp:60, mainBreaker:'2P 60AT', mainWire:'14mm²'},
+  R2:{name:'R2 大樓住宅 100A',amp:100,mainBreaker:'2P 100AT',mainWire:'22mm²'},
   H1:{name:'H1 透天 75A', amp:75, mainBreaker:'2P 75AT', mainWire:'22mm²'},
   H2:{name:'H2 透天 100A',amp:100,mainBreaker:'2P 100AT',mainWire:'22mm²'},
   C1:{name:'C1 商空 100A',amp:100,mainBreaker:'2P 100AT',mainWire:'22mm²'},
@@ -286,34 +281,23 @@ let circuitCounter = 0;
 // INIT
 // ══════════════════════════════════════════════
 function init(){
-  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
-  loadSample();
+  var dateEl = document.getElementById('f-date');
+  if(dateEl) dateEl.value = new Date().toISOString().slice(0,10);
+  // Default to R1 on first load
+  applyTemplate('R1');
 }
 
 function onScenarioChange(){
-  var sc = document.getElementById('f-scenario').value;
-  var isApartment = ['R1','R2','C1','C2'].indexOf(sc) >= 0;
-  var isFloor = ['H1','H2'].indexOf(sc) >= 0;
-
-  // If switching to apartment scenario, remove sub-boards
-  if(isApartment){
-    var hadSubs = boards.some(function(b){ return !b.isMain; });
-    boards = boards.filter(function(b){ return b.isMain; });
-    if(hadSubs) showToast('已切換為公寓場景，子盤已移除');
-  }
-
-  // If switching to floor scenario and no sub-boards exist, offer to add one
-  if(isFloor && boards.length === 1){
-    showToast('透天場景：可在盤體設定新增子盤');
-  }
-
-  renderBoards();
-  renderSLD();
+  var scEl3 = document.getElementById('f-scenario');
+  var sc = scEl3 ? scEl3.value : 'R1';
+  // 套用對應場景模板，重置所有盤體
+  applyTemplate(sc);
+  showToast('已套用「'+SCENARIOS[sc].name+'」電箱模板');
 }
 
 function switchTab(tab){
   document.querySelectorAll('.pl-tab').forEach(function(t,i){
-    t.classList.toggle('active', ['boards','info','import'][i]===tab);
+    t.classList.toggle('active', ['info','boards','import'][i]===tab);
   });
   document.querySelectorAll('.pl-tab-content').forEach(function(c){
     c.classList.toggle('active', c.id==='tab-'+tab);
@@ -323,30 +307,166 @@ function switchTab(tab){
 // ══════════════════════════════════════════════
 // SAMPLE DATA
 // ══════════════════════════════════════════════
-function loadSample(){
-  boards = [];
-  boardCounter = 0; circuitCounter = 0;
-  // Main board
-  var main = addBoard('主盤（1F）', true, null, false);
-  addCircuit(main.id,'客廳照明＋插座','110','1P20A',false,false);
-  addCircuit(main.id,'客廳冷氣（2噸）','220','2P20A',false,false);
-  addCircuit(main.id,'廚房一般插座','110','1P20A',false,false);
-  addCircuit(main.id,'廚房冰箱（專用）','110','1P20A',false,false);
-  addCircuit(main.id,'廚房電鍋（專用）','110','1P20A-H',false,false);
-  addCircuit(main.id,'主臥照明＋插座','110','1P20A',false,false);
-  addCircuit(main.id,'浴室（ELCB）','110','1P20A',true,false);
-  addCircuit(main.id,'陽台洗衣機（ELCB）','110','1P20A',true,false);
-  addCircuit(main.id,'SPARE','110','1P20A',false,true);
-  // Sub board 2F
-  var sub2 = addBoard('子盤（2F）', false, main.id, false);
-  addCircuit(sub2.id,'主臥冷氣（1.5噸）','220','2P20A',false,false);
-  addCircuit(sub2.id,'主臥浴室暖風機','220','2P20A',true,false);
-  addCircuit(sub2.id,'臥室照明＋插座','110','1P20A',false,false);
-  addCircuit(sub2.id,'臥室冷氣（1.5噸）','220','2P20A',false,false);
-  addCircuit(sub2.id,'書房插座','110','1P20A',false,false);
-  addCircuit(sub2.id,'SPARE','220','2P20A',false,true);
+// 依場景建立電箱模板
+var BOARD_TEMPLATES = {
+  'R1': {
+    name:'主盤（大樓住宅 60A）',
+    circuits:[
+      {name:'電燈（全室照明）',       v:'110', type:'1P15A',   elcb:false, spare:false},
+      {name:'一般插座（客廳）',        v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'一般插座（臥室/書房）',   v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
+      {name:'浴室1（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'浴室2（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'冷氣（客廳）',           v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'冷氣（主臥）',           v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'冷氣（臥室）',           v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'浴室暖風機（ELCB）',     v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+    ]
+  },
+  'R2': {
+    name:'主盤（大樓住宅 100A）',
+    circuits:[
+      {name:'電燈（全室照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
+      {name:'一般插座（客廳）',         v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'一般插座（臥室/書房）',    v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房插座（冰箱/小家電）',  v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房高功率（電鍋/烤箱）',  v:'110', type:'1P20A-H', elcb:false, spare:false},
+      {name:'廚房高功率（洗碗機）',     v:'110', type:'1P20A-H', elcb:true,  spare:false},
+      {name:'浴室1（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'浴室2（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'陽台／洗衣機（ELCB）',    v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'冷氣（客廳）',            v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'冷氣（主臥）',            v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'冷氣（臥室2）',           v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'冷氣（臥室3）',           v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'浴室暖風機（ELCB）',      v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'SPARE',                   v:'110', type:'1P20A',   elcb:false, spare:true},
+      {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
+    ]
+  },
+  'H1': {
+    name:'主盤（透天 75A）',
+    circuits:[
+      {name:'電燈（1F 照明）',         v:'110', type:'1P15A',   elcb:false, spare:false},
+      {name:'一般插座（1F）',          v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
+      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'客廳冷氣',               v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'浴室暖風機（1F ELCB）',  v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+    ],
+    sub:{
+      name:'子盤（2F）',
+      circuits:[
+        {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
+        {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false},
+        {name:'浴室（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+        {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
+        {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
+        {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false},
+        {name:'SPARE',                 v:'110', type:'1P20A',   elcb:false, spare:true},
+      ]
+    }
+  },
+  'H2': {
+    name:'主盤（透天 100A）',
+    circuits:[
+      {name:'電燈（1F 照明）',         v:'110', type:'1P15A',   elcb:false, spare:false},
+      {name:'一般插座（1F）',          v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
+      {name:'廚房高功率（洗碗機）',    v:'110', type:'1P20A-H', elcb:true,  spare:false},
+      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'客廳冷氣',               v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'浴室暖風機（1F ELCB）',  v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+    ],
+    sub:{
+      name:'子盤（2F）',
+      circuits:[
+        {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
+        {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false},
+        {name:'浴室（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+        {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
+        {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
+        {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false},
+        {name:'SPARE',                 v:'110', type:'1P20A',   elcb:false, spare:true},
+        {name:'SPARE',                 v:'220', type:'2P20A',   elcb:false, spare:true},
+      ]
+    }
+  },
+  'C1': {
+    name:'主盤（商空 100A）',
+    circuits:[
+      {name:'照明（全場）',            v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'照明（招牌/展示）',       v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'一般插座（辦公區）',      v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房/茶水間插座',         v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廁所（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'空調1',                  v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'空調2',                  v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'空調3',                  v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'消防設備（獨立）',        v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+    ]
+  },
+  'C2': {
+    name:'主盤（商空 200A）',
+    circuits:[
+      {name:'照明（全場）',            v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'照明（廚房/後場）',       v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'一般插座（外場）',        v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房一般插座',           v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'廚房高功率設備1',         v:'110', type:'1P20A-H', elcb:false, spare:false},
+      {name:'廚房高功率設備2',         v:'110', type:'1P20A-H', elcb:false, spare:false},
+      {name:'廁所（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'排油煙/排氣設備',         v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'空調1',                  v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'空調2',                  v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'空調3',                  v:'220', type:'2P20A',   elcb:false, spare:false},
+      {name:'廚房大功率（220V）1',    v:'220', type:'2P30A',   elcb:false, spare:false},
+      {name:'廚房大功率（220V）2',    v:'220', type:'2P30A',   elcb:false, spare:false},
+      {name:'消防設備（獨立）',        v:'110', type:'1P20A',   elcb:false, spare:false},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+    ]
+  }
+};
+
+function applyTemplate(sc){
+  var tmpl = BOARD_TEMPLATES[sc];
+  if(!tmpl) return;
+  boards = []; boardCounter = 0; circuitCounter = 0;
+  var main = addBoard(tmpl.name, true, null, false);
+  tmpl.circuits.forEach(function(c){
+    circuitCounter++;
+    main.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v,type:c.type,elcb:c.elcb,spare:c.spare});
+  });
+  if(tmpl.sub){
+    var sub = addBoard(tmpl.sub.name, false, main.id, false);
+    tmpl.sub.circuits.forEach(function(c){
+      circuitCounter++;
+      sub.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v,type:c.type,elcb:c.elcb,spare:c.spare});
+    });
+  }
   renderBoards();
   renderSLD();
+}
+
+function loadSample(){
+  var sc = document.getElementById('f-scenario') ? document.getElementById('f-scenario').value : 'R1';
+  applyTemplate(sc);
 }
 
 // ══════════════════════════════════════════════
@@ -405,58 +525,130 @@ function updateBoardName(id, name){
 // ══════════════════════════════════════════════
 function renderBoards(){
   var wrap = document.getElementById('boardsList');
-  var html = '';
+  if(!wrap) return;
+
+  // Build using DOM elements to avoid quote escaping issues
+  wrap.innerHTML = '';
+
   boards.forEach(function(b){
     var isChild = !!b.parentId;
-    var tag = b.isMain ? '主盤' : '子盤';
-    var cktRows = b.circuits.map(function(c, idx){
-      var spec = WIRE_SPEC[c.type] || {};
-      var elcbBadge = c.elcb ? '<span class="ckt-elcb">ELCB</span>' : '';
-      var vClass = c.v==='220' ? 'ckt-v220' : 'ckt-v110';
-      return '<div class="ckt-row">'+
-        '<div class="ckt-num">'+(!c.spare?(idx+1):'—')+'</div>'+
-        '<input class="ckt-name-inp'+(c.spare?' td-spare':'\"')+(c.spare?'\" style=\"color:var(--ink-f)\"':'"')+
-          ' value="'+c.name+'" oninput="updateCircuit(\''+b.id+'\',\''+c.id+'\',\'name\',this.value)">'+
-        '<select class="ckt-v-sel '+vClass+'" onchange="updateCircuit(\''+b.id+'\',\''+c.id+'\',\'v\',this.value)">'+
-          '<option value="110"'+(c.v==='110'?' selected':'')+'>110V</option>'+
-          '<option value="220"'+(c.v==='220'?' selected':'')+'>220V</option>'+
-        '</select>'+
-        '<select class="ckt-type-sel" onchange="updateCircuit(\''+b.id+'\',\''+c.id+'\',\'type\',this.value)">'+
-          '<option value="1P15A"'+(c.type==='1P15A'?' selected':'')+'>1P 15A</option>'+
-          '<option value="1P20A"'+(c.type==='1P20A'?' selected':'')+'>1P 20A</option>'+
-          '<option value="1P20A-H"'+(c.type==='1P20A-H'?' selected':'')+'>1P 20A★</option>'+
-          '<option value="2P20A"'+(c.type==='2P20A'?' selected':'')+'>2P 20A</option>'+
-          '<option value="2P30A"'+(c.type==='2P30A'?' selected':'')+'>2P 30A</option>'+
-        '</select>'+
-        '<button class="ckt-del" onclick="deleteCircuit(\''+b.id+'\',\''+c.id+'\')">×</button>'+
-      '</div>';
-    }).join('');
 
-    html += '<div class="board-card"'+(isChild?' style="margin-left:16px;"':'')+'>' +
-      '<div class="board-card-hd">'+
-        '<span class="board-icon">'+(b.isMain?'🔌':'📦')+'</span>'+
-        '<input class="board-name-inp" value="'+b.name+'" oninput="updateBoardName(\''+b.id+'\',this.value)">'+
-        '<span class="board-tag">'+tag+'</span>'+
-        (!b.isMain?'<button class="board-del" onclick="deleteBoard(\''+b.id+'\')">🗑</button>':'')+
-      '</div>'+
-      '<div class="board-circuits">'+
-        cktRows+
-        '<button class="add-ckt-btn" onclick="addCircuit(\''+b.id+'\',\'\',\'110\',\'1P20A\',false,false)">＋ 新增迴路</button>'+
-      '</div>'+
-    '</div>';
+    // Board card container
+    var card = document.createElement('div');
+    card.className = 'board-card';
+    if(isChild) card.style.marginLeft = '16px';
+
+    // Board header
+    var hd = document.createElement('div');
+    hd.className = 'board-card-hd';
+
+    var icon = document.createElement('span');
+    icon.className = 'board-icon';
+    icon.textContent = b.isMain ? '🔌' : '📦';
+
+    var nameInp = document.createElement('input');
+    nameInp.className = 'board-name-inp';
+    nameInp.value = b.name;
+    nameInp.addEventListener('input', (function(bid){ return function(){ updateBoardName(bid, this.value); }; })(b.id));
+
+    var tag = document.createElement('span');
+    tag.className = 'board-tag';
+    tag.textContent = b.isMain ? '主盤' : '子盤';
+
+    hd.appendChild(icon);
+    hd.appendChild(nameInp);
+    hd.appendChild(tag);
+
+    if(!b.isMain){
+      var delBtn = document.createElement('button');
+      delBtn.className = 'board-del';
+      delBtn.textContent = '🗑';
+      delBtn.addEventListener('click', (function(bid){ return function(){ deleteBoard(bid); }; })(b.id));
+      hd.appendChild(delBtn);
+    }
+    card.appendChild(hd);
+
+    // Circuits container
+    var ckts = document.createElement('div');
+    ckts.className = 'board-circuits';
+
+    b.circuits.forEach(function(c, idx){
+      var spec = WIRE_SPEC[c.type] || {};
+      var row = document.createElement('div');
+      row.className = 'ckt-row';
+
+      // Number
+      var num = document.createElement('div');
+      num.className = 'ckt-num';
+      num.textContent = c.spare ? '—' : (idx+1);
+
+      // Name input
+      var ni = document.createElement('input');
+      ni.className = 'ckt-name-inp';
+      if(c.spare){ ni.style.color = 'var(--ink-f)'; ni.style.fontStyle = 'italic'; }
+      ni.value = c.name;
+      ni.addEventListener('input', (function(bid,cid){ return function(){ updateCircuit(bid,cid,'name',this.value); }; })(b.id,c.id));
+
+      // Voltage select
+      var vs = document.createElement('select');
+      vs.className = 'ckt-v-sel ' + (c.v==='220'?'ckt-v220':'ckt-v110');
+      ['110','220'].forEach(function(v){
+        var o = document.createElement('option');
+        o.value = v; o.textContent = v+'V';
+        if(c.v===v) o.selected = true;
+        vs.appendChild(o);
+      });
+      vs.addEventListener('change', (function(bid,cid){ return function(){ updateCircuit(bid,cid,'v',this.value); }; })(b.id,c.id));
+
+      // Type select
+      var ts = document.createElement('select');
+      ts.className = 'ckt-type-sel';
+      [['1P15A','1P 15A'],['1P20A','1P 20A'],['1P20A-H','1P 20A★'],['2P20A','2P 20A'],['2P30A','2P 30A']].forEach(function(pair){
+        var o = document.createElement('option');
+        o.value = pair[0]; o.textContent = pair[1];
+        if(c.type===pair[0]) o.selected = true;
+        ts.appendChild(o);
+      });
+      ts.addEventListener('change', (function(bid,cid){ return function(){ updateCircuit(bid,cid,'type',this.value); }; })(b.id,c.id));
+
+      // Delete button
+      var db = document.createElement('button');
+      db.className = 'ckt-del';
+      db.textContent = '×';
+      db.addEventListener('click', (function(bid,cid){ return function(){ deleteCircuit(bid,cid); }; })(b.id,c.id));
+
+      row.appendChild(num);
+      row.appendChild(ni);
+      row.appendChild(vs);
+      row.appendChild(ts);
+      row.appendChild(db);
+      ckts.appendChild(row);
+    });
+
+    // Add circuit button
+    var addCktBtn = document.createElement('button');
+    addCktBtn.className = 'add-ckt-btn';
+    addCktBtn.textContent = '＋ 新增迴路';
+    addCktBtn.addEventListener('click', (function(bid){ return function(){ addCircuit(bid,'','110','1P20A',false,false); }; })(b.id));
+    ckts.appendChild(addCktBtn);
+
+    card.appendChild(ckts);
+    wrap.appendChild(card);
   });
 
-  // Add sub-board button (only for main board scenarios)
-  var sc = document.getElementById('f-scenario').value;
-  // Only show 新增子盤 for 透天 scenarios
-  var scVal = document.getElementById('f-scenario').value;
-  if(['H1','H2'].indexOf(scVal)>=0){
-    var mainB = boards.find(function(b){return b.isMain;});
+  // Add sub-board button for 透天 scenarios
+  var scEl = document.getElementById('f-scenario');
+  var scVal = scEl ? scEl.value : 'R1';
+  if(['H1','H2'].indexOf(scVal) >= 0){
+    var mainB = boards.find(function(b){ return b.isMain; });
     if(mainB){
-      html += '<button class="add-board-btn" onclick="addBoard(\'子盤（新增）\',false,\''+mainB.id+'\',true)">＋ 新增子盤</button>';
+      var addSubBtn = document.createElement('button');
+      addSubBtn.className = 'add-board-btn';
+      addSubBtn.textContent = '＋ 新增子盤';
+      addSubBtn.addEventListener('click', (function(mid){ return function(){ addBoard('子盤（新增）',false,mid,true); }; })(mainB.id));
+      wrap.appendChild(addSubBtn);
     }
   }
-  wrap.innerHTML = html;
 }
 
 // ══════════════════════════════════════════════
@@ -487,7 +679,8 @@ function updateMeta(){
 
 function renderSVG(){
   var svg = document.getElementById('sldSvg');
-  var sc = SCENARIOS[document.getElementById('f-scenario').value] || SCENARIOS.H2;
+  var scEl2 = document.getElementById('f-scenario');
+  var sc = SCENARIOS[scEl2 ? scEl2.value : 'R1'] || SCENARIOS.R1;
   var W = 700;
 
   // Layout constants
@@ -616,7 +809,8 @@ function renderSVG(){
 // CONFIG TABLE
 // ══════════════════════════════════════════════
 function renderConfigTable(){
-  var sc = SCENARIOS[document.getElementById('f-scenario').value] || SCENARIOS.H2;
+  var scEl2 = document.getElementById('f-scenario');
+  var sc = SCENARIOS[scEl2 ? scEl2.value : 'R1'] || SCENARIOS.R1;
   var html = '<table class="config-tbl"><thead><tr>'+
     '<th>路序</th><th>盤體</th><th>用途說明</th><th>電壓</th>'+
     '<th>開關規格</th><th>線徑</th><th>管徑</th><th>ELCB</th><th>備註</th>'+
