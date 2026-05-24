@@ -369,6 +369,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
   <div class="owner-field"><div class="owner-label">案件地址</div>
     <input class="owner-input lg" id="f-addr" placeholder="選填"></div>
   <button class="send-btn" id="sendBtn" onclick="showReport()" disabled>📋 產生報表</button>
+  <button class="send-btn" id="sldBtn" onclick="exportToSLD()" disabled style="background:var(--sage-dk);">⚡ 匯出單線圖</button>
 </div>
 
 
@@ -1035,6 +1036,8 @@ function renderResults(){
 // EMAIL
 // ══════════════════════════════════════════════
 function updateSendBtn(){
+  var ok2=document.getElementById('f-name').value.trim().length>0;
+  var sb=document.getElementById('sldBtn');if(sb)sb.disabled=!ok2;
   document.getElementById('sendBtn').disabled=!document.getElementById('f-name').value.trim();
 }
 
@@ -1729,6 +1732,75 @@ function renderScenarioStatus(totalW){
   var bar = document.getElementById('sc-bar');
   bar.style.width = pct+'%';
   bar.className = 'sc-bar '+(pct>100?'over':pct>80?'warn':'ok');
+}
+
+
+// ══════════════════════════════════════════════
+// EXPORT TO SINGLE LINE DIAGRAM TOOL
+// ══════════════════════════════════════════════
+function exportToSLD(){
+  var sc = currentScenario || 'R1';
+  var proj = document.getElementById('f-name').value + ' 住宅翻修';
+  var owner = document.getElementById('f-name').value;
+  var addr = document.getElementById('f-addr') ? document.getElementById('f-addr').value : '';
+
+  // Build circuit list from checked items
+  var circuits = [];
+  spaces.forEach(function(sp){
+    var groups = AP_DB[sp.dbKey]||[];
+    groups.forEach(function(g){
+      g.items.forEach(function(ap){
+        var s = spState[sp.id]&&spState[sp.id][ap.id];
+        if(s&&(s.owned||s.plan)){
+          var is220 = ap.v===220;
+          var w = ap.w;
+          var type = is220 ? (w>=3000?'2P30A':'2P20A') : (w>=1500?'1P20A-H':w>=800?'1P20A':'1P15A');
+          var needElcb = /浴室|廚房洗碗|洗衣機|陽台/.test(sp.label+ap.name);
+          circuits.push({
+            name: sp.label+'　'+ap.name,
+            v: is220?'220':'110',
+            type: type,
+            elcb: needElcb,
+            spare: false
+          });
+        }
+      });
+    });
+    (customItems[sp.id]||[]).forEach(function(ci){
+      if(ci.owned||ci.plan){
+        var is220 = ci.v===220;
+        var type = is220 ? (ci.w>=3000?'2P30A':'2P20A') : (ci.w>=1500?'1P20A-H':ci.w>=800?'1P20A':'1P15A');
+        circuits.push({
+          name: sp.label+'　'+ci.name,
+          v: is220?'220':'110',
+          type: type,
+          elcb: false,
+          spare: false
+        });
+      }
+    });
+  });
+
+  // Add 2 spare circuits
+  circuits.push({name:'SPARE',v:'110',type:'1P20A',elcb:false,spare:true});
+  circuits.push({name:'SPARE',v:'220',type:'2P20A',elcb:false,spare:true});
+
+  var data = {
+    scenario: sc,
+    project: proj,
+    owner: owner,
+    addr: addr,
+    boards: [{
+      name: '主盤',
+      isMain: true,
+      parentId: null,
+      circuits: circuits
+    }]
+  };
+
+  localStorage.setItem('sld_import_data', JSON.stringify(data));
+  showToast('已匯出！正在開啟單線圖工具…');
+  setTimeout(function(){ window.open('sld.html','_blank'); }, 800);
 }
 
 
