@@ -70,7 +70,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .board-del{background:none;border:none;font-size:14px;color:var(--ink-f);cursor:pointer;padding:2px 6px;}
 .board-del:hover{color:var(--red);}
 .board-circuits{padding:8px 12px;}
-.ckt-row{display:grid;grid-template-columns:24px 1fr 60px 64px 40px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.ckt-row{display:grid;grid-template-columns:24px 1fr 60px 64px 28px 40px;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
 .ckt-row:last-child{border-bottom:none;}
 .ckt-num{color:var(--ink-f);text-align:center;}
 .ckt-name-inp{border:1px solid transparent;border-radius:4px;padding:3px 6px;font-size:11px;font-family:var(--sans);color:var(--ink);outline:none;width:100%;}
@@ -126,6 +126,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:9px 20px;border-radius:24px;font-size:12px;opacity:0;transition:all .28s;z-index:300;pointer-events:none;}
+
+
+.ckt-move{display:flex;flex-direction:column;gap:1px;}
+.ckt-mv-btn{background:none;border:none;color:var(--ink-f);cursor:pointer;font-size:9px;line-height:1;padding:1px 3px;}
+.ckt-mv-btn:hover{color:var(--sage-dk);}
+.ckt-mv-btn:disabled{opacity:.2;cursor:default;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
@@ -509,6 +515,20 @@ function deleteCircuit(boardId, cktId){
   renderBoards(); renderSLD();
 }
 
+function moveCircuit(boardId, cktId, dir){
+  var b = boards.find(function(x){ return x.id===boardId; });
+  if(!b) return;
+  var idx = b.circuits.findIndex(function(x){ return x.id===cktId; });
+  if(idx < 0) return;
+  var newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= b.circuits.length) return;
+  var tmp = b.circuits[idx];
+  b.circuits[idx] = b.circuits[newIdx];
+  b.circuits[newIdx] = tmp;
+  renderBoards();
+  renderSLD();
+}
+
 function updateCircuit(boardId, cktId, field, val){
   var b = boards.find(function(b){ return b.id===boardId; });
   if(!b) return;
@@ -519,13 +539,17 @@ function updateCircuit(boardId, cktId, field, val){
     // Auto-adjust type based on voltage
     if(val==='220' && c.type.startsWith('1P')) c.type='2P20A';
     if(val==='110' && c.type.startsWith('2P')) c.type='1P20A';
+    // Only re-render selects when voltage changes, not on name input
+    renderBoards();
   }
-  renderBoards(); renderSLD();
+  // Always update the SVG and config table
+  renderSLD();
 }
 
 function updateBoardName(id, name){
   var b = boards.find(function(b){ return b.id===id; });
   if(b){ b.name=name; renderSLD(); }
+  // Don't call renderBoards() - would destroy the input focus
 }
 
 // ══════════════════════════════════════════════
@@ -557,7 +581,11 @@ function renderBoards(){
     var nameInp = document.createElement('input');
     nameInp.className = 'board-name-inp';
     nameInp.value = b.name;
-    nameInp.addEventListener('input', (function(bid){ return function(){ updateBoardName(bid, this.value); }; })(b.id));
+    nameInp.addEventListener('input', (function(bid,el){ return function(){
+        var brd = boards.find(function(x){return x.id===bid;});
+        if(brd) brd.name=el.value;
+        renderSLD();
+      }; })(b.id,nameInp));
 
     var tag = document.createElement('span');
     tag.className = 'board-tag';
@@ -595,7 +623,12 @@ function renderBoards(){
       ni.className = 'ckt-name-inp';
       if(c.spare){ ni.style.color = 'var(--ink-f)'; ni.style.fontStyle = 'italic'; }
       ni.value = c.name;
-      ni.addEventListener('input', (function(bid,cid){ return function(){ updateCircuit(bid,cid,'name',this.value); }; })(b.id,c.id));
+      ni.addEventListener('input', (function(bid,cid,el){ return function(){
+        // Only update data, don't re-render DOM
+        var brd = boards.find(function(x){return x.id===bid;});
+        if(brd){ var ckt=brd.circuits.find(function(x){return x.id===cid;}); if(ckt) ckt.name=el.value; }
+        renderSLD(); // Only update SVG
+      }; })(b.id,c.id,ni));
 
       // Voltage select
       var vs = document.createElement('select');
@@ -619,6 +652,24 @@ function renderBoards(){
       });
       ts.addEventListener('change', (function(bid,cid){ return function(){ updateCircuit(bid,cid,'type',this.value); }; })(b.id,c.id));
 
+      // Move buttons
+      var mv = document.createElement('div');
+      mv.className = 'ckt-move';
+      var mvUp = document.createElement('button');
+      mvUp.className = 'ckt-mv-btn';
+      mvUp.textContent = '▲';
+      mvUp.title = '上移';
+      if(idx===0) mvUp.disabled = true;
+      mvUp.addEventListener('click', (function(bid,cid){ return function(){ moveCircuit(bid,cid,-1); }; })(b.id,c.id));
+      var mvDn = document.createElement('button');
+      mvDn.className = 'ckt-mv-btn';
+      mvDn.textContent = '▼';
+      mvDn.title = '下移';
+      if(idx===b.circuits.length-1) mvDn.disabled = true;
+      mvDn.addEventListener('click', (function(bid,cid){ return function(){ moveCircuit(bid,cid,1); }; })(b.id,c.id));
+      mv.appendChild(mvUp);
+      mv.appendChild(mvDn);
+
       // Delete button
       var db = document.createElement('button');
       db.className = 'ckt-del';
@@ -629,6 +680,7 @@ function renderBoards(){
       row.appendChild(ni);
       row.appendChild(vs);
       row.appendChild(ts);
+      row.appendChild(mv);
       row.appendChild(db);
       ckts.appendChild(row);
     });
