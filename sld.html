@@ -206,8 +206,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
   </div>
 
   <!-- BOARDS TAB -->
-  <div class="pl-tab-content" id="tab-boards">
-    <div class="boards-list" id="boardsList"></div>
+  <div class="pl-tab-content" id="tab-boards" style="flex-direction:column;overflow:hidden;">
+    <div class="boards-list" id="boardsList" style="flex:1;overflow-y:auto;padding:14px;"></div>
   </div>
 
   <!-- IMPORT TAB -->
@@ -327,12 +327,12 @@ var BOARD_TEMPLATES = {
       {name:'一般插座（臥室/書房）',   v:'110', type:'1P20A',   elcb:false, spare:false},
       {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
       {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'浴室（ELCB，多間合併）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
+      {name:'浴室插座（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
       {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
       {name:'冷氣（客廳）',           v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（主臥）',           v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（臥室）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（ELCB，合併）',v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'浴室暖風機（ELCB）',     v:'220', type:'2P20A',   elcb:true,  spare:false},
       {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
       {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
     ]
@@ -352,7 +352,7 @@ var BOARD_TEMPLATES = {
       {name:'冷氣（主臥）',            v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（臥室2）',           v:'220', type:'2P20A',   elcb:false, spare:false},
       {name:'冷氣（臥室3）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（ELCB，合併）', v:'220', type:'2P20A',   elcb:true,  spare:false},
+      {name:'浴室暖風機（ELCB）',      v:'220', type:'2P20A',   elcb:true,  spare:false},
       {name:'SPARE',                   v:'110', type:'1P20A',   elcb:false, spare:true},
       {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
       {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
@@ -376,7 +376,7 @@ var BOARD_TEMPLATES = {
       circuits:[
         {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
         {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false},
-        {name:'浴室（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+        {name:'浴室插座（ELCB）',      v:'110', type:'1P20A',   elcb:true,  spare:false},
         {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
         {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
         {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false},
@@ -403,7 +403,7 @@ var BOARD_TEMPLATES = {
       circuits:[
         {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
         {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false},
-        {name:'浴室（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
+        {name:'浴室插座（ELCB）',      v:'110', type:'1P20A',   elcb:true,  spare:false},
         {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
         {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
         {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false},
@@ -687,131 +687,172 @@ function updateMeta(){
 
 function renderSVG(){
   var svg = document.getElementById('sldSvg');
-  var scEl2 = document.getElementById('f-scenario');
-  var sc = SCENARIOS[scEl2 ? scEl2.value : 'R1'] || SCENARIOS.R1;
-  var W = 700;
+  if(!svg) return;
+  var scEl = document.getElementById('f-scenario');
+  var sc = SCENARIOS[scEl ? scEl.value : 'R1'] || SCENARIOS.R1;
 
-  // Layout constants
-  var COL_MAIN = 60;   // entry line x
-  var COL_BUS  = 160;  // main breaker x
-  var ROW_TOP  = 40;   // start y
+  var W = 900;
+  var COL_ENTRY = 80;   // 進戶線 x
+  var BUS_Y = 120;      // 匯流排 y
 
-  // Count total circuits across all boards
+  // 計算總迴路數
   var totalCkts = 0;
   boards.forEach(function(b){ totalCkts += b.circuits.length; });
-  var totalBoards = boards.length;
-  var H = Math.max(300, ROW_TOP + totalBoards * 80 + totalCkts * 36 + 60);
+  var H = Math.max(400, BUS_Y + 60 + Math.ceil(totalCkts/2) * 36 + 80);
 
-  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
   svg.setAttribute('height', H);
 
-  var svgParts = [];
+  var parts = [];
 
   // ── defs ──
-  svgParts.push('<defs>'+
+  parts.push('<defs>'+
     '<marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">'+
-      '<path d="M0,0 L0,6 L6,3 z" fill="#4a4742"/>'+
+      '<path d="M0,0 L0,6 L6,3 z" fill="#6e7a6a"/>'+
     '</marker>'+
   '</defs>');
 
-  function txt(x,y,content,cls,anchor){
-    cls = cls||'';anchor=anchor||'middle';
-    return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-family="Noto Sans TC,sans-serif" font-size="10" fill="#4a4742" class="'+cls+'">'+content+'</text>';
+  function txt(x,y,t,sz,color,anchor){
+    sz=sz||10; color=color||'#4a4742'; anchor=anchor||'middle';
+    return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+
+      '" font-family="Noto Sans TC,sans-serif" font-size="'+sz+'" fill="'+color+'">'+t+'</text>';
   }
-  function rect(x,y,w,h,fill,stroke){
-    return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(fill||'#fff')+'" stroke="'+(stroke||'#2b2926')+'" stroke-width="1.5" rx="3"/>';
+  function rect(x,y,w,h,fill,stroke,rx){
+    return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+
+      '" fill="'+(fill||'#fff')+'" stroke="'+(stroke||'#2b2926')+
+      '" stroke-width="1.5" rx="'+(rx||3)+'"/>';
   }
-  function line(x1,y1,x2,y2,color,dash){
-    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(color||'#2b2926')+'" stroke-width="1.5"'+(dash?' stroke-dasharray="4,3"':'')+'/>';
+  function line(x1,y1,x2,y2,color,sw,dash){
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+
+      '" stroke="'+(color||'#2b2926')+'" stroke-width="'+(sw||1.5)+'"'+
+      (dash?' stroke-dasharray="4,3"':'')+'/>';
   }
 
-  // ── 台電進戶線 ──
-  svgParts.push(txt(COL_MAIN, ROW_TOP-14, '台 電 進 戶', '', 'middle'));
-  svgParts.push(line(COL_MAIN, ROW_TOP-8, COL_MAIN, ROW_TOP+20));
+  // ── 台電進戶 ──
+  parts.push(txt(COL_ENTRY, 20, '台 電 進 戶', 11, '#2b2926'));
+  parts.push(line(COL_ENTRY, 26, COL_ENTRY, 50));
 
   // ── 主開關 ──
-  var MB_Y = ROW_TOP + 20;
-  svgParts.push(rect(COL_MAIN-30, MB_Y, 60, 28, '#eef0ea', '#6e7a6a'));
-  svgParts.push(txt(COL_MAIN, MB_Y+11, '主開關', '', 'middle'));
-  svgParts.push(txt(COL_MAIN, MB_Y+21, sc.mainBreaker, '', 'middle'));
-  svgParts.push(line(COL_MAIN, MB_Y+28, COL_MAIN, MB_Y+46));
+  parts.push(rect(COL_ENTRY-32, 50, 64, 30, '#eef0ea', '#6e7a6a', 4));
+  parts.push(txt(COL_ENTRY, 62, '主 開 關', 10, '#4a4742'));
+  parts.push(txt(COL_ENTRY, 74, sc.mainBreaker, 9, '#6e7a6a'));
+  parts.push(line(COL_ENTRY, 80, COL_ENTRY, BUS_Y));
 
-  // ── 匯流排 BUS BAR ──
-  var BUS_Y = MB_Y + 46;
-  svgParts.push(line(COL_MAIN, BUS_Y, W-40, BUS_Y, '#6e7a6a'));
-  svgParts.push(rect(COL_MAIN-2, BUS_Y-4, 4, 8, '#6e7a6a','#6e7a6a'));
-  svgParts.push(txt(COL_MAIN+8, BUS_Y-6, 'BUS BAR', '', 'start'));
+  // ── 匯流排 ──
+  var BUS_X_END = W - 30;
+  parts.push(line(COL_ENTRY, BUS_Y, BUS_X_END, BUS_Y, '#6e7a6a', 2.5));
+  parts.push(rect(COL_ENTRY-3, BUS_Y-5, 6, 10, '#6e7a6a', '#6e7a6a'));
+  parts.push(txt(COL_ENTRY+10, BUS_Y-8, 'BUS BAR', 9, '#8a9082', 'start'));
 
-  // ── 各盤體分路 ──
-  var curY = BUS_Y + 20;
-  var mainBoard = boards.find(function(b){ return b.isMain; });
-  var subBoards = boards.filter(function(b){ return !b.isMain; });
+  // ── 各盤體迴路（雙欄排列）──
+  var CKT_START_Y = BUS_Y + 30;
+  var CKT_H = 34;
+  var COL_L = 160;   // 左欄 x（110V 為主）
+  var COL_R = 520;   // 右欄 x（220V 為主）
+  var BUS_TAP_L = COL_ENTRY + 80;   // 左欄從匯流排tap點
+  var BUS_TAP_R = COL_ENTRY + 280;  // 右欄從匯流排tap點
 
-  // Calculate X positions for boards
-  var allBoards = mainBoard ? [mainBoard].concat(subBoards) : subBoards;
-  var boardXStep = Math.min(180, (W - COL_MAIN - 40) / Math.max(allBoards.length, 1));
-
-  allBoards.forEach(function(board, bi){
-    var boardX = COL_MAIN + bi * boardXStep + 30;
-    var boardBusX = boardX + 20;
-
-    // Board label
-    svgParts.push(txt(boardBusX, curY-6, board.name, '', 'middle'));
-
-    // If sub-board, draw feeder line from main bus
-    if(!board.isMain){
-      svgParts.push(line(boardBusX, BUS_Y, boardBusX, curY, '#8a9082', true));
-      // Sub breaker symbol
-      svgParts.push(rect(boardBusX-18, curY-14, 36, 20, '#f9f8f6', '#8a9082'));
-      svgParts.push(txt(boardBusX, curY-7, '幹線/開關', '', 'middle'));
-      curY += 24;
-    } else {
-      // Main board vertical bus
-      svgParts.push(line(boardBusX, BUS_Y, boardBusX, curY));
+  boards.forEach(function(board, bi){
+    // 盤體標題
+    var boardY = CKT_START_Y - 16;
+    if(bi > 0) {
+      // sub board feeder line from bus
+      parts.push(line(BUS_TAP_L + bi*60, BUS_Y, BUS_TAP_L + bi*60, boardY+10, '#8a9082', 1.5, true));
+      parts.push(rect(BUS_TAP_L+bi*60-25, boardY-4, 50, 18, '#f0efe9', '#8a9082', 3));
+      parts.push(txt(BUS_TAP_L+bi*60, boardY+7, board.name, 9, '#8a9082'));
     }
 
-    // Board vertical line
-    var boardStartY = curY;
-    var boardEndY = curY + board.circuits.length * 34;
-    svgParts.push(line(boardBusX, boardStartY, boardBusX, boardEndY, '#4a4742'));
-
-    // Circuits
-    board.circuits.forEach(function(ckt, ci){
-      var cktY = boardStartY + ci * 34 + 17;
-      var cktX = boardBusX + 20;
-      var isSpare = ckt.spare;
-      var is220 = ckt.v === '220';
-      var cktColor = isSpare ? '#c8c4be' : (is220 ? '#c0392b' : '#2980b9');
-      var spec = WIRE_SPEC[ckt.type] || {breaker: ckt.type, wire:'—'};
-
-      // Horizontal tap from board bus
-      svgParts.push(line(boardBusX, cktY, cktX, cktY, cktColor));
-
-      // Breaker symbol
-      svgParts.push(rect(cktX, cktY-8, 28, 16,
-        isSpare ? '#f0efe9' : (is220 ? '#fdecea' : '#eef0ea'),
-        isSpare ? '#c8c4be' : (is220 ? '#e74c3c' : '#2980b9')));
-      svgParts.push('<text x="'+(cktX+14)+'" y="'+(cktY+4)+'" text-anchor="middle" font-family="Noto Sans TC,sans-serif" font-size="8" fill="'+cktColor+'">'+spec.breaker+'</text>');
-
-      // ELCB badge
-      if(ckt.elcb){
-        svgParts.push('<text x="'+(cktX+32)+'" y="'+(cktY-2)+'" text-anchor="start" font-family="Noto Sans TC,sans-serif" font-size="8" fill="#c8960a">ELCB</text>');
-      }
-
-      // Circuit name
-      var nameX = cktX + (ckt.elcb ? 68 : 34);
-      svgParts.push('<text x="'+nameX+'" y="'+(cktY+4)+'" text-anchor="start" font-family="Noto Sans TC,sans-serif" font-size="10" fill="'+(isSpare?'#8a8780':'#2b2926')+'">'+
-        (!isSpare?(ci+1)+'. ':'')+ckt.name+'</text>');
-
-      // Wire spec
-      svgParts.push('<text x="'+nameX+'" y="'+(cktY+13)+'" text-anchor="start" font-family="Noto Sans TC,sans-serif" font-size="8" fill="#c8c4be">'+spec.wire+(spec.conduit?' '+spec.conduit:'')+'</text>');
+    // 分左右兩欄
+    var leftCkts = [];
+    var rightCkts = [];
+    board.circuits.forEach(function(c){
+      if(c.v==='220') rightCkts.push(c);
+      else leftCkts.push(c);
     });
 
-    curY = boardEndY + 30;
+    var maxRows = Math.max(leftCkts.length, rightCkts.length);
+
+    // 左欄垂直線（110V）
+    if(leftCkts.length>0){
+      parts.push(line(COL_ENTRY+20, BUS_Y, COL_ENTRY+20, CKT_START_Y + leftCkts.length*CKT_H - CKT_H/2, '#2980b9', 1.5));
+      parts.push(txt(COL_ENTRY+24, CKT_START_Y-6, '110V', 9, '#2980b9', 'start'));
+    }
+    // 右欄垂直線（220V）
+    if(rightCkts.length>0){
+      parts.push(line(COL_ENTRY+240, BUS_Y, COL_ENTRY+240, CKT_START_Y + rightCkts.length*CKT_H - CKT_H/2, '#c0392b', 1.5));
+      parts.push(txt(COL_ENTRY+244, CKT_START_Y-6, '220V', 9, '#c0392b', 'start'));
+    }
+
+    // 左欄迴路
+    leftCkts.forEach(function(c, ci){
+      var y = CKT_START_Y + ci*CKT_H + 12;
+      var isSpare = c.spare;
+      var spec = WIRE_SPEC[c.type]||{breaker:c.type,wire:'—',conduit:''};
+      var cColor = isSpare ? '#c8c4be' : '#2980b9';
+
+      // tap line
+      parts.push(line(COL_ENTRY+20, y, COL_L-30, y, cColor));
+      // breaker box
+      parts.push(rect(COL_L-30, y-8, 36, 16,
+        isSpare?'#f0efe9':'#eef5fb', isSpare?'#c8c4be':'#2980b9', 2));
+      parts.push('<text x="'+(COL_L-12)+'" y="'+(y+4)+'" text-anchor="middle" '+
+        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="'+cColor+'">'+spec.breaker+'</text>');
+      // ELCB
+      if(c.elcb){
+        parts.push('<rect x="'+(COL_L+10)+'" y="'+(y-7)+'" width="24" height="14" '+
+          'fill="#fef9e7" stroke="#c8960a" stroke-width="1" rx="2"/>');
+        parts.push('<text x="'+(COL_L+22)+'" y="'+(y+2)+'" text-anchor="middle" '+
+          'font-family="Noto Sans TC,sans-serif" font-size="7" fill="#c8960a">ELCB</text>');
+      }
+      // name
+      var nx = COL_L + (c.elcb?40:14);
+      parts.push('<text x="'+nx+'" y="'+(y+3)+'" text-anchor="start" '+
+        'font-family="Noto Sans TC,sans-serif" font-size="10" fill="'+(isSpare?'#8a8780':'#2b2926')+'">'+
+        (isSpare?'— ':( (ci+1)+'. '))+c.name+'</text>');
+      // wire spec
+      parts.push('<text x="'+nx+'" y="'+(y+12)+'" text-anchor="start" '+
+        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="#c8c4be">'+
+        spec.wire+(spec.conduit?' '+spec.conduit:'')+'</text>');
+    });
+
+    // 右欄迴路
+    rightCkts.forEach(function(c, ci){
+      var y = CKT_START_Y + ci*CKT_H + 12;
+      var isSpare = c.spare;
+      var spec = WIRE_SPEC[c.type]||{breaker:c.type,wire:'—',conduit:''};
+      var cColor = isSpare ? '#c8c4be' : '#c0392b';
+
+      // tap line
+      parts.push(line(COL_ENTRY+240, y, COL_R-30, y, cColor));
+      // breaker box
+      parts.push(rect(COL_R-30, y-8, 36, 16,
+        isSpare?'#f0efe9':'#fdecea', isSpare?'#c8c4be':'#c0392b', 2));
+      parts.push('<text x="'+(COL_R-12)+'" y="'+(y+4)+'" text-anchor="middle" '+
+        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="'+cColor+'">'+spec.breaker+'</text>');
+      // ELCB
+      if(c.elcb){
+        parts.push('<rect x="'+(COL_R+10)+'" y="'+(y-7)+'" width="24" height="14" '+
+          'fill="#fef9e7" stroke="#c8960a" stroke-width="1" rx="2"/>');
+        parts.push('<text x="'+(COL_R+22)+'" y="'+(y+2)+'" text-anchor="middle" '+
+          'font-family="Noto Sans TC,sans-serif" font-size="7" fill="#c8960a">ELCB</text>');
+      }
+      // name
+      var nx2 = COL_R + (c.elcb?40:14);
+      parts.push('<text x="'+nx2+'" y="'+(y+3)+'" text-anchor="start" '+
+        'font-family="Noto Sans TC,sans-serif" font-size="10" fill="'+(isSpare?'#8a8780':'#2b2926')+'">'+
+        (isSpare?'— ':(ci+1)+'. ')+c.name+'</text>');
+      // wire spec
+      parts.push('<text x="'+nx2+'" y="'+(y+12)+'" text-anchor="start" '+
+        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="#c8c4be">'+
+        spec.wire+(spec.conduit?' '+spec.conduit:'')+'</text>');
+    });
+
+    CKT_START_Y += Math.max(leftCkts.length, rightCkts.length) * CKT_H + 40;
   });
 
-  svg.innerHTML = svgParts.join('');
+  svg.innerHTML = parts.join('');
 }
+
 
 // ══════════════════════════════════════════════
 // CONFIG TABLE
@@ -846,17 +887,20 @@ function renderConfigTable(){
   });
 
   // Summary row
-  var total110 = 0, total220 = 0;
+  var total110 = 0, total220 = 0, totalElcb = 0;
   boards.forEach(function(b){
     b.circuits.forEach(function(c){
-      if(!c.spare){ if(c.v==='220') total220++; else total110++; }
+      if(!c.spare){
+        if(c.v==='220') total220++; else total110++;
+        if(c.elcb) totalElcb++;
+      }
     });
   });
   html += '<tr style="background:var(--sage-lt);">'+
     '<td colspan="2" style="color:var(--sage-dk);font-family:var(--serif);">合計</td>'+
-    '<td colspan="2">110V 迴路：<strong>'+total110+'</strong> 條</td>'+
-    '<td colspan="2">220V 迴路：<strong>'+total220+'</strong> 條</td>'+
-    '<td colspan="3">主開關：<strong>'+sc.mainBreaker+'</strong>　進戶線：<strong>'+sc.mainWire+'</strong></td>'+
+    '<td colspan="2">110V：<strong>'+total110+'</strong> 路　220V：<strong>'+total220+'</strong> 路</td>'+
+    '<td colspan="2">ELCB：<strong>'+totalElcb+'</strong> 處　主開關：<strong>'+sc.mainBreaker+'</strong></td>'+
+    '<td colspan="3">進戶線：<strong>'+sc.mainWire+'</strong>　安培：<strong>'+sc.amp+'A</strong></td>'+
   '</tr>';
 
   html += '</tbody></table>';
