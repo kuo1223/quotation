@@ -972,7 +972,7 @@ function renderConfigTable(){
   var sc = SCENARIOS[scEl2 ? scEl2.value : 'R1'] || SCENARIOS.R1;
   var html = '<table class="config-tbl"><thead><tr>'+
     '<th>路序</th><th>盤體</th><th>用途說明</th><th>電壓</th>'+
-    '<th>開關規格</th><th>線徑</th><th>管徑</th><th>ELCB</th><th>備註</th>'+
+    '<th>開關規格</th><th>線徑</th><th>管徑</th><th>ELCB</th><th>功率</th><th>備註</th>'+
     '</tr></thead><tbody>';
 
   boards.forEach(function(board){
@@ -982,6 +982,7 @@ function renderConfigTable(){
       var spec = WIRE_SPEC[ckt.type] || {breaker:ckt.type,wire:'—',conduit:'—'};
       var is220 = ckt.v==='220';
       var isSpare = ckt.spare;
+      var wStr = ckt.w>0 ? (ckt.w).toLocaleString()+'W' : (isSpare?'—':'');
       html += '<tr>'+
         '<td>'+(isSpare?'—':(ci+1))+'</td>'+
         '<td>'+board.name+'</td>'+
@@ -991,27 +992,41 @@ function renderConfigTable(){
         '<td>'+spec.wire+'</td>'+
         '<td>'+(spec.conduit||'—')+'</td>'+
         '<td>'+(ckt.elcb?'<span class="td-elcb">✓ ELCB</span>':'')+'</td>'+
+        '<td style="color:var(--ink-l)">'+wStr+'</td>'+
         '<td>'+(isSpare?'預留':'')+'</td>'+
       '</tr>';
     });
   });
 
   // Summary row
-  var total110 = 0, total220 = 0, totalElcb = 0;
+  var total110=0, total220=0, totalElcb=0, totalW110=0, totalW220=0;
   boards.forEach(function(b){
     b.circuits.forEach(function(c){
       if(!c.spare){
-        if(c.v==='220') total220++; else total110++;
+        if(c.v==='220'){ total220++; totalW220+=(c.w||0); }
+        else            { total110++; totalW110+=(c.w||0); }
         if(c.elcb) totalElcb++;
       }
     });
   });
-  html += '<tr style="background:var(--sage-lt);">'+
-    '<td colspan="2" style="color:var(--sage-dk);font-family:var(--serif);">合計</td>'+
-    '<td colspan="2">110V：<strong>'+total110+'</strong> 路　220V：<strong>'+total220+'</strong> 路</td>'+
-    '<td colspan="2">ELCB：<strong>'+totalElcb+'</strong> 處　主開關：<strong>'+sc.mainBreaker+'</strong></td>'+
-    '<td colspan="3">進戶線：<strong>'+sc.mainWire+'</strong>　安培：<strong>'+sc.amp+'A</strong></td>'+
-  '</tr>';
+  var totalW = totalW110+totalW220;
+  var scEl5 = document.getElementById('f-scenario');
+  var scCode = scEl5?scEl5.value:'R1';
+  var scLimit = {R1:6600,R2:11000,H1:8250,H2:11000,C1:11000,C2:22000}[scCode]||11000;
+  var usePct = totalW>0 ? Math.round(totalW/scLimit*100) : 0;
+  var pctColor = usePct>100?'var(--red)':usePct>80?'var(--amber)':'var(--sage-dk)';
+  html +=
+    '<tr style="background:var(--sage-lt);font-size:11px;">'+
+      '<td colspan="2" style="color:var(--sage-dk);font-family:var(--serif);letter-spacing:1px;">合　計</td>'+
+      '<td colspan="2">110V <b>'+total110+'</b> 路　220V <b>'+total220+'</b> 路　ELCB <b>'+totalElcb+'</b> 處</td>'+
+      '<td colspan="2">主開關：<b>'+sc.mainBreaker+'</b>　進戶線：<b>'+sc.mainWire+'</b></td>'+
+      '<td colspan="4" style="color:'+pctColor+'">'+
+        '110V：<b>'+(totalW110/1000).toFixed(1)+'kW</b>　'+
+        '220V：<b>'+(totalW220/1000).toFixed(1)+'kW</b>　'+
+        '總負載：<b>'+(totalW/1000).toFixed(1)+'kW</b>　'+
+        '使用率：<b>'+usePct+'%</b>（上限 '+(scLimit/1000).toFixed(0)+'kW）'+
+      '</td>'+
+    '</tr>';
 
   html += '</tbody></table>';
   document.getElementById('configTableWrap').innerHTML = html;

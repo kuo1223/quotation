@@ -1778,72 +1778,76 @@ function exportToSLD(){
 
   // ── 照明 ───────────────────────────────────────────────
   if(lighting110>0)
-    circuits.push({name:'電燈（全室照明）',v:'110',type:'1P15A',elcb:false,spare:false});
+    circuits.push({name:'電燈（全室照明）',v:'110',type:'1P15A',elcb:false,spare:false,w:lighting110});
 
   // ── 一般插座 ───────────────────────────────────────────
   if(general110>0){
     var gCkts=Math.max(1,Math.ceil(general110/110/16));
+    var genW=Math.round(general110/Math.min(gCkts,3));
     for(var gi=0;gi<Math.min(gCkts,3);gi++)
-      circuits.push({name:'一般插座（客廳/臥室）',v:'110',type:'1P20A',elcb:false,spare:false});
+      circuits.push({name:'一般插座（客廳/臥室）',v:'110',type:'1P20A',elcb:false,spare:false,w:genW});
   }
 
   // ── 廚房一般插座（<800W 小家電、排油煙機） ────────────
   if(kitchen110>0||hasKitchen)
-    circuits.push({name:'廚房一般插座',v:'110',type:'1P20A',elcb:false,spare:false});
+    circuits.push({name:'廚房一般插座',v:'110',type:'1P20A',elcb:false,spare:false,w:kitchen110||500});
 
   // ── 冰箱專用 ───────────────────────────────────────────
   if(fridge)
-    circuits.push({name:'冰箱（專用）',v:'110',type:'1P20A',elcb:false,spare:false});
+    circuits.push({name:'冰箱（專用）',v:'110',type:'1P20A',elcb:false,spare:false,w:fridge.w*fridge.qty});
 
   // ── 廚房中功率合併（電鍋/微波/烤麵包 800W~1500W）──────
   // 線徑加大到 5.5mm²（1P20A-H），可共用一迴路
   if(kitchenMidW>0){
     var midCkts=Math.max(1,Math.ceil(kitchenMidW/110/16));
+    var midWper=Math.round(kitchenMidW/Math.min(midCkts,2));
     for(var mi=0;mi<Math.min(midCkts,2);mi++)
-      circuits.push({name:'廚房小家電共用（電鍋/微波等）',v:'110',type:'1P20A-H',elcb:false,spare:false});
+      circuits.push({name:'廚房小家電共用（電鍋/微波等）',v:'110',type:'1P20A-H',elcb:false,spare:false,w:midWper});
   }
 
   // ── 廚房大功率各自獨立（洗碗機/大烤箱/>1500W） ────────
   kitchenBigItems.forEach(function(i){
     var isWasher=/洗碗/.test(i.name);
-    circuits.push({name:'廚房大功率｜'+i.name,v:'110',type:'1P20A-H',elcb:isWasher,spare:false});
+    circuits.push({name:'廚房大功率｜'+i.name,v:'110',type:'1P20A-H',elcb:isWasher,spare:false,w:i.w*i.qty});
   });
 
   // ── 浴室 ELCB（強制，不管有沒有勾選） ─────────────────
-  circuits.push({name:'浴室插座（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false});
+  var bathW=bathroomItems.reduce(function(s,i){return s+i.w*i.qty;},500);
+  circuits.push({name:'浴室插座（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false,w:bathW});
 
   // ── 陽台/洗衣機 ELCB（強制，偵測到陽台空間） ──────────
   if(hasBalcony||laundry)
-    circuits.push({name:'陽台／洗衣機（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false});
+    circuits.push({name:'陽台／洗衣機（ELCB）',v:'110',type:'1P20A',elcb:true,spare:false,w:laundry?laundry.w*laundry.qty:1200});
 
   // ── 其他 110V ──────────────────────────────────────────
   other110.forEach(function(i){
-    circuits.push({name:i.space+'｜'+i.name,v:'110',type:'1P20A',elcb:false,spare:false});
+    circuits.push({name:i.space+'｜'+i.name,v:'110',type:'1P20A',elcb:false,spare:false,w:i.w*i.qty});
   });
 
   // ── 冷氣各自獨立 ───────────────────────────────────────
   acItems.forEach(function(i){
-    circuits.push({name:'冷氣｜'+i.space,v:'220',type:'2P20A',elcb:false,spare:false});
+    circuits.push({name:'冷氣｜'+i.space,v:'220',type:'2P20A',elcb:false,spare:false,w:i.w*i.qty});
   });
 
   // ── 浴室暖風機 ELCB（強制，偵測到浴室空間） ───────────
-  circuits.push({name:'浴室暖風機（ELCB）',v:'220',type:'2P20A',elcb:true,spare:false});
+  var fanW=fanItems.reduce(function(s,i){return s+i.w*i.qty;},1400);
+  circuits.push({name:'浴室暖風機（ELCB）',v:'220',type:'2P20A',elcb:true,spare:false,w:fanW});
 
   // ── 高功率 220V 各自獨立 ───────────────────────────────
   highItems.forEach(function(i){
-    circuits.push({name:i.space+'｜'+i.name,v:'220',type:'2P30A',elcb:false,spare:false});
+    circuits.push({name:i.space+'｜'+i.name,v:'220',type:'2P30A',elcb:false,spare:false,w:i.w*i.qty});
   });
 
   // ── 其他 220V ──────────────────────────────────────────
   other220.forEach(function(i){
-    circuits.push({name:i.space+'｜'+i.name,v:'220',type:'2P20A',elcb:false,spare:false});
+    circuits.push({name:i.space+'｜'+i.name,v:'220',type:'2P20A',elcb:false,spare:false,w:i.w*i.qty});
   });
 
   // ── SPARE ──────────────────────────────────────────────
   var spareN=sc.startsWith('R')?2:4;
   for(var j=0;j<spareN;j++)
     circuits.push({name:'SPARE',v:j<spareN/2?'110':'220',
-      type:j<spareN/2?'1P20A':'2P20A',elcb:false,spare:true});
+      type:j<spareN/2?'1P20A':'2P20A',elcb:false,spare:true,w:0});
 
   var data = {
     scenario: sc,
