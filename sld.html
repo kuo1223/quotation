@@ -102,12 +102,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .r-content{flex:1;overflow:auto;padding:20px;}
 
 /* SLD CANVAS AREA */
-.sld-wrap{background:var(--surface);border-radius:var(--rl);box-shadow:var(--sh);padding:24px;min-width:600px;}
+.sld-wrap{background:var(--surface);border-radius:var(--rl);box-shadow:var(--sh);padding:24px;}
 .sld-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--sage-dk);}
 .sld-company{font-family:var(--serif);font-size:16px;letter-spacing:4px;color:var(--ink);}
 .sld-subtitle{font-size:11px;color:var(--ink-l);letter-spacing:2px;margin-top:4px;}
 .sld-meta{font-size:11px;color:var(--ink-l);margin-top:6px;}
-#sldSvg{width:100%;overflow:visible;}
+#sldSvg{display:block;overflow:visible;}
 
 /* CONFIG TABLE */
 .config-tbl{width:100%;border-collapse:collapse;margin-top:20px;font-size:11px;}
@@ -802,170 +802,131 @@ function renderSVG(){
   var scEl = document.getElementById('f-scenario');
   var sc = SCENARIOS[scEl ? scEl.value : 'R1'] || SCENARIOS.R1;
 
-  var W = 900;
-  var COL_ENTRY = 80;   // 進戶線 x
-  var BUS_Y = 120;      // 匯流排 y
+  // ── 版面常數 ────────────────────────────────────────────────
+  var W          = 1100;
+  var ENTRY_X    = 110;
+  var MAIN_Y     = 50;
+  var MAIN_H     = 48;
+  var BUS_Y      = MAIN_Y + MAIN_H + 28;
+  var CKT_H      = 58;
+  var CKT_START  = BUS_Y + 50;
 
-  // 計算總迴路數
-  var totalCkts = 0;
-  boards.forEach(function(b){ totalCkts += b.circuits.length; });
-  var H = Math.max(400, BUS_Y + 60 + Math.ceil(totalCkts/2) * 36 + 80);
+  // 左欄（110V）
+  var L_BUS_X    = ENTRY_X + 40;
+  var L_BRK_X    = L_BUS_X + 70;
+  var L_BRK_W    = 78;
+  var L_BRK_H    = 34;
+  var L_NAME_X   = L_BRK_X + L_BRK_W + 12;
+  var L_NAME_EX  = L_BRK_X + L_BRK_W + 62;
+
+  // 右欄（220V）
+  var R_BUS_X    = ENTRY_X + 480;
+  var R_BRK_X    = R_BUS_X + 70;
+  var R_NAME_X   = R_BRK_X + L_BRK_W + 18;
+  var R_NAME_EX  = R_BRK_X + L_BRK_W + 76;
+
+  // 高度計算
+  var leftCkts=0, rightCkts=0;
+  boards.forEach(function(b){
+    b.circuits.forEach(function(c){ if(c.v==='220') rightCkts++; else leftCkts++; });
+  });
+  var H = Math.max(500, CKT_START + Math.max(leftCkts, rightCkts) * CKT_H + 120);
 
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('width', W);
   svg.setAttribute('height', H);
 
   var parts = [];
 
-  // ── defs ──
-  parts.push('<defs>'+
-    '<marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">'+
-      '<path d="M0,0 L0,6 L6,3 z" fill="#6e7a6a"/>'+
-    '</marker>'+
-  '</defs>');
-
-  function txt(x,y,t,sz,color,anchor){
-    sz=sz||10; color=color||'#4a4742'; anchor=anchor||'middle';
+  function T(x,y,t,sz,color,anchor){
+    sz=sz||14; color=color||'#4a4742'; anchor=anchor||'middle';
     return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+
       '" font-family="Noto Sans TC,sans-serif" font-size="'+sz+'" fill="'+color+'">'+t+'</text>';
   }
-  function rect(x,y,w,h,fill,stroke,rx){
+  function R(x,y,w,h,fill,stroke,rx){
     return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+
       '" fill="'+(fill||'#fff')+'" stroke="'+(stroke||'#2b2926')+
-      '" stroke-width="1.5" rx="'+(rx||3)+'"/>';
+      '" stroke-width="2" rx="'+(rx||4)+'"/>';
   }
-  function line(x1,y1,x2,y2,color,sw,dash){
+  function L(x1,y1,x2,y2,color,sw){
     return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+
-      '" stroke="'+(color||'#2b2926')+'" stroke-width="'+(sw||1.5)+'"'+
-      (dash?' stroke-dasharray="4,3"':'')+'/>';
+      '" stroke="'+(color||'#2b2926')+'" stroke-width="'+(sw||2)+'"/>';
   }
 
-  // ── 台電進戶 ──
-  parts.push(txt(COL_ENTRY, 20, '台 電 進 戶', 11, '#2b2926'));
-  parts.push(line(COL_ENTRY, 26, COL_ENTRY, 50));
+  // ── 進戶線 ──────────────────────────────────────────────────
+  parts.push(T(ENTRY_X, 22, '台 電 進 戶', 14, '#2b2926'));
+  parts.push(L(ENTRY_X, 32, ENTRY_X, MAIN_Y, '#2b2926', 2));
 
-  // ── 主開關 ──
-  parts.push(rect(COL_ENTRY-32, 50, 64, 30, '#eef0ea', '#6e7a6a', 4));
-  parts.push(txt(COL_ENTRY, 62, '主 開 關', 10, '#4a4742'));
-  parts.push(txt(COL_ENTRY, 74, sc.mainBreaker, 9, '#6e7a6a'));
-  parts.push(line(COL_ENTRY, 80, COL_ENTRY, BUS_Y));
+  // ── 主開關 ──────────────────────────────────────────────────
+  parts.push(R(ENTRY_X-52, MAIN_Y, 104, MAIN_H, '#eef0ea', '#6e7a6a', 6));
+  parts.push(T(ENTRY_X, MAIN_Y+20, '主 開 關', 14, '#4a4742'));
+  parts.push(T(ENTRY_X, MAIN_Y+36, sc.mainBreaker, 12, '#6e7a6a'));
+  parts.push(L(ENTRY_X, MAIN_Y+MAIN_H, ENTRY_X, BUS_Y, '#2b2926', 2));
 
-  // ── 匯流排 ──
-  var BUS_X_END = W - 30;
-  parts.push(line(COL_ENTRY, BUS_Y, BUS_X_END, BUS_Y, '#6e7a6a', 2.5));
-  parts.push(rect(COL_ENTRY-3, BUS_Y-5, 6, 10, '#6e7a6a', '#6e7a6a'));
-  parts.push(txt(COL_ENTRY+10, BUS_Y-8, 'BUS BAR', 9, '#8a9082', 'start'));
+  // ── 匯流排 ──────────────────────────────────────────────────
+  parts.push(L(ENTRY_X, BUS_Y, W-40, BUS_Y, '#6e7a6a', 3));
+  parts.push(R(ENTRY_X-6, BUS_Y-8, 12, 16, '#6e7a6a', '#6e7a6a'));
+  parts.push(T(ENTRY_X+14, BUS_Y-10, 'BUS BAR', 11, '#8a9082', 'start'));
 
-  // ── 各盤體迴路（雙欄排列）──
-  var CKT_START_Y = BUS_Y + 30;
-  var CKT_H = 34;
-  var COL_L = 160;   // 左欄 x（110V 為主）
-  var COL_R = 520;   // 右欄 x（220V 為主）
-  var BUS_TAP_L = COL_ENTRY + 80;   // 左欄從匯流排tap點
-  var BUS_TAP_R = COL_ENTRY + 280;  // 右欄從匯流排tap點
+  // ── 欄標題 ──────────────────────────────────────────────────
+  parts.push(T(L_BUS_X, CKT_START-14, '110V', 14, '#2980b9'));
+  parts.push(T(R_BUS_X, CKT_START-14, '220V', 14, '#c0392b'));
 
+  // ── 迴路 ────────────────────────────────────────────────────
   boards.forEach(function(board, bi){
-    // 盤體標題
-    var boardY = CKT_START_Y - 16;
-    if(bi > 0) {
-      // sub board feeder line from bus
-      parts.push(line(BUS_TAP_L + bi*60, BUS_Y, BUS_TAP_L + bi*60, boardY+10, '#8a9082', 1.5, true));
-      parts.push(rect(BUS_TAP_L+bi*60-25, boardY-4, 50, 18, '#f0efe9', '#8a9082', 3));
-      parts.push(txt(BUS_TAP_L+bi*60, boardY+7, board.name, 9, '#8a9082'));
+    var lIdx=0, rIdx=0;
+
+    if(!board.isMain){
+      var sbY = CKT_START-44;
+      parts.push(L(L_BUS_X, BUS_Y, L_BUS_X, sbY, '#8a9082', 1.5));
+      parts.push(R(L_BUS_X-56, sbY-14, 112, 28, '#f0efe9','#8a9082',4));
+      parts.push(T(L_BUS_X, sbY+8, board.name, 13, '#8a9082'));
     }
 
-    // 分左右兩欄
-    var leftCkts = [];
-    var rightCkts = [];
     board.circuits.forEach(function(c){
-      if(c.v==='220') rightCkts.push(c);
-      else leftCkts.push(c);
-    });
+      var is220=c.v==='220', isSpare=c.spare;
+      var spec=WIRE_SPEC[c.type]||{breaker:c.type,wire:'—',conduit:''};
+      var busX,brkX,nameX,nameEX,cColor,fillC,idx;
 
-    var maxRows = Math.max(leftCkts.length, rightCkts.length);
+      if(is220){
+        busX=R_BUS_X; brkX=R_BRK_X; nameX=R_NAME_X; nameEX=R_NAME_EX;
+        cColor=isSpare?'#c8c4be':'#c0392b';
+        fillC=isSpare?'#f0efe9':'#fdecea';
+        idx=rIdx++;
+      } else {
+        busX=L_BUS_X; brkX=L_BRK_X; nameX=L_NAME_X; nameEX=L_NAME_EX;
+        cColor=isSpare?'#c8c4be':'#2980b9';
+        fillC=isSpare?'#f0efe9':'#eef5fb';
+        idx=lIdx++;
+      }
 
-    // 左欄垂直線（110V）
-    if(leftCkts.length>0){
-      parts.push(line(COL_ENTRY+20, BUS_Y, COL_ENTRY+20, CKT_START_Y + leftCkts.length*CKT_H - CKT_H/2, '#2980b9', 1.5));
-      parts.push(txt(COL_ENTRY+24, CKT_START_Y-6, '110V', 9, '#2980b9', 'start'));
-    }
-    // 右欄垂直線（220V）
-    if(rightCkts.length>0){
-      parts.push(line(COL_ENTRY+240, BUS_Y, COL_ENTRY+240, CKT_START_Y + rightCkts.length*CKT_H - CKT_H/2, '#c0392b', 1.5));
-      parts.push(txt(COL_ENTRY+244, CKT_START_Y-6, '220V', 9, '#c0392b', 'start'));
-    }
+      var cy = CKT_START + idx*CKT_H + CKT_H/2;
 
-    // 左欄迴路
-    leftCkts.forEach(function(c, ci){
-      var y = CKT_START_Y + ci*CKT_H + 12;
-      var isSpare = c.spare;
-      var spec = WIRE_SPEC[c.type]||{breaker:c.type,wire:'—',conduit:''};
-      var cColor = isSpare ? '#c8c4be' : '#2980b9';
-
-      // tap line
-      parts.push(line(COL_ENTRY+20, y, COL_L-30, y, cColor));
+      // vertical bus tap
+      parts.push(L(busX, BUS_Y, busX, cy, cColor, 2));
+      // horizontal tap to breaker
+      parts.push(L(busX, cy, brkX, cy, cColor, 2));
       // breaker box
-      parts.push(rect(COL_L-30, y-8, 36, 16,
-        isSpare?'#f0efe9':'#eef5fb', isSpare?'#c8c4be':'#2980b9', 2));
-      parts.push('<text x="'+(COL_L-12)+'" y="'+(y+4)+'" text-anchor="middle" '+
-        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="'+cColor+'">'+spec.breaker+'</text>');
+      parts.push(R(brkX, cy-L_BRK_H/2, L_BRK_W, L_BRK_H, fillC, cColor, 4));
+      parts.push(T(brkX+L_BRK_W/2, cy+5, spec.breaker, 12, cColor));
       // ELCB
       if(c.elcb){
-        parts.push('<rect x="'+(COL_L+10)+'" y="'+(y-7)+'" width="24" height="14" '+
-          'fill="#fef9e7" stroke="#c8960a" stroke-width="1" rx="2"/>');
-        parts.push('<text x="'+(COL_L+22)+'" y="'+(y+2)+'" text-anchor="middle" '+
-          'font-family="Noto Sans TC,sans-serif" font-size="7" fill="#c8960a">ELCB</text>');
+        parts.push(R(brkX+L_BRK_W+8, cy-16, 44, 26, '#fef9e7','#c8960a',3));
+        parts.push(T(brkX+L_BRK_W+30, cy+5, 'ELCB', 12, '#c8960a'));
       }
       // name
-      var nx = COL_L + (c.elcb?40:14);
-      parts.push('<text x="'+nx+'" y="'+(y+3)+'" text-anchor="start" '+
-        'font-family="Noto Sans TC,sans-serif" font-size="10" fill="'+(isSpare?'#8a8780':'#2b2926')+'">'+
-        (isSpare?'— ':( (ci+1)+'. '))+c.name+'</text>');
+      var nx=c.elcb?nameEX:nameX;
+      var numStr=isSpare?'— ':((idx+1)+'. ');
+      parts.push(T(nx, cy+5, numStr+c.name, 14, isSpare?'#8a8780':'#2b2926','start'));
       // wire spec
-      parts.push('<text x="'+nx+'" y="'+(y+12)+'" text-anchor="start" '+
-        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="#c8c4be">'+
-        spec.wire+(spec.conduit?' '+spec.conduit:'')+'</text>');
+      parts.push(T(nx, cy+18, spec.wire+(spec.conduit?' '+spec.conduit:''), 10, '#b0ada8','start'));
     });
-
-    // 右欄迴路
-    rightCkts.forEach(function(c, ci){
-      var y = CKT_START_Y + ci*CKT_H + 12;
-      var isSpare = c.spare;
-      var spec = WIRE_SPEC[c.type]||{breaker:c.type,wire:'—',conduit:''};
-      var cColor = isSpare ? '#c8c4be' : '#c0392b';
-
-      // tap line
-      parts.push(line(COL_ENTRY+240, y, COL_R-30, y, cColor));
-      // breaker box
-      parts.push(rect(COL_R-30, y-8, 36, 16,
-        isSpare?'#f0efe9':'#fdecea', isSpare?'#c8c4be':'#c0392b', 2));
-      parts.push('<text x="'+(COL_R-12)+'" y="'+(y+4)+'" text-anchor="middle" '+
-        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="'+cColor+'">'+spec.breaker+'</text>');
-      // ELCB
-      if(c.elcb){
-        parts.push('<rect x="'+(COL_R+10)+'" y="'+(y-7)+'" width="24" height="14" '+
-          'fill="#fef9e7" stroke="#c8960a" stroke-width="1" rx="2"/>');
-        parts.push('<text x="'+(COL_R+22)+'" y="'+(y+2)+'" text-anchor="middle" '+
-          'font-family="Noto Sans TC,sans-serif" font-size="7" fill="#c8960a">ELCB</text>');
-      }
-      // name
-      var nx2 = COL_R + (c.elcb?40:14);
-      parts.push('<text x="'+nx2+'" y="'+(y+3)+'" text-anchor="start" '+
-        'font-family="Noto Sans TC,sans-serif" font-size="10" fill="'+(isSpare?'#8a8780':'#2b2926')+'">'+
-        (isSpare?'— ':(ci+1)+'. ')+c.name+'</text>');
-      // wire spec
-      parts.push('<text x="'+nx2+'" y="'+(y+12)+'" text-anchor="start" '+
-        'font-family="Noto Sans TC,sans-serif" font-size="8" fill="#c8c4be">'+
-        spec.wire+(spec.conduit?' '+spec.conduit:'')+'</text>');
-    });
-
-    CKT_START_Y += Math.max(leftCkts.length, rightCkts.length) * CKT_H + 40;
   });
 
   svg.innerHTML = parts.join('');
 }
 
 
-// ══════════════════════════════════════════════
 // CONFIG TABLE
 // ══════════════════════════════════════════════
 function renderConfigTable(){
