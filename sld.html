@@ -138,6 +138,22 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .ckt-elcb-lbl{font-size:7px;color:var(--amber);letter-spacing:0px;line-height:1.2;}
 .ckt-elcb-cb{accent-color:var(--amber);width:13px;height:13px;cursor:pointer;}
 
+
+/* DRAFT SYSTEM */
+.draft-btn{padding:4px 12px;border-radius:var(--r);font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--s2);color:var(--ink-m);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.draft-btn:hover{border-color:var(--sage-dk);color:var(--sage-dk);}
+.draft-bar{padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.draft-inp{flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:11px;font-family:var(--sans);color:var(--ink);outline:none;}
+.draft-inp:focus{border-color:var(--sage-dk);}
+.sld-draft-list{padding:10px 14px;}
+.sld-draft-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:var(--surface);cursor:pointer;transition:all .15s;}
+.sld-draft-item:hover{border-color:var(--sage-dk);background:var(--sage-lt);}
+.sld-draft-info{flex:1;}
+.sld-draft-name{font-size:12px;color:var(--ink);font-family:var(--serif);}
+.sld-draft-meta{font-size:10px;color:var(--ink-f);margin-top:2px;}
+.sld-draft-del{background:none;border:none;color:var(--ink-f);cursor:pointer;font-size:14px;padding:2px 6px;}
+.sld-draft-del:hover{color:var(--red);}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -151,9 +167,26 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
     <div class="hd-title">單 線 圖 工 具</div>
   </div>
   <div class="hd-right">
+    <button class="hbtn hbtn-ghost" onclick="openDraftDrawer()">📁 草稿</button>
     <button class="hbtn hbtn-ghost" onclick="exportJPG()">↓ JPG</button>
     <button class="hbtn hbtn-sage" onclick="window.print()">列印 / PDF</button>
   </div>
+
+  <!-- DRAFT DRAWER -->
+  <div id="draftDrawer" style="display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:200;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1);">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:var(--serif);font-size:13px;letter-spacing:2px;">單 線 圖 草 稿</div>
+      <button onclick="closeDraftDrawer()" style="background:none;border:none;font-size:18px;color:var(--ink-l);cursor:pointer;">×</button>
+    </div>
+    <div class="draft-bar">
+      <input class="draft-inp" id="sldDraftName" placeholder="草稿名稱（如：王先生 60A 方案）">
+      <button class="draft-btn" onclick="saveSLDDraft()" style="background:var(--sage-dk);color:#fff;border-color:var(--sage-dk);">儲存</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;">
+      <div class="sld-draft-list" id="sldDraftList"></div>
+    </div>
+  </div>
+  <div id="draftBdrop" onclick="closeDraftDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:199;"></div>
 </header>
 
 <div class="workspace">
@@ -1115,6 +1148,134 @@ function importFromDraft(dr){
   renderBoards(); renderSLD();
   switchTab('boards');
   showToast('草稿「'+(dr.name||'')+'」匯入完成');
+}
+
+
+// ══════════════════════════════════════════════
+// SLD DRAFT SYSTEM
+// ══════════════════════════════════════════════
+var SLD_DRAFT_KEY = 'sld_drafts';
+
+function getSLDDrafts(){
+  try{ return JSON.parse(localStorage.getItem(SLD_DRAFT_KEY)||'[]'); }
+  catch(e){ return []; }
+}
+
+function saveSLDDraft(){
+  var name = document.getElementById('sldDraftName').value.trim();
+  if(!name){
+    var proj = document.getElementById('f-project');
+    name = (proj&&proj.value) ? proj.value : '未命名草稿';
+  }
+  var scEl = document.getElementById('f-scenario');
+  var draft = {
+    id: 'sld_' + Date.now(),
+    name: name,
+    savedAt: new Date().toLocaleString('zh-TW'),
+    scenario: scEl ? scEl.value : 'R1',
+    project: (document.getElementById('f-project')||{}).value||'',
+    owner:   (document.getElementById('f-owner')||{}).value||'',
+    addr:    (document.getElementById('f-addr')||{}).value||'',
+    note:    (document.getElementById('f-note')||{}).value||'',
+    date:    (document.getElementById('f-date')||{}).value||'',
+    boards:  JSON.parse(JSON.stringify(boards))
+  };
+  var drafts = getSLDDrafts();
+  drafts.unshift(draft);
+  if(drafts.length > 20) drafts = drafts.slice(0,20);
+  localStorage.setItem(SLD_DRAFT_KEY, JSON.stringify(drafts));
+  renderSLDDraftList();
+  showToast('草稿「'+name+'」已儲存');
+  document.getElementById('sldDraftName').value = '';
+}
+
+function loadSLDDraft(id){
+  var drafts = getSLDDrafts();
+  var dr = drafts.find(function(d){ return d.id===id; });
+  if(!dr) return;
+  // Restore state
+  boards = dr.boards || [];
+  boardCounter = boards.reduce(function(m,b){
+    var n = parseInt(b.id.replace('b',''));
+    return Math.max(m, isNaN(n)?0:n);
+  }, 0);
+  circuitCounter = 0;
+  boards.forEach(function(b){
+    b.circuits.forEach(function(c){
+      var n = parseInt(c.id.replace('c',''));
+      if(!isNaN(n)) circuitCounter = Math.max(circuitCounter, n);
+    });
+  });
+  // Restore info fields
+  var fields = {
+    'f-scenario': dr.scenario,
+    'f-project':  dr.project,
+    'f-owner':    dr.owner,
+    'f-addr':     dr.addr,
+    'f-note':     dr.note,
+    'f-date':     dr.date
+  };
+  Object.keys(fields).forEach(function(id){
+    var el = document.getElementById(id);
+    if(el && fields[id]) el.value = fields[id];
+  });
+  renderBoards();
+  renderSLD();
+  switchTab('boards');
+  closeDraftDrawer();
+  showToast('已載入草稿「'+dr.name+'」');
+}
+
+function deleteSLDDraft(id, e){
+  e.stopPropagation();
+  var drafts = getSLDDrafts().filter(function(d){ return d.id!==id; });
+  localStorage.setItem(SLD_DRAFT_KEY, JSON.stringify(drafts));
+  renderSLDDraftList();
+  showToast('草稿已刪除');
+}
+
+function renderSLDDraftList(){
+  var wrap = document.getElementById('sldDraftList');
+  if(!wrap) return;
+  var drafts = getSLDDrafts();
+  if(!drafts.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--ink-f);padding:12px 0;text-align:center;">尚無儲存的草稿</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  drafts.forEach(function(dr){
+    var item = document.createElement('div');
+    item.className = 'sld-draft-item';
+    item.innerHTML =
+      '<div class="sld-draft-info">'+
+        '<div class="sld-draft-name">'+dr.name+'</div>'+
+        '<div class="sld-draft-meta">'+dr.scenario+' ・ '+dr.savedAt+
+          (dr.boards?' ・ '+dr.boards.reduce(function(s,b){return s+b.circuits.length;},0)+'路':'')+'</div>'+
+      '</div>'+
+      '<button class="sld-draft-del" title="刪除">🗑</button>';
+    item.querySelector('.sld-draft-info').addEventListener('click', function(){ loadSLDDraft(dr.id); });
+    item.querySelector('.sld-draft-del').addEventListener('click', function(e){ deleteSLDDraft(dr.id, e); });
+    wrap.appendChild(item);
+  });
+}
+
+function openDraftDrawer(){
+  renderSLDDraftList();
+  var drawer = document.getElementById('draftDrawer');
+  var bdrop  = document.getElementById('draftBdrop');
+  if(drawer){ drawer.style.display='flex'; }
+  if(bdrop)  { bdrop.style.display='block'; }
+  // Auto-fill draft name from project
+  var proj = document.getElementById('f-project');
+  var inp  = document.getElementById('sldDraftName');
+  if(inp && proj && proj.value && !inp.value) inp.value = proj.value;
+}
+
+function closeDraftDrawer(){
+  var drawer = document.getElementById('draftDrawer');
+  var bdrop  = document.getElementById('draftBdrop');
+  if(drawer) drawer.style.display='none';
+  if(bdrop)  bdrop.style.display='none';
 }
 
 
