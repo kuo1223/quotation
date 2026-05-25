@@ -366,132 +366,132 @@ var BOARD_TEMPLATES = {
   'R1': {
     name:'主盤（大樓住宅 60A）',
     circuits:[
-      {name:'電燈（全室照明）',       v:'110', type:'1P15A',   elcb:false, spare:false},
-      {name:'一般插座（客廳）',        v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'一般插座（臥室/書房）',   v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'浴室插座（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'冷氣（客廳）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'冷氣（主臥）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'冷氣（臥室）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（ELCB）',     v:'220', type:'2P20A',   elcb:true,  spare:false},
-      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
-      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'電燈（全室照明）',       v:'110', type:'1P15A',   elcb:false, spare:false,w:300},
+      {name:'一般插座（客廳）',        v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'一般插座（臥室/書房）',   v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false,w:200},
+      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false,w:1200},
+      {name:'浴室插座（ELCB）',          v:'110', type:'1P20A',   elcb:true,  spare:false,w:800},
+      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false,w:1200},
+      {name:'冷氣（客廳）',           v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'冷氣（主臥）',           v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'冷氣（臥室）',           v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'浴室暖風機（ELCB）',     v:'220', type:'2P20A',   elcb:true,  spare:false,w:1400},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
     ]
   },
   'R2': {
     name:'主盤（大樓住宅 100A）',
     circuits:[
-      {name:'電燈（全室照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
-      {name:'一般插座（客廳）',         v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'一般插座（臥室/書房）',    v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房插座（冰箱/小家電）',  v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房高功率（電鍋/烤箱）',  v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'廚房高功率（洗碗機）',     v:'110', type:'1P20A-H', elcb:true,  spare:false},
-      {name:'浴室（ELCB，多間合併）',    v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'陽台／洗衣機（ELCB）',    v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'冷氣（客廳）',            v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'冷氣（主臥）',            v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'冷氣（臥室2）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'冷氣（臥室3）',           v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（ELCB）',      v:'220', type:'2P20A',   elcb:true,  spare:false},
-      {name:'SPARE',                   v:'110', type:'1P20A',   elcb:false, spare:true},
-      {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
-      {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'電燈（全室照明）',        v:'110', type:'1P15A',   elcb:false, spare:false,w:300},
+      {name:'一般插座（客廳）',         v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'一般插座（臥室/書房）',    v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房插座（冰箱/小家電）',  v:'110', type:'1P20A',   elcb:false, spare:false,w:200},
+      {name:'廚房高功率（電鍋/烤箱）',  v:'110', type:'1P20A-H', elcb:false, spare:false,w:1200},
+      {name:'廚房高功率（洗碗機）',     v:'110', type:'1P20A-H', elcb:true,  spare:false,w:1200},
+      {name:'浴室（ELCB，多間合併）',    v:'110', type:'1P20A',   elcb:true,  spare:false,w:1600},
+      {name:'陽台／洗衣機（ELCB）',    v:'110', type:'1P20A',   elcb:true,  spare:false,w:1200},
+      {name:'冷氣（客廳）',            v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'冷氣（主臥）',            v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'冷氣（臥室2）',           v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'冷氣（臥室3）',           v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'浴室暖風機（ELCB）',      v:'220', type:'2P20A',   elcb:true,  spare:false,w:1400},
+      {name:'SPARE',                   v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                   v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
     ]
   },
   'H1': {
     name:'主盤（透天 75A）',
     circuits:[
-      {name:'電燈（1F 照明）',         v:'110', type:'1P15A',   elcb:false, spare:false},
-      {name:'一般插座（1F）',          v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'客廳冷氣',               v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（1F ELCB）',  v:'220', type:'2P20A',   elcb:true,  spare:false},
-      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
-      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'電燈（1F 照明）',         v:'110', type:'1P15A',   elcb:false, spare:false,w:300},
+      {name:'一般插座（1F）',          v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false,w:200},
+      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false,w:1200},
+      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false,w:1200},
+      {name:'客廳冷氣',               v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'浴室暖風機（1F ELCB）',  v:'220', type:'2P20A',   elcb:true,  spare:false,w:1400},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
     ],
     sub:{
       name:'子盤（2F）',
       circuits:[
-        {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
-        {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false},
-        {name:'浴室插座（ELCB）',      v:'110', type:'1P20A',   elcb:true,  spare:false},
-        {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
-        {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
-        {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false},
-        {name:'SPARE',                 v:'110', type:'1P20A',   elcb:false, spare:true},
+        {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false,w:300},
+        {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+        {name:'浴室插座（ELCB）',      v:'110', type:'1P20A',   elcb:true,  spare:false,w:800},
+        {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+        {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+        {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false,w:1400},
+        {name:'SPARE',                 v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
       ]
     }
   },
   'H2': {
     name:'主盤（透天 100A）',
     circuits:[
-      {name:'電燈（1F 照明）',         v:'110', type:'1P15A',   elcb:false, spare:false},
-      {name:'一般插座（1F）',          v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'廚房高功率（洗碗機）',    v:'110', type:'1P20A-H', elcb:true,  spare:false},
-      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'客廳冷氣',               v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'浴室暖風機（1F ELCB）',  v:'220', type:'2P20A',   elcb:true,  spare:false},
-      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
-      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'電燈（1F 照明）',         v:'110', type:'1P15A',   elcb:false, spare:false,w:300},
+      {name:'一般插座（1F）',          v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房插座（冰箱/小家電）', v:'110', type:'1P20A',   elcb:false, spare:false,w:200},
+      {name:'廚房高功率（電鍋/烤箱）', v:'110', type:'1P20A-H', elcb:false, spare:false,w:1200},
+      {name:'廚房高功率（洗碗機）',    v:'110', type:'1P20A-H', elcb:true,  spare:false,w:1200},
+      {name:'陽台／洗衣機（ELCB）',   v:'110', type:'1P20A',   elcb:true,  spare:false,w:1200},
+      {name:'客廳冷氣',               v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+      {name:'浴室暖風機（1F ELCB）',  v:'220', type:'2P20A',   elcb:true,  spare:false,w:1400},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
     ],
     sub:{
       name:'子盤（2F）',
       circuits:[
-        {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false},
-        {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false},
-        {name:'浴室插座（ELCB）',      v:'110', type:'1P20A',   elcb:true,  spare:false},
-        {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
-        {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false},
-        {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false},
-        {name:'SPARE',                 v:'110', type:'1P20A',   elcb:false, spare:true},
-        {name:'SPARE',                 v:'220', type:'2P20A',   elcb:false, spare:true},
+        {name:'電燈（2F 照明）',        v:'110', type:'1P15A',   elcb:false, spare:false,w:300},
+        {name:'一般插座（2F）',         v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+        {name:'浴室插座（ELCB）',      v:'110', type:'1P20A',   elcb:true,  spare:false,w:800},
+        {name:'主臥冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+        {name:'臥室冷氣',              v:'220', type:'2P20A',   elcb:false, spare:false,w:1800},
+        {name:'浴室暖風機（2F ELCB）', v:'220', type:'2P20A',   elcb:true,  spare:false,w:1400},
+        {name:'SPARE',                 v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+        {name:'SPARE',                 v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
       ]
     }
   },
   'C1': {
     name:'主盤（商空 100A）',
     circuits:[
-      {name:'照明（全場）',            v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'照明（招牌/展示）',       v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'一般插座（辦公區）',      v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房/茶水間插座',         v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廁所（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'空調1',                  v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'空調2',                  v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'空調3',                  v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'消防設備（獨立）',        v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
-      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'照明（全場）',            v:'110', type:'1P20A',   elcb:false, spare:false,w:300},
+      {name:'照明（招牌/展示）',       v:'110', type:'1P20A',   elcb:false, spare:false,w:300},
+      {name:'一般插座（辦公區）',      v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房/茶水間插座',         v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廁所（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false,w:1600},
+      {name:'空調1',                  v:'220', type:'2P20A',   elcb:false, spare:false,w:2200},
+      {name:'空調2',                  v:'220', type:'2P20A',   elcb:false, spare:false,w:2200},
+      {name:'空調3',                  v:'220', type:'2P20A',   elcb:false, spare:false,w:2200},
+      {name:'消防設備（獨立）',        v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
     ]
   },
   'C2': {
     name:'主盤（商空 200A）',
     circuits:[
-      {name:'照明（全場）',            v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'照明（廚房/後場）',       v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'一般插座（外場）',        v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房一般插座',           v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'廚房高功率設備1',         v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'廚房高功率設備2',         v:'110', type:'1P20A-H', elcb:false, spare:false},
-      {name:'廁所（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false},
-      {name:'排油煙/排氣設備',         v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'空調1',                  v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'空調2',                  v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'空調3',                  v:'220', type:'2P20A',   elcb:false, spare:false},
-      {name:'廚房大功率（220V）1',    v:'220', type:'2P30A',   elcb:false, spare:false},
-      {name:'廚房大功率（220V）2',    v:'220', type:'2P30A',   elcb:false, spare:false},
-      {name:'消防設備（獨立）',        v:'110', type:'1P20A',   elcb:false, spare:false},
-      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true},
-      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
-      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true},
+      {name:'照明（全場）',            v:'110', type:'1P20A',   elcb:false, spare:false,w:300},
+      {name:'照明（廚房/後場）',       v:'110', type:'1P20A',   elcb:false, spare:false,w:300},
+      {name:'一般插座（外場）',        v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房一般插座',           v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'廚房高功率設備1',         v:'110', type:'1P20A-H', elcb:false, spare:false,w:2000},
+      {name:'廚房高功率設備2',         v:'110', type:'1P20A-H', elcb:false, spare:false,w:2000},
+      {name:'廁所（ELCB）',           v:'110', type:'1P20A',   elcb:true,  spare:false,w:1600},
+      {name:'排油煙/排氣設備',         v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'空調1',                  v:'220', type:'2P20A',   elcb:false, spare:false,w:2200},
+      {name:'空調2',                  v:'220', type:'2P20A',   elcb:false, spare:false,w:2200},
+      {name:'空調3',                  v:'220', type:'2P20A',   elcb:false, spare:false,w:2200},
+      {name:'廚房大功率（220V）1',    v:'220', type:'2P30A',   elcb:false, spare:false,w:3300},
+      {name:'廚房大功率（220V）2',    v:'220', type:'2P30A',   elcb:false, spare:false,w:3300},
+      {name:'消防設備（獨立）',        v:'110', type:'1P20A',   elcb:false, spare:false,w:1600},
+      {name:'SPARE',                  v:'110', type:'1P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
+      {name:'SPARE',                  v:'220', type:'2P20A',   elcb:false, spare:true,w:0},
     ]
   }
 };
@@ -503,13 +503,13 @@ function applyTemplate(sc){
   var main = addBoard(tmpl.name, true, null, false);
   tmpl.circuits.forEach(function(c){
     circuitCounter++;
-    main.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v,type:c.type,elcb:c.elcb,spare:c.spare});
+    main.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v,type:c.type,elcb:c.elcb,spare:c.spare,w:c.w||0});
   });
   if(tmpl.sub){
     var sub = addBoard(tmpl.sub.name, false, main.id, false);
     tmpl.sub.circuits.forEach(function(c){
       circuitCounter++;
-      sub.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v,type:c.type,elcb:c.elcb,spare:c.spare});
+      sub.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v,type:c.type,elcb:c.elcb,spare:c.spare,w:c.w||0});
     });
   }
   renderBoards();
@@ -542,7 +542,8 @@ function addCircuit(boardId, name, v, type, elcb, spare){
   var b = boards.find(function(b){ return b.id===boardId; });
   if(!b) return;
   circuitCounter++;
-  b.circuits.push({id:'c'+circuitCounter, name:name||'新迴路', v:v||'110', type:type||'1P20A', elcb:!!elcb, spare:!!spare});
+  var defW = {R1:1000,R2:1000,H1:1000,H2:1000,C1:1000,C2:1000};
+  b.circuits.push({id:'c'+circuitCounter, name:name||'新迴路', v:v||'110', type:type||'1P20A', elcb:!!elcb, spare:!!spare, w:spare?0:0});
   renderBoards(); renderSLD();
 }
 
@@ -1157,7 +1158,7 @@ function importFromDraft(dr){
     (b.circuits||[]).forEach(function(c){
       circuitCounter++;
       nb.circuits.push({id:'c'+circuitCounter,name:c.name,v:c.v||'110',
-        type:c.type||'1P20A',elcb:!!c.elcb,spare:!!c.spare});
+        type:c.type||'1P20A',elcb:!!c.elcb,spare:!!c.spare,w:c.w||0});
     });
   });
   renderBoards(); renderSLD();
