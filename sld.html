@@ -70,7 +70,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .board-del{background:none;border:none;font-size:14px;color:var(--ink-f);cursor:pointer;padding:2px 6px;}
 .board-del:hover{color:var(--red);}
 .board-circuits{padding:8px 12px;}
-.ckt-row{display:grid;grid-template-columns:24px 1fr 60px 64px 28px 40px;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.ckt-row{display:grid;grid-template-columns:20px minmax(60px,1fr) 56px 60px 32px 24px 32px;gap:3px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
 .ckt-row:last-child{border-bottom:none;}
 .ckt-num{color:var(--ink-f);text-align:center;}
 .ckt-name-inp{border:1px solid transparent;border-radius:4px;padding:3px 6px;font-size:11px;font-family:var(--sans);color:var(--ink);outline:none;width:100%;}
@@ -132,6 +132,11 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .ckt-mv-btn{background:none;border:none;color:var(--ink-f);cursor:pointer;font-size:9px;line-height:1;padding:1px 3px;}
 .ckt-mv-btn:hover{color:var(--sage-dk);}
 .ckt-mv-btn:disabled{opacity:.2;cursor:default;}
+
+
+.ckt-elcb-wrap{display:flex;flex-direction:column;align-items:center;gap:0px;}
+.ckt-elcb-lbl{font-size:7px;color:var(--amber);letter-spacing:0px;line-height:1.2;}
+.ckt-elcb-cb{accent-color:var(--amber);width:13px;height:13px;cursor:pointer;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
@@ -632,7 +637,7 @@ function renderBoards(){
 
       // Voltage select
       var vs = document.createElement('select');
-      vs.className = 'ckt-v-sel ' + (c.v==='220'?'ckt-v220':'ckt-v110');
+      vs.className = 'ckt-v-sel ' + (c.v==='220'?'ckt-v220':'ckt-v110'); vs.style.padding='2px 2px';
       ['110','220'].forEach(function(v){
         var o = document.createElement('option');
         o.value = v; o.textContent = v+'V';
@@ -643,7 +648,7 @@ function renderBoards(){
 
       // Type select
       var ts = document.createElement('select');
-      ts.className = 'ckt-type-sel';
+      ts.className = 'ckt-type-sel'; ts.style.padding='2px 2px';
       [['1P15A','1P 15A'],['1P20A','1P 20A'],['1P20A-H','1P 20A★'],['2P20A','2P 20A'],['2P30A','2P 30A']].forEach(function(pair){
         var o = document.createElement('option');
         o.value = pair[0]; o.textContent = pair[1];
@@ -676,10 +681,30 @@ function renderBoards(){
       db.textContent = '×';
       db.addEventListener('click', (function(bid,cid){ return function(){ deleteCircuit(bid,cid); }; })(b.id,c.id));
 
+      // ELCB checkbox
+      var elcbWrap = document.createElement('div');
+      elcbWrap.className = 'ckt-elcb-wrap';
+      var elcbLbl = document.createElement('div');
+      elcbLbl.className = 'ckt-elcb-lbl';
+      elcbLbl.textContent = 'ELCB';
+      var elcbCb = document.createElement('input');
+      elcbCb.type = 'checkbox';
+      elcbCb.className = 'ckt-elcb-cb';
+      elcbCb.checked = !!c.elcb;
+      elcbCb.title = 'ELCB 漏電斷路器';
+      elcbCb.addEventListener('change', (function(bid,cid){ return function(){
+        var brd=boards.find(function(x){return x.id===bid;});
+        if(brd){ var ckt=brd.circuits.find(function(x){return x.id===cid;}); if(ckt) ckt.elcb=this.checked; }
+        renderSLD();
+      }; })(b.id,c.id));
+      elcbWrap.appendChild(elcbLbl);
+      elcbWrap.appendChild(elcbCb);
+
       row.appendChild(num);
       row.appendChild(ni);
       row.appendChild(vs);
       row.appendChild(ts);
+      row.appendChild(elcbWrap);
       row.appendChild(mv);
       row.appendChild(db);
       ckts.appendChild(row);
