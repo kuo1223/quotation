@@ -183,6 +183,37 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .mode-tab.active{color:var(--sage-dk);border-bottom-color:var(--sage-dk);}
 .mode-tab:hover{background:var(--s2);}
 
+
+/* INTEGRATED REPORT */
+.rpt-section{margin-bottom:28px;}
+.rpt-section-title{font-family:var(--serif);font-size:13px;letter-spacing:3px;color:var(--sage-dk);padding-bottom:8px;border-bottom:1.5px solid var(--sage-pa);margin-bottom:14px;}
+.rpt-overview{background:var(--s2);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;font-size:12px;color:var(--ink-m);line-height:1.9;}
+.rpt-overview b{color:var(--ink);}
+/* Risk summary table */
+.rpt-risk-table{width:100%;border-collapse:collapse;margin-bottom:4px;font-size:11px;}
+.rpt-risk-table th{background:var(--s3);padding:7px 10px;text-align:left;font-weight:400;color:var(--ink-m);border:1px solid var(--border);}
+.rpt-risk-table td{padding:8px 10px;border:1px solid var(--border);vertical-align:top;line-height:1.7;}
+.rpt-risk-table tr:nth-child(even) td{background:var(--s2);}
+.rpt-risk-lv{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500;}
+.rpt-risk-hi{background:#fdecea;color:var(--red);}
+.rpt-risk-md{background:var(--amber-lt);color:#7a5200;}
+.rpt-risk-lo{background:var(--sage-lt);color:var(--sage-dk);}
+/* Detail cards */
+.rpt-detail-card{border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.rpt-detail-hd{padding:10px 14px;background:var(--s3);display:flex;align-items:center;gap:10px;}
+.rpt-detail-num{width:22px;height:22px;border-radius:50%;background:var(--sage-dk);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rpt-detail-ttl{font-size:12px;color:var(--ink);flex:1;line-height:1.5;}
+.rpt-detail-cat{font-size:9px;padding:2px 8px;border-radius:10px;background:var(--sage-lt);color:var(--sage-dk);white-space:nowrap;}
+.rpt-detail-body{padding:12px 14px;}
+.rpt-detail-row{display:grid;grid-template-columns:80px 1fr;gap:6px;margin-bottom:8px;font-size:11px;line-height:1.7;}
+.rpt-detail-lbl{color:var(--ink-l);font-size:10px;padding-top:1px;}
+.rpt-detail-val{color:var(--ink-m);}
+.rpt-detail-val.red{color:var(--red);}
+.rpt-sol-list{margin:6px 0 0 0;padding-left:16px;font-size:11px;color:var(--sage-dk);line-height:1.8;}
+.rpt-sol-list li{margin-bottom:2px;}
+.rpt-summary-box{background:var(--sage-lt);border-radius:var(--r);padding:12px 16px;margin-top:16px;font-size:11px;color:var(--ink-m);line-height:1.9;}
+.rpt-summary-box b{color:var(--sage-dk);}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -3351,62 +3382,143 @@ function clearAll(){
 }
 
 // ══════════════════════════════════════════════
-// RENDER REPORT
+// RENDER REPORT（整合式綜合評估）
 // ══════════════════════════════════════════════
 function renderReport(){
-  const container = document.getElementById('rptItems');
-  const footer = document.getElementById('rptFooter');
+  var container = document.getElementById('rptItems');
+  var footer = document.getElementById('rptFooter');
 
   if(selectedIds.size===0){
-    container.innerHTML = '<div class="rpt-empty"><span class="rpt-empty-icon">📋</span>請從左側搜尋並勾選適用的法規情境<br>系統將自動產生專業評估報告</div>';
+    container.innerHTML = '<div class="rpt-empty"><span class="rpt-empty-icon">📋</span>請從左側搜尋並勾選適用的法規情境<br>系統將自動產生專業整合評估報告</div>';
     footer.style.display='none';
     return;
   }
 
-  container.innerHTML = '';
-  let num = 1;
-  selectedIds.forEach(id=>{
-    const law = LAW_DB.find(l=>l.id===id);
-    if(!law) return;
-    const lawUrl = getLawLink(law.title);
-    const div = document.createElement('div');
-    div.className = 'rpt-item';
-    var solItems = (law.solution||[]).map(function(s){return '<li>'+s+'</li>';}).join('');
-    div.innerHTML =
-      '<div class="rpt-item-hd">'+
-        '<div class="rpt-item-num">'+num+'</div>'+
-        '<div class="rpt-item-title">'+law.title+'</div>'+
-        '<span class="law-card-cat">'+law.category+'</span>'+
-      '</div>'+
-      '<div class="rpt-item-body">'+
-        '<div class="rpt-grid">'+
-          '<div class="rpt-cell">'+
-            '<div class="rpt-cell-label">⚠️ 問題情境</div>'+
-            '<div class="rpt-cell-val">'+law.plain.substring(0,40)+(law.plain.length>40?'…':'')+'</div>'+
-          '</div>'+
-          '<div class="rpt-cell">'+
-            '<div class="rpt-cell-label">📋 對應法條</div>'+
-            '<div class="rpt-cell-val">'+law.lawText.substring(0,40)+(law.lawText.length>40?'…':'')+'</div>'+
-          '</div>'+
-          '<div class="rpt-cell">'+
-            '<div class="rpt-cell-label">🔴 罰則</div>'+
-            '<div class="rpt-cell-val red">'+law.penalty.substring(0,40)+(law.penalty.length>40?'…':'')+'</div>'+
-          '</div>'+
-        '</div>'+
-        '<div class="rpt-risk">💥 '+law.impact+'</div>'+
-        (solItems?'<div class="rpt-sol"><div class="rpt-sol-label">✅ 合規替代方案</div><ul>'+solItems+'</ul></div>':'')+
-        '<div class="rpt-bottom">'+
-          '<div class="rpt-authority">🏛️ '+(law.authority||'')+'　📞 '+(law.hotline||'')+'</div>'+
-          '<a class="rpt-ref-link" href="'+lawUrl+'" target="_blank">🔗 查閱完整法條</a>'+
-        '</div>'+
-      '</div>';
-    container.appendChild(div);
-    num++;
+  // 收集所有選取的法規
+  var laws = [];
+  selectedIds.forEach(function(id){
+    var law = LAW_DB.find(function(l){ return l.id===id; });
+    if(law) laws.push(law);
   });
 
+  // 風險等級判斷
+  function riskLevel(law){
+    var p = law.penalty||'';
+    if(/有期徒刑|拘役|停業|強制拆除|50萬|100萬/.test(p)) return 'hi';
+    if(/6萬|10萬|15萬|20萬|30萬/.test(p)) return 'md';
+    return 'lo';
+  }
+  function riskLabel(lv){ return lv==='hi'?'高風險':lv==='md'?'中風險':'低風險'; }
+  function riskClass(lv){ return 'rpt-risk-'+lv; }
+
+  var hiCount = laws.filter(function(l){return riskLevel(l)==='hi';}).length;
+  var mdCount = laws.filter(function(l){return riskLevel(l)==='md';}).length;
+  var loCount = laws.filter(function(l){return riskLevel(l)==='lo';}).length;
+
+  // 依分類分組
+  var catGroups = {};
+  laws.forEach(function(law){
+    var cat = law.category||'其他';
+    if(!catGroups[cat]) catGroups[cat]=[];
+    catGroups[cat].push(law);
+  });
+
+  var html = '';
+
+  // ── 一、評估總覽 ──────────────────────────────
+  html += '<div class="rpt-section">';
+  html += '<div class="rpt-section-title">一、評 估 總 覽</div>';
+  html += '<div class="rpt-overview">';
+  html += '本次評估共涉及 <b>'+laws.length+'</b> 項法規情境，';
+  html += '涵蓋 <b>'+Object.keys(catGroups).length+'</b> 個法規類別。<br>';
+  if(hiCount>0) html += '⛔ 高風險項目 <b>'+hiCount+'</b> 項（涉及刑事責任或強制拆除）。';
+  if(mdCount>0) html += '　⚠️ 中風險項目 <b>'+mdCount+'</b> 項（罰鍰6萬至30萬元）。';
+  if(loCount>0) html += '　✅ 低風險項目 <b>'+loCount+'</b> 項。';
+  html += '<br><br>';
+  html += '建議依下列順序處理：<b>高風險項目優先改善</b>，並於施工前與建管處、消防局確認所有申報文件。';
+  html += '</div>';
+
+  // ── 二、風險彙整表 ───────────────────────────
+  html += '<div class="rpt-section-title">二、法 規 風 險 彙 整</div>';
+  html += '<table class="rpt-risk-table"><thead><tr>';
+  html += '<th style="width:32px;">#</th><th>法規項目</th><th style="width:60px;">分類</th><th style="width:56px;">風險</th><th style="width:120px;">主要罰則</th>';
+  html += '</tr></thead><tbody>';
+  laws.forEach(function(law,i){
+    var lv = riskLevel(law);
+    var penShort = (law.penalty||'').replace(/新臺幣/g,'').substring(0,30)+(law.penalty&&law.penalty.length>30?'…':'');
+    html += '<tr>';
+    html += '<td style="text-align:center;color:var(--ink-f);">'+(i+1)+'</td>';
+    html += '<td style="font-size:11px;">'+law.title.substring(0,45)+(law.title.length>45?'…':'')+'</td>';
+    html += '<td><span style="font-size:9px;color:var(--ink-l);">'+law.category+'</span></td>';
+    html += '<td><span class="rpt-risk-lv '+riskClass(lv)+'">'+riskLabel(lv)+'</span></td>';
+    html += '<td style="font-size:10px;color:var(--red);">'+penShort+'</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div>';
+
+  // ── 三、各項法規詳細說明 ──────────────────────
+  html += '<div class="rpt-section">';
+  html += '<div class="rpt-section-title">三、各 項 法 規 詳 細 說 明</div>';
+  laws.forEach(function(law, i){
+    var lv = riskLevel(law);
+    var solItems = (law.solution||[]).map(function(s){return '<li>'+s+'</li>';}).join('');
+    var lawUrl = getLawLink(law.title);
+    html += '<div class="rpt-detail-card">';
+    html += '<div class="rpt-detail-hd">';
+    html +=   '<div class="rpt-detail-num">'+(i+1)+'</div>';
+    html +=   '<div class="rpt-detail-ttl">'+law.title+'</div>';
+    html +=   '<span class="rpt-risk-lv '+riskClass(lv)+'">'+riskLabel(lv)+'</span>';
+    html +=   '<span class="rpt-detail-cat">'+law.category+'</span>';
+    html += '</div>';
+    html += '<div class="rpt-detail-body">';
+    html +=   '<div class="rpt-detail-row"><span class="rpt-detail-lbl">白話說明</span><span class="rpt-detail-val">'+law.plain+'</span></div>';
+    html +=   '<div class="rpt-detail-row"><span class="rpt-detail-lbl">風險影響</span><span class="rpt-detail-val">'+law.impact+'</span></div>';
+    if(law.case) html += '<div class="rpt-detail-row"><span class="rpt-detail-lbl">典型案例</span><span class="rpt-detail-val">'+law.case+'</span></div>';
+    html +=   '<div class="rpt-detail-row"><span class="rpt-detail-lbl">罰則</span><span class="rpt-detail-val red">'+law.penalty+'</span></div>';
+    if(solItems) html += '<div class="rpt-detail-row"><span class="rpt-detail-lbl">改善建議</span><span class="rpt-detail-val"><ul class="rpt-sol-list">'+solItems+'</ul></span></div>';
+    html +=   '<div style="margin-top:8px;font-size:10px;color:var(--ink-f);">🏛 '+law.authority+'　📞 '+law.hotline;
+    html +=   '　<a href="'+lawUrl+'" target="_blank" style="color:var(--sage-dk);">🔗 查閱完整法條</a></div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ── 四、綜合改善建議 ──────────────────────────
+  html += '<div class="rpt-section">';
+  html += '<div class="rpt-section-title">四、綜 合 改 善 建 議</div>';
+  html += '<div class="rpt-summary-box">';
+  if(hiCount>0){
+    html += '<b>【立即處理】高風險項目（'+hiCount+'項）</b><br>';
+    laws.filter(function(l){return riskLevel(l)==='hi';}).forEach(function(l,i){
+      html += (i+1)+'. '+l.title.substring(0,40)+'：';
+      if(l.solution&&l.solution[0]) html += l.solution[0];
+      html += '<br>';
+    });
+    html += '<br>';
+  }
+  if(mdCount>0){
+    html += '<b>【施工前確認】中風險項目（'+mdCount+'項）</b><br>';
+    laws.filter(function(l){return riskLevel(l)==='md';}).forEach(function(l,i){
+      html += (i+1)+'. '+l.title.substring(0,40)+'：';
+      if(l.solution&&l.solution[0]) html += l.solution[0];
+      html += '<br>';
+    });
+    html += '<br>';
+  }
+  html += '<b>【主管機關聯繫清單】</b><br>';
+  var auths = {};
+  laws.forEach(function(l){
+    if(l.authority&&l.hotline) auths[l.authority]=l.hotline;
+  });
+  Object.keys(auths).forEach(function(a){ html += a+'：'+auths[a]+'<br>'; });
+  html += '</div></div>';
+
+  container.innerHTML = html;
   footer.style.display='block';
   document.getElementById('rptDate').textContent = new Date().toLocaleDateString('zh-TW');
 }
+
 
 // ══════════════════════════════════════════════
 // SEARCH
@@ -3489,7 +3601,17 @@ async function exportJPG(){
     });
   }
   const target = document.getElementById('reportPreview');
-  const canvas = await html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  // 暫時移除 overflow 限制，讓 html2canvas 能截取完整內容
+  const rContent = target.closest('.r-content') || target.parentElement;
+  const origOverflow = rContent ? rContent.style.overflow : '';
+  const origHeight = target.style.height||'';
+  if(rContent) rContent.style.overflow = 'visible';
+  target.style.height = 'auto';
+  await new Promise(r=>setTimeout(r,100));
+  const canvas = await html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#ffffff',
+    scrollX:0,scrollY:0,windowWidth:target.scrollWidth+80,logging:false});
+  if(rContent) rContent.style.overflow = origOverflow;
+  target.style.height = origHeight;
   const dataUrl = canvas.toDataURL('image/jpeg',0.92);
   const fileName = '法規評估報告_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.jpg';
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
