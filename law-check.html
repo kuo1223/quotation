@@ -276,9 +276,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
   </div>
   <div class="report-body" id="reportBody">
     <div class="report-preview" id="reportPreview">
-      
-        <div class="rpt-subtitle">室內裝修法規與安全風險評估報告</div>
-      </div>
+      <div class="rpt-subtitle">室內裝修法規與安全風險評估報告</div>
       <div class="rpt-meta" id="rptMeta"></div>
       <div class="rpt-intro">
         <strong>致 敬愛的客戶：</strong><br>
@@ -3593,38 +3591,61 @@ function emailReport(){
 async function exportJPG(){
   if(selectedIds.size===0){showToast('請先勾選法規再匯出');return;}
   showToast('報告產生中，請稍候…');
+  // 載入 html2canvas
   if(typeof html2canvas==='undefined'){
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
+    await new Promise(function(res,rej){
+      var s=document.createElement('script');
       s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
     });
   }
-  const target = document.getElementById('reportPreview');
-  // 暫時移除 overflow 限制，讓 html2canvas 能截取完整內容
-  const rContent = target.closest('.r-content') || target.parentElement;
-  const origOverflow = rContent ? rContent.style.overflow : '';
-  const origHeight = target.style.height||'';
-  if(rContent) rContent.style.overflow = 'visible';
-  target.style.height = 'auto';
-  await new Promise(r=>setTimeout(r,100));
-  const canvas = await html2canvas(target,{scale:2,useCORS:true,backgroundColor:'#ffffff',
-    scrollX:0,scrollY:0,windowWidth:target.scrollWidth+80,logging:false});
-  if(rContent) rContent.style.overflow = origOverflow;
-  target.style.height = origHeight;
-  const dataUrl = canvas.toDataURL('image/jpeg',0.92);
-  const fileName = '法規評估報告_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.jpg';
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var target = document.getElementById('reportPreview');
+  if(!target){ showToast('找不到報告區域'); return; }
+
+  // 建立隱藏的全寬容器來截圖，避免 overflow:hidden 截斷問題
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;width:800px;z-index:-1;';
+  var clone = target.cloneNode(true);
+  clone.style.cssText = 'width:800px;padding:32px 36px;background:#fff;';
+  wrap.appendChild(clone);
+  document.body.appendChild(wrap);
+  await new Promise(function(r){ setTimeout(r,150); });
+
+  var canvas;
+  try {
+    canvas = await html2canvas(wrap, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      width: 800,
+      scrollX: 0,
+      scrollY: 0,
+      logging: false
+    });
+  } catch(e) {
+    document.body.removeChild(wrap);
+    showToast('截圖失敗，請重試');
+    return;
+  }
+  document.body.removeChild(wrap);
+
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  var fileName = '法規評估報告_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.jpg';
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   if(isIOS){
-    const w=window.open('','_blank');
+    var w = window.open('','_blank');
     if(w){
-      w.document.write('<html><head><title>'+fileName+'</title></head><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;"><p style="color:#fff;font-size:13px;padding:12px;">長按圖片 → 儲存至相簿 或 分享</p><img src="'+dataUrl+'" style="max-width:100%;display:block;"></body></html>');
+      w.document.write('<html><head><meta name="viewport" content="width=device-width"><title>'+fileName+'</title></head><body style="margin:0;background:#111;text-align:center;padding:12px;"><p style="color:#fff;font-size:13px;margin-bottom:8px;">長按圖片 → 儲存至相簿</p><img src="'+dataUrl+'" style="max-width:100%;border-radius:4px;"></body></html>');
       w.document.close();
     } else showToast('請允許彈出視窗');
   } else {
-    const link=document.createElement('a');
-    link.download=fileName;link.href=dataUrl;
-    document.body.appendChild(link);link.click();document.body.removeChild(link);
+    var link = document.createElement('a');
+    link.download = fileName;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     showToast('JPG 已下載');
   }
 }
