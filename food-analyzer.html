@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>食物攝影四專家分析平台</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',sans-serif;background:#f4f3ef;color:#1a1a18;min-height:100vh}
+:root{
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f4f3ef;
+  --color-text-primary:#1a1a18;
+  --color-text-secondary:#5a5a56;
+  --color-text-tertiary:#9a9a94;
+  --color-border-tertiary:rgba(0,0,0,0.10);
+  --color-border-secondary:rgba(0,0,0,0.18);
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1e1e1c;
+    --color-background-secondary:#2a2a28;
+    --color-text-primary:#f0efe9;
+    --color-text-secondary:#a8a8a0;
+    --color-text-tertiary:#686860;
+    --color-border-tertiary:rgba(255,255,255,0.10);
+    --color-border-secondary:rgba(255,255,255,0.18);
+  }
+  body{background:#161614}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+
+/* API Key modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:999;padding:1rem}
+.modal-box{background:var(--color-background-primary);border-radius:20px;padding:2rem;max-width:460px;width:100%;border:0.5px solid var(--color-border-secondary)}
+.modal-box h2{font-size:18px;font-weight:600;color:var(--color-text-primary);margin-bottom:8px}
+.modal-box p{font-size:13px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.6}
+.modal-box input{width:100%;padding:10px 14px;border:1px solid var(--color-border-secondary);border-radius:10px;font-size:13px;background:var(--color-background-secondary);color:var(--color-text-primary);margin-bottom:12px;font-family:monospace}
+.modal-box input:focus{outline:none;border-color:#7F77DD}
+.modal-box .hint{font-size:11px;color:var(--color-text-tertiary);margin-top:8px;line-height:1.5}
+.modal-box .hint a{color:#7F77DD;text-decoration:none}
+.btn-primary{background:#7F77DD;color:#fff;border:none;border-radius:100px;padding:11px 28px;font-size:14px;font-weight:500;cursor:pointer;width:100%}
+.btn-primary:hover{background:#6c65cc}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+// ── API Key Gate ────────────────────────────────────────────────────
+function ApiKeyModal({ onSave }) {
+  const [key, setKey] = useState('');
+  const [err, setErr] = useState('');
+  const handle = () => {
+    const k = key.trim();
+    if (!k.startsWith('sk-ant-')) { setErr('格式不對，Key 應以 sk-ant- 開頭'); return; }
+    onSave(k);
+  };
+  return (
+    <div className="modal-overlay">
+      <div className="modal-box">
+        <h2>🔑 輸入 Anthropic API Key</h2>
+        <p>本工具直接從瀏覽器呼叫 Claude API，需要你的個人 API Key。Key 只存在你的瀏覽器本地，不會上傳到任何伺服器。</p>
+        <input
+          type="password"
+          placeholder="sk-ant-api03-xxxxxxxxxxxxxxxx"
+          value={key}
+          onChange={e => { setKey(e.target.value); setErr(''); }}
+          onKeyDown={e => e.key === 'Enter' && handle()}
+          autoFocus
+        />
+        {err && <p style={{color:'#E24B4A',fontSize:12,marginBottom:8}}>{err}</p>}
+        <button className="btn-primary" onClick={handle}>開始使用</button>
+        <p className="hint">還沒有 Key？前往 <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a> 免費申請。每次重新整理需重新輸入。</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Data ────────────────────────────────────────────────────────────
+const EXPERTS = [
+  {
+    id: 'director', icon: 'ti-camera', title: '商業攝影總監', subtitle: 'Photography Director',
+    accent: '#7F77DD', bg: '#EEEDFE', border: '#AFA9EC', textColor: '#3C3489',
+    prompt: `你是一位頂尖的商業攝影總監，專精於食物攝影與影像傳達魅力。
+請以繁體中文，針對這張食物照片進行專業分析，分為以下三個部分：
+
+【基本解析】
+- 構圖與光線分析
+- 色彩與氛圍表現
+- 畫面焦點與深度感
+
+【優點】
+列出3-4個具體優點
+
+【缺點與改善建議】
+列出2-3個缺點，並給出具體的拍攝改善方法（角度、光線、道具、後製等）
+
+語氣專業但易懂，用詞精確。`
+  },
+  {
+    id: 'chef', icon: 'ti-tools-kitchen-2', title: '料理長', subtitle: 'Executive Chef',
+    accent: '#1D9E75', bg: '#E1F5EE', border: '#5DCAA5', textColor: '#085041',
+    prompt: `你是一位精通各類料理的米其林級料理長，對食材、烹飪技法與料理美學有深厚造詣。
+請以繁體中文，針對這張食物照片進行專業分析，分為以下三個部分：
+
+【食物識別與特色】
+- 辨識食物種類、料理風格、可能的食材
+- 分析烹飪技法與呈現方式
+
+【賣點與特色表現】
+- 這道料理的核心賣點
+- 食材的視覺吸引力與季節感
+- 擺盤與食器的搭配評估
+
+【最佳呈現建議】
+如何讓這道食物看起來更具食慾感和高級感（擺盤調整、食材點綴、器皿選擇等）
+
+語氣充滿對料理的熱情與專業。`
+  },
+  {
+    id: 'cmo', icon: 'ti-chart-bar', title: '品牌行銷長', subtitle: 'Chief Marketing Officer',
+    accent: '#D85A30', bg: '#FAECE7', border: '#F0997B', textColor: '#712B13',
+    prompt: `你是一位洞察市場趨勢的品牌行銷長，熟悉食品行業的消費者心理、市場定位與行銷策略。
+請以繁體中文，針對這張食物照片進行專業分析，分為以下三個部分：
+
+【市場定位分析】
+- 目標客群與消費族群
+- 市場趨勢與競品分析
+- 品牌調性建議
+
+【行銷策略建議】
+- 社群媒體投放策略（IG、小紅書、FB等平台適合性）
+- 視覺內容策略
+- 故事行銷切入點
+
+【定價策略與商業化】
+- 建議定價區間與定位理由
+- 適合的銷售通路
+- 季節性與限定款策略
+
+語氣自信、數據導向，充滿商業洞察。`
+  }
+];
+
+const SUMMARY_PROMPT = `你是一位擁有20年經驗的品牌策略長暨總顧問（Chief Brand Strategist），曾服務多個國際餐飲與食品品牌。
+
+以下是三位專家對同一張食物照片的完整分析：
+═══ 商業攝影總監分析 ═══
+{director}
+═══ 料理長分析 ═══
+{chef}
+═══ 品牌行銷長分析 ═══
+{cmo}
+
+請以繁體中文，撰寫一份專業的業主建議書，嚴格按照以下結構：
+
+【總顧問評語】
+以一段精煉的文字（3-4句），從品牌策略高度點出核心現況。
+
+【品牌定位建議】
+明確指出市場定位與差異化方向，給出一句「品牌定位宣言」。
+
+【三大精準戰略】
+提煉3個戰略行動，每項含：戰略名稱、核心目的、具體執行方向（2-3點）。
+
+【風險提示】
+1-2個若不改善的潛在風險。
+
+【給業主的一句話】
+一句有力、精準的結語。
+
+語氣：專業直接，如頂級顧問簡報語言。`;
+
+// ── Main App ────────────────────────────────────────────────────────
+function App() {
+  const [apiKey, setApiKey] = useState('');
+  const [image, setImage] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
+  const [results, setResults] = useState({});
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState({});
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const fileRef = useRef();
+  const dropRef = useRef();
+
+  if (!apiKey) return <ApiKeyModal onSave={setApiKey} />;
+
+  const callAPI = (body) => fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, ...body })
+  }).then(r => r.json());
+
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    setImage(URL.createObjectURL(file));
+    setResults({}); setSummary(null);
+    const reader = new FileReader();
+    reader.onload = (e) => setImageBase64(e.target.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  };
+
+  const callExpert = async (expert) => {
+    setLoading(l => ({ ...l, [expert.id]: true }));
+    try {
+      const data = await callAPI({ messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+        { type: 'text', text: expert.prompt }
+      ]}]});
+      setResults(r => ({ ...r, [expert.id]: data.content?.find(b => b.type === 'text')?.text || '分析失敗' }));
+    } catch { setResults(r => ({ ...r, [expert.id]: '⚠️ 分析發生錯誤，請重試。' })); }
+    setLoading(l => ({ ...l, [expert.id]: false }));
+  };
+
+  const analyzeAll = async () => {
+    setResults({}); setSummary(null);
+    await Promise.all(EXPERTS.map(e => callExpert(e)));
+  };
+
+  const generateSummary = async () => {
+    setSummaryLoading(true);
+    const filled = SUMMARY_PROMPT
+      .replace('{director}', results.director || '無')
+      .replace('{chef}', results.chef || '無')
+      .replace('{cmo}', results.cmo || '無');
+    try {
+      const data = await callAPI({ messages: [{ role: 'user', content: filled }] });
+      setSummary(data.content?.find(b => b.type === 'text')?.text || '生成失敗');
+    } catch { setSummary('⚠️ 生成錯誤'); }
+    setSummaryLoading(false);
+  };
+
+  const allDone = EXPERTS.every(e => results[e.id]);
+  const anyLoading = EXPERTS.some(e => loading[e.id]);
+
+  const formatText = (text) => text.split('\n').map((line, i) => {
+    if (line.startsWith('【') && line.endsWith('】'))
+      return <p key={i} style={{fontWeight:600,fontSize:14,color:'var(--color-text-primary)',margin:'14px 0 4px',borderLeft:'3px solid currentColor',paddingLeft:8}}>{line}</p>;
+    if (line.startsWith('- ') || line.startsWith('• '))
+      return <p key={i} style={{fontSize:13.5,color:'var(--color-text-secondary)',margin:'3px 0 3px 12px',lineHeight:1.6}}>{line}</p>;
+    if (line.trim() === '') return <div key={i} style={{height:4}}/>;
+    return <p key={i} style={{fontSize:13.5,color:'var(--color-text-secondary)',margin:'3px 0',lineHeight:1.65}}>{line}</p>;
+  });
+
+  const S = {
+    wrap: { maxWidth:760, margin:'0 auto', padding:'1.5rem 1rem 3rem' },
+    card: { background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)', borderRadius:16, marginBottom:16, overflow:'hidden' },
+  };
+
+  const sectionColors = {
+    '【總顧問評語】':      { bg:'#FAEEDA', color:'#633806', border:'#BA7517' },
+    '【品牌定位建議】':    { bg:'#EEEDFE', color:'#3C3489', border:'#7F77DD' },
+    '【三大精準戰略】':    { bg:'#E1F5EE', color:'#085041', border:'#1D9E75' },
+    '【風險提示】':        { bg:'#FCEBEB', color:'#501313', border:'#E24B4A' },
+    '【給業主的一句話】':  { bg:'#2C2C2A', color:'#FAC775', border:'#BA7517' },
+  };
+
+  return (
+    <div style={S.wrap}>
+
+      {/* Header */}
+      <div style={{textAlign:'center',marginBottom:'2rem'}}>
+        <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'var(--color-background-secondary)',border:'0.5px solid var(--color-border-tertiary)',borderRadius:100,padding:'6px 18px',marginBottom:16}}>
+          <i className="ti ti-sparkles" style={{fontSize:14,color:'#7F77DD'}}/>
+          <span style={{fontSize:12,color:'var(--color-text-secondary)',letterSpacing:'0.05em'}}>AI 食物攝影分析平台</span>
+        </div>
+        <h1 style={{fontSize:26,fontWeight:600,color:'var(--color-text-primary)',margin:'0 0 8px',letterSpacing:'-0.02em'}}>四位專家，一張食物照片</h1>
+        <p style={{fontSize:14,color:'var(--color-text-secondary)',margin:0}}>攝影 · 料理 · 行銷 · 品牌策略 — 全方位解析你的作品</p>
+        <button onClick={() => setApiKey('')} style={{marginTop:12,background:'none',border:'none',fontSize:11,color:'var(--color-text-tertiary)',cursor:'pointer',textDecoration:'underline'}}>更換 API Key</button>
+      </div>
+
+      {/* Upload */}
+      <div ref={dropRef}
+        onDrop={e => { e.preventDefault(); dropRef.current.style.borderColor=''; handleFile(e.dataTransfer.files[0]); }}
+        onDragOver={e => { e.preventDefault(); dropRef.current.style.borderColor='#7F77DD'; }}
+        onDragLeave={() => { dropRef.current.style.borderColor=''; }}
+        onClick={() => !image && fileRef.current.click()}
+        style={{border:`1.5px dashed ${image?'#AFA9EC':'var(--color-border-secondary)'}`,borderRadius:16,padding:image?0:'2.5rem 1rem',textAlign:'center',cursor:image?'default':'pointer',background:image?'transparent':'var(--color-background-secondary)',transition:'border-color 0.2s',marginBottom:'1.5rem',overflow:'hidden'}}
+      >
+        <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={e => handleFile(e.target.files[0])}/>
+        {image ? (
+          <div style={{position:'relative'}}>
+            <img src={image} alt="食物" style={{width:'100%',maxHeight:380,objectFit:'cover',display:'block',borderRadius:14}}/>
+            <button onClick={e => { e.stopPropagation(); setImage(null); setImageBase64(null); setResults({}); setSummary(null); }}
+              style={{position:'absolute',top:10,right:10,background:'rgba(0,0,0,0.55)',border:'none',borderRadius:100,color:'#fff',width:32,height:32,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <i className="ti ti-x"/>
+            </button>
+          </div>
+        ) : (
+          <div>
+            <i className="ti ti-photo-up" style={{fontSize:40,color:'var(--color-text-tertiary)',display:'block',marginBottom:12}}/>
+            <p style={{fontSize:15,color:'var(--color-text-primary)',margin:'0 0 4px',fontWeight:500}}>拖曳或點擊上傳食物照片</p>
+            <p style={{fontSize:12,color:'var(--color-text-tertiary)',margin:0}}>支援 JPG、PNG、WEBP</p>
+          </div>
+        )}
+      </div>
+
+      {/* Analyze button */}
+      {image && (
+        <div style={{textAlign:'center',marginBottom:'2rem'}}>
+          <button onClick={analyzeAll} disabled={anyLoading}
+            style={{background:anyLoading?'var(--color-background-secondary)':'#7F77DD',color:anyLoading?'var(--color-text-secondary)':'#fff',border:'none',borderRadius:100,padding:'12px 32px',fontSize:15,fontWeight:500,cursor:anyLoading?'not-allowed':'pointer',display:'inline-flex',alignItems:'center',gap:8}}>
+            <i className={anyLoading?'ti ti-loader-2':'ti ti-wand'} style={{fontSize:16,animation:anyLoading?'spin 1s linear infinite':'none'}}/>
+            {anyLoading ? '專家們正在分析中...' : allDone ? '重新分析' : '開始三位專家分析'}
+          </button>
+        </div>
+      )}
+
+      {/* Expert cards */}
+      {EXPERTS.map(expert => (
+        <div key={expert.id} style={S.card}>
+          <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 18px',background:expert.bg,borderBottom:results[expert.id]?`0.5px solid ${expert.border}`:'none'}}>
+            <div style={{width:38,height:38,borderRadius:10,background:expert.accent,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <i className={`ti ${expert.icon}`} style={{fontSize:18,color:'#fff'}}/>
+            </div>
+            <div style={{flex:1}}>
+              <p style={{margin:0,fontWeight:600,fontSize:15,color:expert.textColor}}>{expert.title}</p>
+              <p style={{margin:0,fontSize:11,color:expert.accent,letterSpacing:'0.04em'}}>{expert.subtitle}</p>
+            </div>
+            {loading[expert.id] && <span style={{fontSize:12,color:expert.textColor,display:'flex',alignItems:'center',gap:5}}><i className="ti ti-loader-2" style={{fontSize:14,animation:'spin 1s linear infinite'}}/>分析中</span>}
+            {results[expert.id] && !loading[expert.id] && <span style={{fontSize:12,color:expert.textColor,display:'flex',alignItems:'center',gap:4}}><i className="ti ti-check" style={{fontSize:14}}/>完成</span>}
+          </div>
+
+          {results[expert.id] && <div style={{padding:'14px 18px 16px'}}>{formatText(results[expert.id])}</div>}
+          {!results[expert.id] && !loading[expert.id] && <div style={{padding:'18px',textAlign:'center',color:'var(--color-text-tertiary)',fontSize:13}}>上傳照片後點擊「開始分析」</div>}
+          {loading[expert.id] && (
+            <div style={{padding:'24px',textAlign:'center'}}>
+              <div style={{display:'inline-flex',gap:4}}>
+                {[0,1,2].map(i => <div key={i} style={{width:6,height:6,borderRadius:'50%',background:expert.accent,animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite`}}/>)}
+              </div>
+              <p style={{fontSize:12,color:'var(--color-text-tertiary)',margin:'8px 0 0'}}>正在深度分析中...</p>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Strategist section */}
+      {allDone && !anyLoading && (
+        <div style={{marginTop:8}}>
+          <div style={{display:'flex',alignItems:'center',gap:12,margin:'24px 0 16px'}}>
+            <div style={{flex:1,height:'0.5px',background:'var(--color-border-tertiary)'}}/>
+            <span style={{fontSize:11,color:'var(--color-text-tertiary)',letterSpacing:'0.1em',whiteSpace:'nowrap'}}>品牌策略長總顧問報告</span>
+            <div style={{flex:1,height:'0.5px',background:'var(--color-border-tertiary)'}}/>
+          </div>
+
+          <div style={S.card}>
+            <div style={{height:4,background:'linear-gradient(90deg,#BA7517 0%,#FAC775 50%,#EF9F27 100%)'}}/>
+            <div style={{padding:'20px 22px',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+                <div style={{display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{width:46,height:46,borderRadius:12,background:'#FAC775',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <i className="ti ti-briefcase" style={{fontSize:22,color:'#633806'}}/>
+                  </div>
+                  <div>
+                    <p style={{margin:0,fontWeight:600,fontSize:16,color:'var(--color-text-primary)'}}>品牌策略長 · 總顧問</p>
+                    <p style={{margin:0,fontSize:11,color:'var(--color-text-tertiary)',letterSpacing:'0.05em'}}>Chief Brand Strategist — Owner Advisory Report</p>
+                  </div>
+                </div>
+                {!summary && !summaryLoading && (
+                  <button onClick={generateSummary} style={{background:'#BA7517',color:'#fff',border:'none',borderRadius:100,padding:'10px 22px',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',gap:7,fontWeight:500}}>
+                    <i className="ti ti-file-analytics" style={{fontSize:14}}/>生成顧問報告
+                  </button>
+                )}
+                {summaryLoading && <span style={{fontSize:12,color:'var(--color-text-secondary)',display:'flex',alignItems:'center',gap:6}}><i className="ti ti-loader-2" style={{fontSize:14,animation:'spin 1s linear infinite'}}/>總顧問分析中...</span>}
+                {summary && !summaryLoading && <span style={{fontSize:12,color:'#BA7517',display:'flex',alignItems:'center',gap:5,background:'#FAEEDA',padding:'5px 12px',borderRadius:100}}><i className="ti ti-check" style={{fontSize:13}}/>報告完成</span>}
+              </div>
+            </div>
+
+            {summaryLoading && (
+              <div style={{padding:'36px',textAlign:'center'}}>
+                <div style={{display:'inline-flex',gap:6,marginBottom:12}}>
+                  {[0,1,2,3,4].map(i => <div key={i} style={{width:5,height:5,borderRadius:'50%',background:'#BA7517',animation:`pulse 1.4s ease-in-out ${i*0.15}s infinite`}}/>)}
+                </div>
+                <p style={{fontSize:13,color:'var(--color-text-secondary)',margin:0}}>品牌策略長正在整合四位專家的洞察，撰寫業主建議書...</p>
+              </div>
+            )}
+
+            {summary && (
+              <div style={{padding:'20px 22px 24px'}}>
+                {summary.split('\n').map((line, i) => {
+                  if (line.startsWith('【') && line.endsWith('】')) {
+                    const sc = sectionColors[line] || {bg:'var(--color-background-secondary)',color:'var(--color-text-primary)',border:'var(--color-border-secondary)'};
+                    return <div key={i} style={{background:sc.bg,borderLeft:`3px solid ${sc.border}`,borderRadius:'0 8px 8px 0',padding:'8px 14px',margin:'18px 0 6px',width:'calc(100% - 28px)'}}><p style={{margin:0,fontWeight:600,fontSize:13,color:sc.color}}>{line}</p></div>;
+                  }
+                  if (line.startsWith('- ')) return <p key={i} style={{fontSize:13.5,color:'var(--color-text-secondary)',margin:'4px 0 4px 16px',lineHeight:1.65}}><span style={{color:'#BA7517'}}>› </span>{line.slice(2)}</p>;
+                  if (line.trim() === '') return <div key={i} style={{height:2}}/>;
+                  return <p key={i} style={{fontSize:13.5,color:'var(--color-text-secondary)',margin:'4px 0',lineHeight:1.7}}>{line}</p>;
+                })}
+              </div>
+            )}
+
+            {!summary && !summaryLoading && (
+              <div style={{padding:'28px 22px',textAlign:'center'}}>
+                <i className="ti ti-file-analytics" style={{fontSize:32,color:'var(--color-text-tertiary)',display:'block',marginBottom:8}}/>
+                <p style={{fontSize:13,color:'var(--color-text-tertiary)',margin:0}}>三位專家分析完成後，點擊「生成顧問報告」<br/>取得給業主的精準品牌戰略建議</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
