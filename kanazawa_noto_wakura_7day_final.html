@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>金澤・能登・和倉溫泉 7天6夜</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#ffffff; --bg2:#f5f4f0; --bg3:#eeece6;
+  --text:#1a1a18; --text2:#4a4948; --text3:#787672;
+  --border:#d0cec5; --border2:#e6e4dc; --card:#ffffff;
+  --active:#1a1a18; --active-text:#ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#1c1c1e; --bg2:#2c2c2e; --bg3:#3a3a3c;
+    --text:#f2f2f0; --text2:#c8c8c4; --text3:#8c8c88;
+    --border:#4a4a4c; --border2:#3c3c3e; --card:#2c2c2e;
+    --active:#f2f2f0; --active-text:#1c1c1e;
+  }
+}
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+.wrap { max-width:780px; margin:0 auto; padding:1.5rem 1rem 3rem; }
+h1 { font-size:19px; font-weight:700; margin-bottom:4px; }
+.subtitle { font-size:13px; color:var(--text3); margin-bottom:1.5rem; }
+
+.tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1.5rem; }
+.tab-btn { padding:8px 14px; font-size:13px; font-weight:600; border-radius:10px; border:1.5px solid var(--border); background:var(--card); color:var(--text2); cursor:pointer; transition:all .15s; }
+.tab-btn.active { background:var(--active); color:var(--active-text); border-color:var(--active); }
+.section { display:none; }
+.section.visible { display:block; }
+
+.day-card { display:flex; }
+.spine { display:flex; flex-direction:column; align-items:center; min-width:52px; }
+.dot { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:8px; }
+.line { width:2px; flex:1; margin-top:4px; min-height:20px; }
+.body { flex:1; padding:8px 0 28px 12px; }
+.dhead { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.dtitle { font-size:15px; font-weight:700; }
+.ddate { font-size:12px; color:var(--text3); }
+.zbadge { font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; }
+
+.d-fly  { background:#1e40af; color:#dbeafe; } .l-fly  { background:#3b82f6; }
+.d-kana { background:#166534; color:#dcfce7; } .l-kana { background:#16a34a; }
+.d-noto { background:#5b21b6; color:#ede9fe; } .l-noto { background:#7c3aed; }
+.d-waku { background:#134e4a; color:#ccfbf1; } .l-waku { background:#0d9488; }
+.d-free { background:#92400e; color:#fef3c7; } .l-free { background:#d97706; }
+.d-osa  { background:#1e3a8a; color:#bfdbfe; } .l-osa  { background:#2563eb; }
+.z-fly  { background:#1e3a8a; color:#bfdbfe; }
+.z-kana { background:#14532d; color:#bbf7d0; }
+.z-noto { background:#4c1d95; color:#ddd6fe; }
+.z-waku { background:#0f3e3b; color:#99f6e4; }
+.z-free { background:#78350f; color:#fde68a; }
+.z-osa  { background:#1e3a8a; color:#bfdbfe; }
+
+.items { display:flex; flex-direction:column; gap:9px; }
+.item { display:flex; gap:9px; align-items:flex-start; }
+.ico { font-size:17px; min-width:24px; margin-top:1px; }
+.itext { font-size:14px; line-height:1.65; color:var(--text); }
+.inote { font-size:12px; color:var(--text3); display:block; margin-top:2px; }
+
+.transport { background:var(--bg3); border-radius:10px; padding:9px 13px; margin:8px 0; font-size:13px; color:var(--text2); line-height:1.6; }
+.info-box  { background:var(--bg2); border-left:3px solid #3b82f6; border-radius:0 8px 8px 0; padding:10px 13px; margin:9px 0; font-size:13px; color:var(--text); line-height:1.6; }
+.warn-box  { background:var(--bg2); border-left:3px solid #ef4444; border-radius:0 8px 8px 0; padding:10px 13px; margin:9px 0; font-size:13px; color:var(--text); line-height:1.6; }
+.ok-box    { background:var(--bg2); border-left:3px solid #22c55e; border-radius:0 8px 8px 0; padding:10px 13px; margin:9px 0; font-size:13px; color:var(--text); line-height:1.6; }
+.amber-box { background:var(--bg2); border-left:3px solid #f59e0b; border-radius:0 8px 8px 0; padding:10px 13px; margin:9px 0; font-size:13px; color:var(--text); line-height:1.6; }
+.star-box  { background:var(--bg2); border-left:3px solid #8b5cf6; border-radius:0 8px 8px 0; padding:10px 13px; margin:9px 0; font-size:13px; color:var(--text); line-height:1.6; }
+
+/* A/B 方案 */
+.ab-wrap { display:flex; flex-direction:column; gap:8px; margin:8px 0; }
+.ab-block { background:var(--bg2); border-radius:10px; padding:10px 13px; }
+.ab-label { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; margin-bottom:6px; }
+.ab-a { background:#1e40af; color:#dbeafe; }
+.ab-b { background:#166534; color:#dcfce7; }
+.ab-text { font-size:13px; line-height:1.6; color:var(--text); }
+
+.tag { display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; font-weight:600; margin-right:4px; }
+.tg { background:#166534; color:#dcfce7; }
+.ty { background:#92400e; color:#fef3c7; }
+.tb { background:#1e40af; color:#dbeafe; }
+.tr { background:#7f1d1d; color:#fee2e2; }
+.tp { background:#5b21b6; color:#ede9fe; }
+.tc { background:#134e4a; color:#ccfbf1; }
+
+.tip-sec { margin-bottom:1.5rem; }
+.tip-head { font-size:15px; font-weight:700; margin-bottom:10px; }
+.tip { font-size:14px; line-height:1.65; padding-left:18px; position:relative; margin-bottom:9px; }
+.tip::before { content:"·"; position:absolute; left:6px; color:var(--text3); font-size:18px; top:-2px; }
+
+.cost-card { background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:1rem 1.25rem; margin-bottom:14px; }
+.cost-title { font-size:14px; font-weight:700; margin-bottom:10px; }
+.cost-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border2); font-size:13px; }
+.cost-row:last-of-type { border-bottom:none; }
+.cost-l { color:var(--text3); }
+.cost-total { display:flex; justify-content:space-between; padding:8px 0 0; font-size:15px; font-weight:700; border-top:1.5px solid var(--border); margin-top:6px; }
+.total-val { color:#16a34a; }
+
+/* 行程概覽 */
+.overview { display:flex; flex-direction:column; gap:6px; margin-bottom:1.5rem; }
+.ov-row { display:flex; gap:10px; align-items:flex-start; padding:8px 12px; background:var(--bg2); border-radius:10px; font-size:13px; }
+.ov-day { font-weight:700; color:var(--text3); min-width:32px; }
+.ov-theme { font-weight:600; color:var(--text); }
+.ov-note { color:var(--text3); font-size:12px; margin-top:2px; }
+
+@media(max-width:500px) { .dtitle{font-size:14px;} .itext{font-size:13px;} .tip{font-size:13px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🗾 金澤・能登・和倉溫泉 7天6夜</h1>
+  <div class="subtitle">高雄 KHH 出發 · 8人家族 · 7/25–7/31 · 輕鬆悠閒・體驗為主・不趕行程</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="go('overview')">🗺️ 行程概覽</button>
+    <button class="tab-btn" onclick="go('itinerary')">📅 每日行程</button>
+    <button class="tab-btn" onclick="go('logistics')">🧳 住宿行李</button>
+    <button class="tab-btn" onclick="go('tips')">🔑 實務提醒</button>
+  </div>
+
+  <!-- 概覽 -->
+  <div class="section visible" id="tab-overview">
+    <div class="tip-sec">
+      <div class="tip-head">整趟旅行的核心精神</div>
+      <div class="tip">金澤當生活基地，不是打卡景點；能登感受海・祭・牡蠣・復興中的地方溫度；和倉溫泉用一晚七尾灣海景與私人湯屋把節奏完全放慢。</div>
+      <div class="tip">每天節奏：<strong>早出（07:00～10:00）戶外 → 午間（11:00～15:00）室內避暑 → 傍晚（15:30後）再出門</strong>，7月底石川氣溫 30～35°C，這個節奏最舒服。</div>
+      <div class="tip">行李只搬兩次：KIX→金澤（D1宅配），金澤→和倉（D3夜宅配），其餘時間完全不動行李。</div>
+    </div>
+
+    <div class="overview">
+      <div class="ov-row"><span class="ov-day">D1</span><div><div class="ov-theme">抵達金澤・夏夜花火</div><div class="ov-note">7/25 北國花火大會，抵達即看花火，最好的開場</div></div></div>
+      <div class="ov-row"><span class="ov-day">D2</span><div><div class="ov-theme">金澤市區・晨市・工藝體驗</div><div class="ov-note">近江町浜烤早餐・室內工藝一項・東茶屋街傍晚</div></div></div>
+      <div class="ov-row"><span class="ov-day">D3</span><div><div class="ov-theme">能登出發・七尾・和倉入住</div><div class="ov-note">取車・祭典會館・能登食祭市場・白米千枚田・和倉溫泉</div></div></div>
+      <div class="ov-row"><span class="ov-day">D4</span><div><div class="ov-theme">和倉早晨・輪島・返金澤</div><div class="ov-note">7/28 新月・千里浜・輪島塗見學・傍晚返金澤</div></div></div>
+      <div class="ov-row"><span class="ov-day">D5</span><div><div class="ov-theme">金澤自由日・A/B彈性全開</div><div class="ov-note">美術館・採買・茶室・酒莊・長町・完全自己決定</div></div></div>
+      <div class="ov-row"><span class="ov-day">D6</span><div><div class="ov-theme">還車・搭JR返大阪・採買</div><div class="ov-note">大野町咖啡・還車・敦賀換車・難波採買晚餐</div></div></div>
+      <div class="ov-row"><span class="ov-day">D7</span><div><div class="ov-theme">大阪 KIX 返高雄</div><div class="ov-note">悠閒早餐・はるか・飛回高雄</div></div></div>
+    </div>
+
+    <div class="cost-card">
+      <div class="cost-title">📊 住宿移動示意</div>
+      <div class="cost-row"><span class="cost-l">D1～D2（2晚）</span><span>金澤飯店或包棟町屋</span></div>
+      <div class="cost-row"><span class="cost-l">D3（1晚）</span><span>和倉溫泉旅館（七尾灣海景）</span></div>
+      <div class="cost-row"><span class="cost-l">D4～D5（2晚）</span><span>金澤飯店或包棟町屋</span></div>
+      <div class="cost-row"><span class="cost-l">D6（1晚）</span><span>大阪難波周邊飯店</span></div>
+      <div class="cost-row"><span class="cost-l">行李宅配</span><span>KIX→金澤（D1）・金澤→和倉（D3夜）・和倉→金澤（D4）</span></div>
+    </div>
+  </div>
+
+  <!-- 每日行程 -->
+  <div class="section" id="tab-itinerary">
+
+    <!-- D1 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-fly">D1</div><div class="line l-fly"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">抵達金澤・夏夜花火</span><span class="ddate">7/25 六</span><span class="zbadge z-fly">移動日</span></div>
+        <div class="items">
+          <div class="item"><span class="ico">✈️</span><div class="itext">高雄 KHH 出發，09:00 前起飛直飛 KIX<br><span class="inote">長榮 BR / 中華 CI 早班，約 10:30 抵達</span></div></div>
+          <div class="item"><span class="ico">📦</span><div class="itext">入境後辦行李宅配（ヤマト運輸）→ 金澤飯店（翌日達）<br><span class="inote">全員只帶隨身包，空手搭 JR</span></div></div>
+          <div class="transport">🚆 はるか KIX→大阪（75分）→ サンダーバード 大阪→敦賀（80分）→ つるぎ 敦賀→金澤（45分）｜約18:00抵金澤</div>
+          <div class="item"><span class="ico">🏨</span><div class="itext">入住金澤飯店或包棟町屋，放下行李<br><span class="inote">推薦：金澤站東口步行5分內。包棟町屋8人住在一起更有生活感，需提早半年預訂</span></div></div>
+          <div class="amber-box">🎆 今晚就是北國花火金澤大會！犀川綠地步行可達，不需特別安排，放完行李直接去，是整趟旅程最好的開場白</div>
+          <div class="item"><span class="ico">🍶</span><div class="itext">晚餐：花火結束後附近居酒屋，石川地酒＋當季生魚片，為旅程開場</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D2 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-kana">D2</div><div class="line l-kana"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">金澤市區・晨市海鮮・工藝體驗</span><span class="ddate">7/26 日</span><span class="zbadge z-kana">金澤日</span></div>
+        <div class="items">
+          <div class="amber-box">☀️ 今日全程徒步＋巴士，車停飯店不動。節奏：早出→午間室內→傍晚再出門</div>
+          <div class="item"><span class="ico">🦪</span><div class="itext"><strong>近江町市場 浜烤區</strong>（07:30，趁涼快）：8人分頭挑選當季海鮮，圍在炭火旁自烤天然岩牡蠣＋魚貝，是最有互動感的家族早餐<br><span class="inote">岩牡蠣7月下旬是身入最高峰；市場週日全開，D2（週日）去最保險</span></div></div>
+          <div class="item"><span class="ico">🏯</span><div class="itext"><strong>兼六園</strong>（09:00，早去人少）：日本三大名園，夏季翠綠，約1小時<br><span class="inote">門票 ¥320/人；金澤城公園對面，兩個一起走</span></div></div>
+
+          <div class="ab-wrap">
+            <div class="ab-block">
+              <span class="ab-label ab-a">A 方案・午間體驗</span>
+              <div class="ab-text"><strong>工藝體驗擇一（室內，約1.5小時）</strong><br>
+              金箔貼付（安江金箔工藝館）：薄如蟬翼的金箔貼在筷子或小木盒，帶回家的紀念品<br>
+              九谷焼彩繪：自己畫的器皿當場燒製，約2週後郵寄到台灣</div>
+            </div>
+            <div class="ab-block">
+              <span class="ab-label ab-b">B 方案・午間沉澱</span>
+              <div class="ab-text"><strong>鈴木大拙館</strong>：水鏡庭院極簡美學，比21世紀美術館更安靜低調，坐在水邊發呆就是目的，完全室內冷氣<br>
+              <span style="font-size:12px;color:var(--text3);">門票 ¥310/人</span></div>
+            </div>
+          </div>
+
+          <div class="item"><span class="ico">🏮</span><div class="itext"><strong>東茶屋街</strong>（16:00後，光線最美）：江戶木造格子街道，喝抹茶、吃金箔冰淇淋（箔一）<br><span class="inote">傍晚人潮稍散，光線溫暖，最適合慢走</span></div></div>
+          <div class="item"><span class="ico">🍣</span><div class="itext">晚餐：片町繁華街，加賀料理割烹或能登食材居酒屋</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D3 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-noto">D3</div><div class="line l-waku"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">能登出發・七尾・白米千枚田・和倉入住</span><span class="ddate">7/27 一</span><span class="zbadge z-noto">能登→和倉</span></div>
+        <div class="items">
+          <div class="item"><span class="ico">🚗</span><div class="itext">金澤站東口 08:30 取車（2輛 Alphard）</div></div>
+          <div class="transport">🚗 金澤→七尾 約 80km / 1小時（のと里山海道）</div>
+          <div class="item"><span class="ico">🏮</span><div class="itext"><strong>和倉溫泉祭典會館</strong>（完全室內，涼快）：超大實體山車展示，還能親自拉動大型山車，震撼體驗<br><span class="inote">七尾市有「祭典都市」之稱，這裡是能登祭典文化最好的入門</span></div></div>
+          <div class="item"><span class="ico">🦪</span><div class="itext"><strong>能登食祭市場</strong>（七尾站步行800m）：在地漁獲平價直購，牡蠣¥300/顆，後方浜烤區直接炭烤<br><span class="inote">8人圍著炭火烤海鮮，比輪島朝市更輕鬆，這就是能登夏天的味道</span></div></div>
+          <div class="item"><span class="ico">🍜</span><div class="itext"><strong>生そば 槐（Enju）</strong>：百年大正古宅蕎麥麵店，三色蕎麥麵一次品嚐三種口感<br><span class="inote">建築本身就值得一看，挺過多次天災的老屋</span></div></div>
+          <div class="item"><span class="ico">🌾</span><div class="itext"><strong>白米千枚田</strong>（15:00後前往）：千層梯田面向日本海，午後光線最美，傍晚金光灑落海面<br><span class="inote">正午太熱太曬不適合去；15:00後氣溫稍降，光線反而更好</span></div></div>
+          <div class="item"><span class="ico">🍦</span><div class="itext"><strong>能登ミルク</strong>（和倉総湯對面）：日本最年輕義式冰淇淋大師，能登牛奶口味＋Sora（芒果・杏仁・血橙）<br><span class="inote">進旅館前最後一站，清爽收尾</span></div></div>
+          <div class="item"><span class="ico">🏨</span><div class="itext">入住<strong>和倉溫泉旅館</strong>（七尾灣海景）<br><span class="inote">推薦：加賀屋系列（日本頂級旅館服務）或一能登島（全館8間，8人包館，180度海景＋私人桑拿）；兩者均需半年前預訂</span></div></div>
+          <div class="item"><span class="ico">♨️</span><div class="itext">入住後：泡湯、看七尾灣夕陽、穿浴衣在旅館散步</div></div>
+          <div class="item"><span class="ico">🍱</span><div class="itext">晚餐：旅館懷石料理或無菜單壽司，能登牛＋瓦斯蝦＋赤貝</div></div>
+          <div class="ok-box">✅ 今晚請旅館辦理行李宅配→金澤飯店（翌日達），明天輕裝出發</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D4 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-waku">D4</div><div class="line l-kana"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">和倉早晨・千里浜・輪島・返金澤</span><span class="ddate">7/28 二</span><span class="zbadge z-waku">能登→金澤</span></div>
+        <div class="items">
+          <div class="star-box">🌙 今晚是新月，金澤市區觀星條件最佳。若天氣好，晚上可到金澤城公園或河岸，肉眼看夏季大三角</div>
+          <div class="item"><span class="ico">🌅</span><div class="itext">旅館早餐後，七尾灣晨間散步，感受海灣清晨的靜謐</div></div>
+
+          <div class="ab-wrap">
+            <div class="ab-block">
+              <span class="ab-label ab-a">A 方案・有活力</span>
+              <div class="ab-text"><strong>千里浜なぎさドライブウェイ</strong>：日本唯一可開車上沙灘的海岸，約8km，兩輛車走在浪邊，體驗完全獨特<br>
+              <span style="font-size:12px;color:var(--text3);">退房後順路，接著往輪島方向</span></div>
+            </div>
+            <div class="ab-block">
+              <span class="ab-label ab-b">B 方案・想慢慢來</span>
+              <div class="ab-text">旅館Late checkout（確認是否可行），多泡一次湯，中午再出發往輪島<br>
+              <span style="font-size:12px;color:var(--text3);">省去千里浜，時間更從容</span></div>
+            </div>
+          </div>
+
+          <div class="item"><span class="ico">🏺</span><div class="itext"><strong>輪島塗工房見學</strong>（室內，約1小時）：百道工序的漆器職人工房，觀看師傅手工上漆，感受工藝深度<br><span class="inote">しおやす漆器工房等提供見學體驗；視輪島復原狀況彈性調整</span></div></div>
+          <div class="item"><span class="ico">🛣️</span><div class="itext">返程途中：能登ワイン酒莊（穴水町，順路）試飲參觀，約1小時<br><span class="inote">能登ブルーベリーワインは7月底採收期，可買新鮮果實與酒帶回</span></div></div>
+          <div class="transport">🚗 輪島→穴水（能登ワイン）→金澤 約 130km / 1.5小時</div>
+          <div class="item"><span class="ico">🏨</span><div class="itext">返抵金澤，入住（行李已到），輕鬆晚餐</div></div>
+          <div class="item"><span class="ico">🍜</span><div class="itext">晚餐：近江町周邊，或金澤站百番街輕食，今天開車辛苦了，不要再找遠的</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D5 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-free">D5</div><div class="line l-free"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">金澤自由日・完全彈性</span><span class="ddate">7/29 三</span><span class="zbadge z-free">金澤自由</span></div>
+        <div class="items">
+          <div class="info-box">💡 今天是全程最彈性的一天，早上起床再決定。以下是可以自由組合的選項，不需要全部去</div>
+
+          <div class="ab-wrap">
+            <div class="ab-block">
+              <span class="ab-label ab-a">早上 A・想出門走走</span>
+              <div class="ab-text"><strong>長町武家屋敷跡</strong>：江戶武士宅邸保存街區，土牆石板路安靜有古都氛圍，早上人最少<br>
+              野村家入內（¥700/人），庭園精緻</div>
+            </div>
+            <div class="ab-block">
+              <span class="ab-label ab-b">早上 B・想繼續懶</span>
+              <div class="ab-text">飯店或町屋吃個早餐，喝咖啡發呆，11點再出門也完全沒關係</div>
+            </div>
+          </div>
+
+          <div class="ab-wrap">
+            <div class="ab-block">
+              <span class="ab-label ab-a">午間 A・文化</span>
+              <div class="ab-text"><strong>金澤21世紀美術館</strong>：泳池錯視裝置，室內冷氣，常設展免費<br>
+              或<strong>石川縣立美術館</strong>：九谷焼・加賀友禅・能登工藝完整收藏</div>
+            </div>
+            <div class="ab-block">
+              <span class="ab-label ab-b">午間 B・體驗</span>
+              <div class="ab-text">加賀友禅染（約2小時）或山中漆器體驗（若昨天沒去）<br>手作一件帶回家的紀念品</div>
+            </div>
+          </div>
+
+          <div class="item"><span class="ico">🛍️</span><div class="itext">下午採買：<span class="tag tg">金澤百番街</span>一次買齊　<span class="tag ty">近江町市場</span>海鮮加工品・加賀棒茶　<span class="tag tp">箔一</span>金箔系列</div></div>
+          <div class="item"><span class="ico">☕</span><div class="itext">傍晚：東茶屋街茶室，抹茶＋和菓子，坐下來發呆看人來人往</div></div>
+          <div class="item"><span class="ico">🍶</span><div class="itext">晚餐：金澤最後一晚，選一間這趟還沒去的好店，慢慢吃</div></div>
+          <div class="ok-box">✅ 今晚辦行李宅配→大阪飯店（翌日達），明天還車輕裝出發</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D6 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-osa">D6</div><div class="line l-osa"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">還車・搭JR返大阪・難波採買</span><span class="ddate">7/30 四</span><span class="zbadge z-osa">金澤→大阪</span></div>
+        <div class="items">
+          <div class="ab-wrap">
+            <div class="ab-block">
+              <span class="ab-label ab-a">還車前 A・最後一站</span>
+              <div class="ab-text"><strong>大野町醬油倉庫改建咖啡館</strong>（金澤港邊，還車前順路）：舊倉庫改建空間，手沖咖啡，慵懶收心，給旅程一個安靜的道別</div>
+            </div>
+            <div class="ab-block">
+              <span class="ab-label ab-b">還車前 B・繼續採買</span>
+              <div class="ab-text">飯店附近最後巡禮，金澤百番街補買漏掉的伴手禮，然後直接去還車</div>
+            </div>
+          </div>
+
+          <div class="item"><span class="ico">🚗</span><div class="itext">金澤站東口還車（2輛 Alphard），4天圓滿結束</div></div>
+          <div class="transport">🚆 つるぎ 金澤→敦賀（45分）→ サンダーバード 敦賀→大阪（80分）｜建議09:00～10:00班次，中午抵大阪</div>
+          <div class="item"><span class="ico">🏨</span><div class="itext">入住大阪難波周邊飯店（行李已到）<br><span class="inote">推薦：Dormy Inn Premium 難波 / cross hotel Osaka / OMO7 大阪</span></div></div>
+          <div class="item"><span class="ico">🛒</span><div class="itext">下午採買衝刺：<span class="tag tb">心齋橋</span>時裝化妝品　<span class="tag ty">黑門市場</span>海鮮零食　<span class="tag tg">阿倍野Q's Mall</span>藥妝</div></div>
+          <div class="item"><span class="ico">🦞</span><div class="itext">晚餐：道頓堀，大阪燒・章魚燒・かに道楽，旅程最後盛餐</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D7 -->
+    <div class="day-card">
+      <div class="spine"><div class="dot d-fly">D7</div><div class="line" style="background:transparent;min-height:0;"></div></div>
+      <div class="body">
+        <div class="dhead"><span class="dtitle">大阪 KIX 返高雄</span><span class="ddate">7/31 五</span><span class="zbadge z-fly">返程</span></div>
+        <div class="items">
+          <div class="item"><span class="ico">☕</span><div class="itext">悠閒早餐，最後採買，不趕</div></div>
+          <div class="item"><span class="ico">🚆</span><div class="itext">搭 はるか特急 大阪→KIX（約75分）<br><span class="inote">8人建議提前2.5小時抵機場</span></div></div>
+          <div class="item"><span class="ico">✈️</span><div class="itext">KIX 搭機返回高雄 KHH — 旅程圓滿！🎉</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /itinerary -->
+
+  <!-- 住宿行李 -->
+  <div class="section" id="tab-logistics">
+    <div class="tip-sec">
+      <div class="tip-head">🏨 住宿推薦</div>
+      <div class="tip"><span class="tag tg">金澤（D1・D2・D4・D5，4晚）</span><br>
+        <strong>飯店方案</strong>：金澤站東口步行5分內，ANA Crowne Plaza 金澤 / Dormy Inn 金澤（天然溫泉）/ RINN 金澤鼓門，訂相鄰房備註「family group」<br>
+        <strong>包棟町屋方案</strong>：8人住在一起有廚房，從市場買食材回來料理，生活感最強，金澤町屋風格獨特，需提前半年以上預訂
+      </div>
+      <div class="tip"><span class="tag tc">和倉溫泉（D3，1晚）</span><br>
+        <strong>一能登島</strong>：全館僅8間客房，8人可包館，180度七尾灣海景，私人桑拿＋半室外海景浴缸，無菜單壽司料理，是整趟最奢華的一晚，<strong>出發前半年以上預訂</strong><br>
+        <strong>加賀屋系列</strong>：日本頂級旅館服務，較大型，服務無可挑剔
+      </div>
+      <div class="tip"><span class="tag tb">大阪（D6，1晚）</span>難波・心齋橋：Dormy Inn Premium 難波 / cross hotel Osaka，機場交通方便，採買零距離</div>
+    </div>
+
+    <div class="tip-sec">
+      <div class="tip-head">📦 行李宅配節點</div>
+      <div class="tip"><strong>D1（KIX→金澤）</strong>：入境大廳辦理，翌日 D2 早上行李在房間等你</div>
+      <div class="tip"><strong>D3 晚（金澤→和倉）</strong>：出發前請金澤飯店辦理，D3 入住和倉時行李已到</div>
+      <div class="tip"><strong>D3 晚（和倉→金澤）</strong>：入住和倉當晚請旅館辦理，D4 返金澤時行李已到</div>
+      <div class="tip"><strong>D5 晚（金澤→大阪）</strong>：金澤飯店辦理，D6 中午抵大阪時行李已到</div>
+      <div class="tip"><span class="tag tr">重要</span> 全程只有和倉那一晚需要住其他地方，其餘時間都在金澤，行李移動極少，非常輕鬆</div>
+    </div>
+
+    <div class="tip-sec">
+      <div class="tip-head">🚗 租車細節</div>
+      <div class="tip">D3 早上 08:30 金澤站東口取車 → D6 早上金澤站東口還車，共 4 天</div>
+      <div class="tip">2輛 Toyota Alphard（7人座），每輛 4 人，行李舒適放後廂</div>
+      <div class="tip"><strong>暑假旺季出發前 2 個月以上網路預約</strong>，Toyota Rent-a-Car 或 Nissan Rent-a-Car 金澤站前店</div>
+      <div class="tip">台灣駕照＋中華民國日文版國際駕照，兩者都要帶</div>
+      <div class="tip">購買免責險 CDW，8人合租兩輛，有狀況理賠不傷感情</div>
+    </div>
+  </div><!-- /logistics -->
+
+  <!-- 實務提醒 -->
+  <div class="section" id="tab-tips">
+    <div class="tip-sec">
+      <div class="tip-head">🎫 票券策略（完全不需要 JR Pass）</div>
+      <div class="tip"><span class="tag tb">e5489 線上預訂</span> JR 西日本官網，出發前預訂サンダーバード＋つるぎ 乘継指定席，8人訂同節車廂，暑假旺季提早 1 個月以上</div>
+      <div class="tip"><span class="tag tg">北鐵 1日乘車券 ¥700</span> D2・D5 金澤市區巴士，兼六園・東茶屋街・美術館全搞定</div>
+      <div class="tip">大阪段：はるか特急直接買票或 ICOCA 刷卡，不需任何 Pass</div>
+    </div>
+
+    <div class="tip-sec">
+      <div class="tip-head">🌙 7/25～8/1 期間限定加值</div>
+      <div class="tip"><strong>7/25 北國花火金澤大會</strong>：D1 抵達當晚，犀川綠地，步行可達，不需特別安排，是旅程最好的開場</div>
+      <div class="tip"><strong>7/28 新月</strong>：D4 返金澤當晚觀星條件全程最佳，金澤城公園或河岸肉眼可見夏季大三角</div>
+      <div class="tip"><strong>天然岩牡蠣「夏輝」</strong>：7月下旬是身入最高峰，能登食祭市場直購直烤，¥300/顆，是這趟最對的季節</div>
+      <div class="tip"><strong>能登ブルーベリー</strong>：7月底採收期，穴水町能登ワイン酒莊可買新鮮果實與藍莓酒</div>
+      <div class="tip"><strong>能登キリコ祭り</strong>：7月下旬各地輪番，若遇上直接去看，不需強求，遇到是緣分</div>
+    </div>
+
+    <div class="tip-sec">
+      <div class="tip-head">☀️ 夏日節奏守則</div>
+      <div class="tip">每天：<strong>07:00～10:00 戶外</strong> → <strong>11:00～15:00 室內</strong>（工藝・美術館・祭典會館・旅館休息）→ <strong>15:30 後再出門</strong></div>
+      <div class="tip">能登那天白米千枚田 15:00 後去，光線最美，氣溫也稍降</div>
+      <div class="tip">宮島と違い宮島ではなく，輪島復原狀況出發前確認「石川みち情報ネット」</div>
+      <div class="tip">每天不超過3個主要景點，行程留有呼吸空間，A/B方案當天起床再決定</div>
+    </div>
+
+    <div class="tip-sec">
+      <div class="tip-head">💡 這趟旅行最值得期待的事</div>
+      <div class="tip">D1 晚花火：什麼都不用安排，站在犀川邊看煙火，旅行就開始了</div>
+      <div class="tip">D2 早晨：8個人圍著炭火在近江町市場烤岩牡蠣，這個畫面會記很久</div>
+      <div class="tip">D3 和倉：入住旅館後穿上浴衣，在七尾灣邊泡湯看夕陽，把所有壓力都泡掉</div>
+      <div class="tip">D5 自由日：什麼都不排，起床看心情，這才是真正的旅行</div>
+    </div>
+  </div><!-- /tips -->
+
+</div>
+<script>
+function go(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('visible'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('visible');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
