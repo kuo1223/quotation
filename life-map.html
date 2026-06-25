@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生地圖 · 得森設計</title>
+<style>
+  :root {
+    --green-dark: #2d5a45;
+    --green-mid: #3d7a5f;
+    --green-light: #e8f0eb;
+    --paper: #f7f6f2;
+    --border: #d4ddd7;
+    --text-primary: #1a2e23;
+    --text-secondary: #5a7a66;
+    --text-muted: #8fa898;
+    --fresh: #2d5a45;
+    --stale-1: #4a7a5e;
+    --stale-2: #7aaa8e;
+    --stale-3: #aacbb8;
+    --stale-4: #d4e5db;
+    --stale-5: #edf4f0;
+    --r: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    font-family: 'Georgia', 'Noto Serif TC', serif;
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--green-dark);
+    color: white;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title { font-size: 15px; letter-spacing: 0.1em; opacity: 0.9; }
+  .header-sub { font-size: 11px; opacity: 0.6; margin-top: 3px; font-family: sans-serif; }
+  .header-back {
+    font-size: 12px; color: rgba(255,255,255,0.7);
+    text-decoration: none; font-family: sans-serif;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 5px 12px; border-radius: 20px;
+    transition: all 0.2s;
+  }
+  .header-back:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  /* ── Setup Banner ── */
+  .setup-banner {
+    background: #fff8e6;
+    border-bottom: 1px solid #f0dfa0;
+    padding: 12px 28px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: #7a6020; font-family: sans-serif;
+  }
+  .setup-banner.hidden { display: none; }
+  .setup-banner input {
+    flex: 1; padding: 6px 10px; border: 1px solid #d4c070;
+    border-radius: 6px; font-size: 13px; font-family: sans-serif;
+    background: white;
+  }
+  .setup-banner button {
+    padding: 6px 14px; background: var(--green-dark); color: white;
+    border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
+    font-family: sans-serif;
+  }
+
+  /* ── Main ── */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── Center Badge ── */
+  .center-area {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .center-badge {
+    display: inline-block;
+    background: var(--green-dark);
+    color: white;
+    padding: 14px 36px;
+    border-radius: 40px;
+    font-size: 16px;
+    letter-spacing: 0.12em;
+  }
+  .center-sub {
+    font-size: 11px; color: var(--text-muted); margin-top: 8px;
+    font-family: sans-serif; letter-spacing: 0.05em;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  @media (min-width: 600px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* ── Cell ── */
+  .cell {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    min-height: 110px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .cell:hover { border-color: var(--green-mid); box-shadow: 0 3px 12px rgba(45,90,69,0.1); transform: translateY(-1px); }
+
+  .cell-name {
+    font-size: 13px; font-weight: bold;
+    color: var(--text-primary); line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .cell-next {
+    font-size: 11px; color: var(--text-secondary);
+    font-family: sans-serif; line-height: 1.5;
+    flex: 1;
+  }
+  .cell-next.empty { color: var(--text-muted); font-style: italic; }
+
+  .cell-age {
+    font-size: 10px; color: var(--text-muted);
+    font-family: sans-serif; margin-top: 10px;
+    text-align: right;
+  }
+
+  /* freshness indicator — left border */
+  .cell[data-age="0"] { border-left: 4px solid var(--fresh); }
+  .cell[data-age="1"] { border-left: 4px solid var(--stale-1); }
+  .cell[data-age="2"] { border-left: 4px solid var(--stale-2); }
+  .cell[data-age="3"] { border-left: 4px solid var(--stale-3); }
+  .cell[data-age="4"] { border-left: 4px solid var(--stale-4); }
+  .cell[data-age="5"] { border-left: 4px solid var(--stale-5); }
+
+  /* ── Modal ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 100;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: white; border-radius: 14px;
+    width: 100%; max-width: 520px;
+    max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-header {
+    background: var(--green-dark); color: white;
+    padding: 18px 22px; border-radius: 14px 14px 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-title { font-size: 15px; letter-spacing: 0.05em; }
+  .modal-close {
+    background: none; border: none; color: white;
+    font-size: 20px; cursor: pointer; opacity: 0.7; line-height: 1;
+  }
+  .modal-close:hover { opacity: 1; }
+
+  .modal-body { padding: 22px; }
+
+  .field-label {
+    font-size: 11px; color: var(--text-muted);
+    font-family: sans-serif; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 6px; margin-top: 16px;
+  }
+  .field-label:first-child { margin-top: 0; }
+
+  .modal-body input, .modal-body textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; font-family: sans-serif; color: var(--text-primary);
+    background: var(--paper); resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .modal-body input:focus, .modal-body textarea:focus {
+    outline: none; border-color: var(--green-mid);
+  }
+
+  /* log entries */
+  .log-list { margin-top: 6px; }
+  .log-entry {
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-family: sans-serif;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-date { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .log-text { font-size: 13px; color: var(--text-primary); line-height: 1.6; }
+
+  .log-add {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+  .log-add textarea {
+    flex: 1; min-height: 60px;
+  }
+  .log-add-btn {
+    padding: 8px 14px; background: var(--green-dark); color: white;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-size: 12px; font-family: sans-serif; align-self: flex-end;
+    white-space: nowrap;
+  }
+  .log-add-btn:hover { background: var(--green-mid); }
+
+  .modal-save {
+    width: 100%; margin-top: 20px;
+    padding: 12px; background: var(--green-dark); color: white;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-family: sans-serif; letter-spacing: 0.05em;
+    transition: background 0.2s;
+  }
+  .modal-save:hover { background: var(--green-mid); }
+
+  /* saving indicator */
+  .saving-toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green-dark); color: white;
+    padding: 10px 18px; border-radius: 8px;
+    font-size: 13px; font-family: sans-serif;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    z-index: 200;
+  }
+  .saving-toast.show { opacity: 1; }
+
+  /* legend */
+  .legend {
+    display: flex; gap: 16px; margin-bottom: 20px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text-muted); font-family: sans-serif;
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">人生地圖</div>
+    <div class="header-sub">得森設計 · Eric Kuo</div>
+  </div>
+  <a href="index.html" class="header-back">← 回工作平台</a>
+</div>
+
+<!-- Token setup banner -->
+<div class="setup-banner" id="setupBanner">
+  🔑 請輸入 GitHub Token 以啟用跨裝置同步：
+  <input type="password" id="tokenInput" placeholder="ghp_xxxxx...">
+  <button onclick="saveToken()">儲存</button>
+</div>
+
+<div class="main">
+  <div class="center-area">
+    <div class="center-badge">得森 · Eric</div>
+    <div class="center-sub">左側顏色越淺 = 越久沒更新，點格子記錄進度</div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#2d5a45"></div>今天</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7aaa8e"></div>1–2週</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#aacbb8"></div>3–4週</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d4e5db"></div>1–2月</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#edf4f0"></div>2月以上</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModalBtn()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-label">下一步</div>
+      <input type="text" id="modalNext" placeholder="目前最重要的一個行動...">
+
+      <div class="field-label">進度筆記</div>
+      <div class="log-list" id="logList"></div>
+      <div class="log-add">
+        <textarea id="logInput" placeholder="記錄今天的進展..."></textarea>
+        <button class="log-add-btn" onclick="addLog()">新增</button>
+      </div>
+
+      <button class="modal-save" onclick="saveCell()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="saving-toast" id="toast"></div>
+
+<script>
+const REPO = 'kuo1223/quotation';
+const FILE = 'life-data.json';
+const API  = `https://api.github.com/repos/${REPO}/contents/${FILE}`;
+
+const CELLS = [
+  { id: 'business',  name: '新商業機會',   sub: '商業模式、商品開發、服務開發' },
+  { id: 'creative',  name: '創新思考巨集', sub: '點子想法、優秀作品借鏡、創想育成' },
+  { id: 'interest',  name: '個人興趣簿',   sub: '美術、旅行、攝影、健身' },
+  { id: 'knowledge', name: '知識管理中心', sub: '學習計劃、新知、科技、講座' },
+  { id: 'studio',    name: '設計工作室',   sub: '工法、材料、技術、概念、管理' },
+  { id: 'brand',     name: '品牌形象',     sub: '品牌形象、作品集、宣傳媒介' },
+  { id: 'ai',        name: 'AI 大腦中心',  sub: 'AI技術、自行開發、新概念、工具集' },
+  { id: 'relation',  name: '關係發展',     sub: '客戶關係、供應商、朋友圈、資源連結' },
+];
+
+let data = {};
+let sha  = null;
+let currentCell = null;
+
+// ── Token ──
+function getToken() { return localStorage.getItem('gh_token_lifemap') || ''; }
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t) return;
+  localStorage.setItem('gh_token_lifemap', t);
+  document.getElementById('setupBanner').classList.add('hidden');
+  loadData();
+}
+
+// ── Age bucket (0=fresh … 5=very stale) ──
+function ageBucket(isoDate) {
+  if (!isoDate) return 5;
+  const days = (Date.now() - new Date(isoDate)) / 86400000;
+  if (days < 1)  return 0;
+  if (days < 14) return 1;
+  if (days < 21) return 2;
+  if (days < 30) return 3;
+  if (days < 60) return 4;
+  return 5;
+}
+function ageLabel(isoDate) {
+  if (!isoDate) return '從未更新';
+  const days = Math.floor((Date.now() - new Date(isoDate)) / 86400000);
+  if (days === 0) return '今天更新';
+  if (days === 1) return '昨天';
+  if (days < 7)  return `${days} 天前`;
+  if (days < 30) return `${Math.floor(days/7)} 週前`;
+  if (days < 365) return `${Math.floor(days/30)} 個月前`;
+  return `${Math.floor(days/365)} 年前`;
+}
+
+// ── Render grid ──
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  CELLS.forEach(c => {
+    const d = data[c.id] || {};
+    const bucket = ageBucket(d.updated);
+    const div = document.createElement('div');
+    div.className = 'cell';
+    div.dataset.age = bucket;
+    div.onclick = () => openModal(c.id);
+    div.innerHTML = `
+      <div>
+        <div class="cell-name">${c.name}</div>
+        <div class="cell-next ${d.next ? '' : 'empty'}">${d.next || c.sub}</div>
+      </div>
+      <div class="cell-age">${ageLabel(d.updated)}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ── GitHub API ──
+async function loadData() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const res = await fetch(API, { headers: { Authorization: `token ${token}` } });
+    if (res.status === 404) { data = {}; sha = null; renderGrid(); return; }
+    const json = await res.json();
+    sha = json.sha;
+    data = JSON.parse(atob(json.content.replace(/\n/g,'')));
+  } catch(e) { data = {}; }
+  renderGrid();
+}
+
+async function saveData() {
+  const token = getToken();
+  if (!token) { showToast('請先設定 GitHub Token'); return false; }
+  showToast('同步中…');
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  const body = { message: 'update life-map', content };
+  if (sha) body.sha = sha;
+  try {
+    const res = await fetch(API, {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json();
+    sha = json.content.sha;
+    showToast('已同步 ✓');
+    return true;
+  } catch(e) { showToast('同步失敗，請檢查 Token'); return false; }
+}
+
+// ── Modal ──
+function openModal(id) {
+  currentCell = id;
+  const c = CELLS.find(x => x.id === id);
+  const d = data[id] || { next: '', logs: [] };
+  document.getElementById('modalTitle').textContent = c.name;
+  document.getElementById('modalNext').value = d.next || '';
+  const logList = document.getElementById('logList');
+  logList.innerHTML = '';
+  (d.logs || []).slice().reverse().forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `<div class="log-date">${l.date}</div><div class="log-text">${l.text}</div>`;
+    logList.appendChild(div);
+  });
+  document.getElementById('logInput').value = '';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(e) { if (e.target === document.getElementById('overlay')) closeModalBtn(); }
+function closeModalBtn() { document.getElementById('overlay').classList.remove('open'); }
+
+function addLog() {
+  const text = document.getElementById('logInput').value.trim();
+  if (!text) return;
+  if (!data[currentCell]) data[currentCell] = { next: '', logs: [] };
+  if (!data[currentCell].logs) data[currentCell].logs = [];
+  const today = new Date().toISOString().slice(0,10);
+  data[currentCell].logs.push({ date: today, text });
+  document.getElementById('logInput').value = '';
+  // re-render log list
+  const logList = document.getElementById('logList');
+  logList.innerHTML = '';
+  data[currentCell].logs.slice().reverse().forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `<div class="log-date">${l.date}</div><div class="log-text">${l.text}</div>`;
+    logList.appendChild(div);
+  });
+}
+
+async function saveCell() {
+  if (!data[currentCell]) data[currentCell] = { next: '', logs: [] };
+  data[currentCell].next = document.getElementById('modalNext').value.trim();
+  data[currentCell].updated = new Date().toISOString();
+  renderGrid();
+  const ok = await saveData();
+  if (ok) closeModalBtn();
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', () => {
+  const token = getToken();
+  if (token) {
+    document.getElementById('setupBanner').classList.add('hidden');
+    loadData();
+  }
+  renderGrid();
+});
+</script>
+</body>
+</html>
